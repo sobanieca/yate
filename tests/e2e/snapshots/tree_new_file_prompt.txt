@@ -1,0 +1,20 @@
+# tree_new_file_prompt
+# start: yate (project folder)
+# keys: a
+# 70x14, cursor at column 16, row 4
+┌──────────────────────────────────────────────────────────────────────┐
+│ PROJECT                untitled                                      │
+│ ▸ src                                    Y A T E                     │
+│   .gitignore                     yet another text editor             │
+│   README.╭─ New file (end with / for a folder) ───────────╮          │
+│          │ src/                                           │ctrl+p    │
+│          ╰────────────────────────────────────────────────╯ alt+f    │
+│                          file tree                          alt+e    │
+│                          switch: tree, files                alt+w    │
+│                          review git changes                 alt+g    │
+│                          command palette                    alt+p    │
+│                          all key bindings                  ctrl+h    │
+│                          quit                              ctrl+q    │
+│                                                                      │
+│ INPUT  main  untitled                     text  utf-8  LF  100%  1:1 │
+└──────────────────────────────────────────────────────────────────────┘

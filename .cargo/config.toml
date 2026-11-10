@@ -1,0 +1,13 @@
+# Development tasks.
+[alias]
+xtask = "run --quiet --package xtask --"
+# Run yate from source: cargo yate [path]. The fast profile skips LTO for quick rebuilds.
+yate = "run --profile fast --package yate --"
+# Formatting, lints and tests: run before committing.
+verify = "xtask verify"
+# End-to-end tests: screen snapshots in tests/e2e/snapshots.
+e2e = "test --test e2e"
+# Accept the current screens as the new snapshots.
+update-snapshots = "xtask update-snapshots"
+# Static release binary in dist/yate.
+dist = "xtask dist"

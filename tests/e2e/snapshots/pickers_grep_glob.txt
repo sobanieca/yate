@@ -1,0 +1,27 @@
+# pickers_grep_glob
+# start: yate README.md
+# keys: alt+f
+# type: "render"
+# keys: tab
+# type: "*.ts,!*.test.ts"
+# keys: tab
+# type: "("
+# 80x16, cursor at column 14, row 3
+┌────────────────────────────────────────────────────────────────────────────────┐
+│ README.md                                                                      │
+│  1  Call render() to draw.                                                     │
+│  2╭─ Live grep ────────────────────────────────────────────────────── 2/2 ─╮   │
+│   │ ❯ render(                                        glob *.ts,!*.test.ts  │   │
+│   │────────────────────────────────────────────────────────────────────────│   │
+│   │▌ src/app.ts:2  render(app);                                            │   │
+│   │  src/editor/view.ts:1  export function render(view) {                  │   │
+│   │                                                                        │   │
+│   │                                                                        │   │
+│   │                                                                        │   │
+│   │                                                                        │   │
+│   │                                                                        │   │
+│   │                                                                        │   │
+│   ╰─ ctrl+f glob filter, e.g. *.ts, !*.test.ts ────────────────────────────╯   │
+│                                                                                │
+│ PICK  README.md                                   markdown  utf-8  LF  0%  1:1 │
+└────────────────────────────────────────────────────────────────────────────────┘

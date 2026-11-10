@@ -1,0 +1,24 @@
+# tree_changed_only
+# start: yate (project folder)
+# write file outside the editor: src/lib/util.ts
+# write file outside the editor: new.ts
+# focus gained
+# keys: m
+# keys: right down right
+# 70x14, cursor hidden
+┌──────────────────────────────────────────────────────────────────────┐
+│ PROJECT changed        untitled                                      │
+│ ▾ src •                                  Y A T E                     │
+│   ▾ lib •                        yet another text editor             │
+│       util.ts       M                                                │
+│   new.ts            U    find file                         ctrl+p    │
+│                          live grep                          alt+f    │
+│                          file tree                          alt+e    │
+│                          switch: tree, files                alt+w    │
+│                          review git changes                 alt+g    │
+│                          command palette                    alt+p    │
+│                          all key bindings                  ctrl+h    │
+│                          quit                              ctrl+q    │
+│                                                                      │
+│ TREE  main  untitled        ctrl+h keys   text  utf-8  LF  100%  1:1 │
+└──────────────────────────────────────────────────────────────────────┘

@@ -1,0 +1,20 @@
+// Example ~/yate.jsonc
+//
+// Copy it with:
+//   cp examples/yate.jsonc ~/yate.jsonc
+//   mkdir -p ~/.config/yate/plugins && cp examples/plugins/extras.js ~/.config/yate/plugins/
+{
+  "options": {
+    "tabSize": 2,
+    "nerdIcons": true
+  },
+  "keys": {
+    // nvim habit: ctrl+y toggles the file tree; redo moves to alt+z.
+    "editor": { "ctrl+y": "tree.toggle", "alt+z": "edit.redo", "alt+d": "date.insert" },
+    "tree": { "ctrl+y": "tree.toggle" }
+  },
+  "plugins": {
+    "extras": true,   // ~/.config/yate/plugins/extras.js
+    "git": false      // a bundled plugin turned off
+  }
+}

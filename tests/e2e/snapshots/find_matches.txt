@@ -1,0 +1,52 @@
+# find_matches
+# start: yate cart.js
+# keys: ctrl+f
+# type: "total"
+# 70x10, cursor at column 13, row 8
+┌──────────────────────────────────────────────────────────────────────┐
+│ cart.js                                                              │
+│  1  let total = 0;                                                   │
+│  2  for (const item of items) {                                      │
+│  3  ▏ total += item.price;                                           │
+│  4  }                                                                │
+│  5  console.log(total);                                              │
+│  6                                                                   │
+│                                                                      │
+│ FIND   total                   Aa  .*  1 of 3  enter/↓ next · ↑ prev │
+│ FIND  cart.js           (5 selected) javascript  utf-8  LF  0%  1:10 │
+└──────────────────────────────────────────────────────────────────────┘
+
+styles
+┌──────────────────────────────────────────────────────────────────────┐
+│abbbbbbbaccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc│
+│aadaaeeeafffffagahgaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
+│aaiaaeeeajeeeeeakkkkaeeakkkkkjajaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
+│aaiaaialllllaggakkkkgmmmmmgaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
+│aaiaajaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
+│aaiaakkkkkkkgmmmjllllljgaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
+│aaiaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
+│aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
+│nooooncpqqqqqpppppppppppppppppccrrccrrccscsscscctttttttcttttctctcttttc│
+│nooooncuuuuuuucccccccccccsscssssssssscssssssssssccsssssccssccsscnoooon│
+└──────────────────────────────────────────────────────────────────────┘
+a  bg BG #24283b
+b  fg BLUE #7aa2f7, bg BG #24283b, bold
+c  bg BG_DARK #1f2335
+d  fg ORANGE #ff9e64, bg BG #24283b, bold
+e  fg PURPLE #9d7cd8, bg BG #24283b, italic
+f  fg BG_DARK #1f2335, bg ORANGE #ff9e64
+g  fg BLUE5 #89ddff, bg BG #24283b
+h  fg ORANGE #ff9e64, bg BG #24283b
+i  fg FG_GUTTER #3b4261, bg BG #24283b
+j  fg FG_DARK #a9b1d6, bg BG #24283b
+k  fg FG #c0caf5, bg BG #24283b
+l  fg FG #c0caf5, bg BG_SEARCH #3d59a1
+m  fg GREEN1 #73daca, bg BG #24283b
+n  bg YELLOW #e0af68
+o  fg BG_DARK #1f2335, bg YELLOW #e0af68, bold
+p  bg BG_HIGHLIGHT #292e42
+q  fg FG #c0caf5, bg BG_HIGHLIGHT #292e42
+r  fg DARK5 #737aa2, bg BG_DARK #1f2335
+s  fg FG_DARK #a9b1d6, bg BG_DARK #1f2335
+t  fg DARK3 #545c7e, bg BG_DARK #1f2335
+u  fg FG #c0caf5, bg BG_DARK #1f2335

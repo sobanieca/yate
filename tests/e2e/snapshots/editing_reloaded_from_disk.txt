@@ -1,0 +1,19 @@
+# editing_reloaded_from_disk
+# start: yate app.js
+# write file outside the editor: app.js
+# focus gained
+# 60x12, cursor at column 5, row 1
+┌────────────────────────────────────────────────────────────┐
+│ app.js                                                     │
+│  1  const changed = true;                                  │
+│  2                                                         │
+│                                                            │
+│                                                            │
+│                                                            │
+│                                                            │
+│                                                            │
+│                                                            │
+│                                                            │
+│                                                            │
+│ EDIT  Reloaded app.js       javascript  utf-8  LF  0%  1:1 │
+└────────────────────────────────────────────────────────────┘

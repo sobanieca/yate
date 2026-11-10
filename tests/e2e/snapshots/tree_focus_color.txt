@@ -1,0 +1,30 @@
+# tree_focus_color
+# start: yate (project folder)
+# 40x5, cursor hidden
+┌────────────────────────────────────────┐
+│ PROJECT             untitled           │
+│   a.txt                  Y A T E       │
+│                    yet another text edi│
+│                                        │
+│ TREE …tled  text  utf-8  LF  100%  1:1 │
+└────────────────────────────────────────┘
+
+styles
+┌────────────────────────────────────────┐
+│abbbbbbbaaaaaaaaaaaacddddddddcaaaaaaaaaa│
+│eeefffffeeeeeeeeeeeeccccccdcdcdcdccccccc│
+│aaaaaaaaaaaaaaaaaaaagggcgggggggcggggcggg│
+│aaaaaaaaaaaaaaaaaaaacccccccccccccccccccc│
+│hiiiihjjjjjaakkkkaakkkkkaakkaakkkkahiiih│
+└────────────────────────────────────────┘
+a  bg BG_DARK #1f2335
+b  fg GREEN #9ece6a, bg BG_DARK #1f2335, bold
+c  bg BG #24283b
+d  fg BLUE #7aa2f7, bg BG #24283b, bold
+e  bg BG_HIGHLIGHT #292e42
+f  fg FG_DARK #a9b1d6, bg BG_HIGHLIGHT #292e42
+g  fg DARK5 #737aa2, bg BG #24283b, italic
+h  bg GREEN #9ece6a
+i  fg BG_DARK #1f2335, bg GREEN #9ece6a, bold
+j  fg FG #c0caf5, bg BG_DARK #1f2335
+k  fg FG_DARK #a9b1d6, bg BG_DARK #1f2335

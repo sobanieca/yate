@@ -1,0 +1,24 @@
+# keys_switcher
+# start: yate a.js
+# keys: ctrl+p
+# type: "b.js"
+# keys: enter
+# keys: ctrl+p
+# type: "c.js"
+# keys: enter
+# keys: alt+tab
+# 70x12, cursor at column 5, row 1
+┌──────────────────────────────────────────────────────────────────────┐
+│ a.js   b.js   c.js                                                   │
+│  1  let c = 3;        ╭─ Switch to ──────────╮                       │
+│  2                    │ 1  File tree         │                       │
+│                       │ 2  a.js              │                       │
+│                       │ 3  b.js              │                       │
+│                       │ 4  c.js              │                       │
+│                       ╰──────────────────────╯                       │
+│                                                                      │
+│                                                                      │
+│                                                                      │
+│                                                                      │
+│ SWITCH  c.js                          javascript  utf-8  LF  0%  1:1 │
+└──────────────────────────────────────────────────────────────────────┘

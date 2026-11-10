@@ -1,0 +1,20 @@
+# tree_src_expanded
+# start: yate (project folder)
+# keys: enter
+# 70x14, cursor hidden
+┌──────────────────────────────────────────────────────────────────────┐
+│ PROJECT                untitled                                      │
+│ ▾ src                                    Y A T E                     │
+│   ▸ lib                          yet another text editor             │
+│     app.ts                                                           │
+│   .gitignore             find file                         ctrl+p    │
+│   README.md              live grep                          alt+f    │
+│                          file tree                          alt+e    │
+│                          switch: tree, files                alt+w    │
+│                          review git changes                 alt+g    │
+│                          command palette                    alt+p    │
+│                          all key bindings                  ctrl+h    │
+│                          quit                              ctrl+q    │
+│                                                                      │
+│ TREE  main  untitled        ctrl+h keys   text  utf-8  LF  100%  1:1 │
+└──────────────────────────────────────────────────────────────────────┘

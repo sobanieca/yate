@@ -1,0 +1,18 @@
+# keys_help
+# start: yate a.js
+# keys: ctrl+h
+# 70x12, cursor at column 7, row 1
+┌──────────────────────────────────────────────────────────────────────┐
+│ a.╭─ Key bindings (enter runs) ────────────────────────── 79/79 ─╮   │
+│  1│ ❯                                                            │   │
+│  2│──────────────────────────────────────────────────────────────│   │
+│   │▌ ctrl+q               Quit                            global │   │
+│   │  ctrl+h               Help: key bindings              global │   │
+│   │  ctrl+s               Save file                       global │   │
+│   │  ctrl+n               New file…                       global │   │
+│   │  ctrl+p               Find file                       global │   │
+│   │  alt+f ctrl+shift+f   Live grep                       global │   │
+│   │  alt+shift+f          Live grep in files matching a glglobal │   │
+│   │  ctrl+e               Open buffers                    global │   │
+│ PI╰──────────────────────────────────────────────────────────────╯:1 │
+└──────────────────────────────────────────────────────────────────────┘

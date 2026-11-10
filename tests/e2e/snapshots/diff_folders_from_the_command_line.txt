@@ -1,0 +1,17 @@
+# diff_folders_from_the_command_line
+# start: yate diff old new
+# 80x12, cursor hidden
+┌────────────────────────────────────────────────────────────────────────────────┐
+│ DIFFERENT (1)           COMPARE  old/app.js → new/app.js  +1 -1  n/p next/prev │
+│ M app.js                          @@ -1,2 +1,2 @@                              │
+│                           1   1   let a = 1;                                   │
+│                           2     - let b = 2;                                   │
+│                               2 + let b = 3;                                   │
+│                                                                                │
+│                                                                                │
+│                                                                                │
+│                                                                                │
+│                                                                                │
+│                                                                                │
+│ REVIEW  untitled       alt+w switch · ctrl+h keys   text  utf-8  LF  100%  1:1 │
+└────────────────────────────────────────────────────────────────────────────────┘

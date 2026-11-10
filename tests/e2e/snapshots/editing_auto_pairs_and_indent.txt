@@ -1,0 +1,19 @@
+# editing_auto_pairs_and_indent
+# start: yate app.js
+# keys: ctrl+end
+# type: "function add(a, b) {\nreturn a + b"
+# 60x12, cursor at column 19, row 9
+┌────────────────────────────────────────────────────────────┐
+│ app.js ●                                                   │
+│  1  const colors = {                                       │
+│  2  ▏ bg: "#24283b",                                       │
+│  3  };                                                     │
+│  4                                                         │
+│  5  function greet(name) {                                 │
+│  6  ▏ return `hello ${name}`;                              │
+│  7  }                                                      │
+│  8  function add(a, b) {                                   │
+│  9  ▏ return a + b                                         │
+│ 10  }                                                      │
+│ EDIT  app.js ●            javascript  utf-8  LF  88%  9:15 │
+└────────────────────────────────────────────────────────────┘

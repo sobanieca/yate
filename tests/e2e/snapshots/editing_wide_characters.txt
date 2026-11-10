@@ -1,0 +1,11 @@
+# editing_wide_characters
+# start: yate notes.txt
+# 40x6, cursor at column 5, row 1
+┌────────────────────────────────────────┐
+│ notes.txt                              │
+│  1  名前: 東京                         │
+│  2  ▏ indented                         │
+│  3  emoji 🎉 end                       │
+│  4                                     │
+│ EDIT …es.txt  text  utf-8  LF  0%  1:1 │
+└────────────────────────────────────────┘

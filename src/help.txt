@@ -1,0 +1,60 @@
+yate - yet another text editor
+
+Usage:
+  yate                  open the current folder (file tree)
+  yate <folder>         open a folder
+  yate <file>[:line]    open a file; the project is its git repository
+  yate diff <a> <b>     compare two files or two folders (a is the old side)
+  yate update           install the latest release (./update opens a file named update)
+
+Options:
+  -h, --help            show this help
+  -v, --version         show the version
+
+Keys (VS Code style, no modes; ctrl+h in yate lists every binding):
+  ctrl+h                key bindings (search them, enter runs one)
+  ctrl+p                find file (fuzzy)          alt+f    live grep
+  ctrl+f in a picker    glob filter: *.ts, src/**, !*.test.ts (! excludes; kept for the
+                        next search)               alt+shift+f  live grep, glob first
+  ctrl+e                open buffers               alt+r    resume last picker
+  alt+p                 command palette
+  alt+w, alt+tab        then 1 file tree, 2-9 open files (they pop up when you wait);
+                        alt+w again: next file, alt+shift+w: previous
+  alt+e                 toggle file tree           ctrl+t   reveal file in tree
+  ctrl+\                split editor / unsplit     ctrl+o   other pane
+  ctrl+j                scroll both panes together (sync on / off)
+  alt+g                 review git changes         ctrl+l   bookmarks
+  ctrl+s                save                       ctrl+n   new file
+  ctrl+w                close buffer               ctrl+q   quit
+  ctrl+pgup/pgdn        previous / next buffer     alt+, alt+.
+  alt+left / alt+right  jump back / forward        ctrl+g   go to line
+  alt+d                 go to definition, or the file of the path or import under the
+                        cursor (also ctrl+click; path:line:col works; ctrl+p takes file:line)
+  ctrl+f / ctrl+r       find / replace in file     enter, down / up  next / previous match
+  ctrl+z / ctrl+y       undo / redo                ctrl+a   select all
+  ctrl+c / ctrl+x       copy / cut (line without a selection; tmux buffer)
+  ctrl+v                paste (newest tmux buffer inside tmux)
+  ctrl+d                select word / next occurrence
+  ctrl+/                toggle comment             ctrl+k   delete line
+  alt+up / alt+down     move line                  alt+shift+down  duplicate line
+  tab / shift+tab       indent / outdent           alt+i / alt+o   indent / outdent
+  ctrl+left / right     10 characters (jumpChars)  ctrl+up / down  5 lines (jumpLines)
+  alt+m                 toggle bookmark            alt+n / alt+b  next / previous
+  ctrl+u                insert UUID (bundled plugin)
+
+File tree: enter open, left/right fold, f find file in the folder, g live grep in the
+           folder, a new, r rename, d delete, y copy path,
+           c compare (mark, then c on another file or folder), i show ignored files,
+           m only changed files, shift+r refresh, esc editor.
+Review:    up/down files, tab diff, n/p next/prev change, r refresh, enter open, esc close.
+Compare:   "Compare current file with…" in the palette, c twice in the file tree, or
+           yate diff <a> <b>; two folders list the files that differ.
+
+Settings: ~/yate.json, overridden by yate.json files closer to the working directory
+          (theme, options, keys, plugins); yate.jsonc works too. "Open yate.json" in
+          the palette creates ~/yate.jsonc listing every key binding, ready to edit.
+Plugins:  ~/.config/yate/plugins/<name>.js (JavaScript), loaded when yate.json has
+          "plugins": { "<name>": true }.
+Log:      ~/.local/state/yate/yate.log
+Updates:  checked once a day; "updateCheck": false in options or YATE_NO_UPDATE_CHECK=1
+          turns the check off.

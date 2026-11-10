@@ -1,0 +1,26 @@
+# git_review_untracked_file
+# start: yate src/main.rs
+# keys: down home shift+end
+# type: "let name = \"yate\";"
+# keys: ctrl+s
+# write file outside the editor: NOTES.md
+# focus gained
+# keys: alt+g
+# keys: up
+# 80x14, cursor hidden
+┌────────────────────────────────────────────────────────────────────────────────┐
+│ CHANGES (2)             REVIEW  NOTES.md  +1 -0  n/p next/prev change · enter o│
+│ U NOTES.md                        @@ -1,0 +1,1 @@                              │
+│ M src/main.rs                 1 + todo                                         │
+│                                                                                │
+│                                                                                │
+│                                                                                │
+│                                                                                │
+│                                                                                │
+│                                                                                │
+│                                                                                │
+│                                                                                │
+│                                                                                │
+│                                                                                │
+│ REVIEW  main  Saved src/main.rs                     rust  utf-8  LF  25%  2:23 │
+└────────────────────────────────────────────────────────────────────────────────┘

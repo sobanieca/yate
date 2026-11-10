@@ -1,0 +1,19 @@
+# compare_folders
+# start: yate (project folder)
+# keys: down c
+# keys: up c
+# 80x12, cursor hidden
+┌────────────────────────────────────────────────────────────────────────────────┐
+│ DIFFERENT (3)           COMPARE  new/added.js  +1 -0  n/p next/prev change · en│
+│ A added.js                        @@ -1,0 +1,1 @@                              │
+│ M app.js                      1 + hello                                        │
+│ D gone.js                                                                      │
+│                                                                                │
+│                                                                                │
+│                                                                                │
+│                                                                                │
+│                                                                                │
+│                                                                                │
+│                                                                                │
+│ REVIEW  untitled       alt+w switch · ctrl+h keys   text  utf-8  LF  100%  1:1 │
+└────────────────────────────────────────────────────────────────────────────────┘

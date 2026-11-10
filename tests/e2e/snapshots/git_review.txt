@@ -1,0 +1,83 @@
+# git_review
+# start: yate src/main.rs
+# keys: down home shift+end
+# type: "let name = \"yate\";"
+# keys: ctrl+s
+# write file outside the editor: NOTES.md
+# focus gained
+# keys: alt+g
+# 80x14, cursor hidden
+┌────────────────────────────────────────────────────────────────────────────────┐
+│ CHANGES (2)             REVIEW  src/main.rs  +1 -1  n/p next/prev change · ente│
+│ U NOTES.md                        @@ -1,4 +1,4 @@                              │
+│ M src/main.rs             1   1   fn main() {                                  │
+│                           2     -     let name = "world";                      │
+│                               2 +     let name = "yate";                       │
+│                           3   3       println!("hello {name}");                │
+│                           4   4   }                                            │
+│                                                                                │
+│                                                                                │
+│                                                                                │
+│                                                                                │
+│                                                                                │
+│                                                                                │
+│ REVIEW  main  Saved src/main.rs                     rust  utf-8  LF  25%  2:23 │
+└────────────────────────────────────────────────────────────────────────────────┘
+
+styles
+┌────────────────────────────────────────────────────────────────────────────────┐
+│abbbbbbbabbbaaaaaaaaaaaacddddddcaeeeeeeeeeeeaaffaggaahhhahhhhhhhhhahhhhhhahahhhh│
+│aiajjjjjjjjaaaaaaaaaaaaaaaaaaaaaaaakkakkkkakkkkakkaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
+│lmlnnnnooooooollllllllllpppqpppqppprrpssssttptpppppppppppppppppppppppppppppppppp│
+│aaaaaaaaaaaaaaaaaaaaaaaauuuvuuuuuwuuuuuxxxuyyyyuyuzzzzzzzAuuuuuuuuuuuuuuuuuuuuuu│
+│aaaaaaaaaaaaaaaaaaaaaaaaBBBBBBBCBDBBBBBEEEBFFFFBFBGGGGGGHBBBBBBBBBBBBBBBBBBBBBBB│
+│aaaaaaaaaaaaaaaaaaaaaaaapppqpppqpppppppIIIIIIIItJJJJJJpJJJJJJJtKpppppppppppppppp│
+│aaaaaaaaaaaaaaaaaaaaaaaapppqpppqppptpppppppppppppppppppppppppppppppppppppppppppp│
+│aaaaaaaaaaaaaaaaaaaaaaaapppppppppppppppppppppppppppppppppppppppppppppppppppppppp│
+│aaaaaaaaaaaaaaaaaaaaaaaapppppppppppppppppppppppppppppppppppppppppppppppppppppppp│
+│aaaaaaaaaaaaaaaaaaaaaaaapppppppppppppppppppppppppppppppppppppppppppppppppppppppp│
+│aaaaaaaaaaaaaaaaaaaaaaaapppppppppppppppppppppppppppppppppppppppppppppppppppppppp│
+│aaaaaaaaaaaaaaaaaaaaaaaapppppppppppppppppppppppppppppppppppppppppppppppppppppppp│
+│aaaaaaaaaaaaaaaaaaaaaaaapppppppppppppppppppppppppppppppppppppppppppppppppppppppp│
+│cddddddcLMMMMLaNNNNNaNNNNNNNNNNNaaaaaaaaaaaaaaaaaaaaajjjjaajjjjjaajjaajjjacddddc│
+└────────────────────────────────────────────────────────────────────────────────┘
+a  bg BG_DARK #1f2335
+b  fg MAGENTA #bb9af7, bg BG_DARK #1f2335, bold
+c  bg MAGENTA #bb9af7
+d  fg BG_DARK #1f2335, bg MAGENTA #bb9af7, bold
+e  fg FG #c0caf5, bg BG_DARK #1f2335, bold
+f  fg GREEN #9ece6a, bg BG_DARK #1f2335
+g  fg RED #f7768e, bg BG_DARK #1f2335
+h  fg DARK3 #545c7e, bg BG_DARK #1f2335
+i  fg GREEN #9ece6a, bg BG_DARK #1f2335, bold
+j  fg FG_DARK #a9b1d6, bg BG_DARK #1f2335
+k  fg BLUE #7aa2f7, bg BG_DARK #1f2335, italic
+l  bg BG_HIGHLIGHT #292e42
+m  fg YELLOW #e0af68, bg BG_HIGHLIGHT #292e42, bold
+n  fg DARK5 #737aa2, bg BG_HIGHLIGHT #292e42
+o  fg FG #c0caf5, bg BG_HIGHLIGHT #292e42
+p  bg BG #24283b
+q  fg FG_GUTTER #3b4261, bg BG #24283b
+r  fg PURPLE #9d7cd8, bg BG #24283b, italic
+s  fg BLUE #7aa2f7, bg BG #24283b
+t  fg FG_DARK #a9b1d6, bg BG #24283b
+u  bg DIFF_DELETE_BG #3f2d3d
+v  fg FG_GUTTER #3b4261, bg DIFF_DELETE_BG #3f2d3d
+w  fg RED1 #db4b4b, bg DIFF_DELETE_BG #3f2d3d, bold
+x  fg PURPLE #9d7cd8, bg DIFF_DELETE_BG #3f2d3d, italic
+y  fg FG #c0caf5, bg DIFF_DELETE_BG #3f2d3d
+z  fg GREEN #9ece6a, bg DIFF_DELETE_EMPHASIS #5c3242
+A  fg BLUE5 #89ddff, bg DIFF_DELETE_EMPHASIS #5c3242
+B  bg DIFF_ADD_BG #273849
+C  fg FG_GUTTER #3b4261, bg DIFF_ADD_BG #273849
+D  fg GIT_ADD #449dab, bg DIFF_ADD_BG #273849, bold
+E  fg PURPLE #9d7cd8, bg DIFF_ADD_BG #273849, italic
+F  fg FG #c0caf5, bg DIFF_ADD_BG #273849
+G  fg GREEN #9ece6a, bg DIFF_ADD_EMPHASIS #2e5059
+H  fg BLUE5 #89ddff, bg DIFF_ADD_EMPHASIS #2e5059
+I  fg BLUE1 #2ac3de, bg BG #24283b
+J  fg GREEN #9ece6a, bg BG #24283b
+K  fg BLUE5 #89ddff, bg BG #24283b
+L  bg FG_GUTTER #3b4261
+M  fg MAGENTA #bb9af7, bg FG_GUTTER #3b4261
+N  fg GREEN1 #73daca, bg BG_DARK #1f2335

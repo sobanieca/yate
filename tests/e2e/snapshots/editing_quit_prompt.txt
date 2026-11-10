@@ -1,0 +1,19 @@
+# editing_quit_prompt
+# start: yate app.js
+# type: "x"
+# keys: ctrl+q
+# 60x12, cursor hidden
+┌────────────────────────────────────────────────────────────┐
+│ app.js ●                                                   │
+│  1  xconst colors = {                                      │
+│  2  ▏ bg: "#24283b",                                       │
+│  3  ╭─ Unsaved: app.js. Quit anyway? (y/n) ──────────╮     │
+│  4  │ y / n                                          │     │
+│  5  ╰────────────────────────────────────────────────╯     │
+│  6  ▏ return `hello ${name}`;                              │
+│  7  }                                                      │
+│  8                                                         │
+│                                                            │
+│                                                            │
+│ INPUT  app.js ●             javascript  utf-8  LF  0%  1:2 │
+└────────────────────────────────────────────────────────────┘

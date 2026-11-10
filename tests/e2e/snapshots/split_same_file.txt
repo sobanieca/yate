@@ -1,0 +1,19 @@
+# split_same_file
+# start: yate one.txt
+# keys: ctrl+\ ctrl+g
+# type: "40\n"
+# keys: ctrl+o
+# keys: ctrl+o
+# 70x10, cursor at column 40, row 8
+┌──────────────────────────────────────────────────────────────────────┐
+│ one.txt                                                              │
+│  1  one 1                        │ 33  one 33                        │
+│  2  one 2                        │ 34  one 34                        │
+│  3  one 3                        │ 35  one 35                        │
+│  4  one 4                        │ 36  one 36                        │
+│  5  one 5                        │ 37  one 37                        │
+│  6  one 6                        │ 38  one 38                        │
+│  7  one 7                        │ 39  one 39                        │
+│  8  one 8                        │ 40  one 40                        │
+│ EDIT  one.txt               ctrl+h keys   text  utf-8  LF  65%  40:1 │
+└──────────────────────────────────────────────────────────────────────┘
