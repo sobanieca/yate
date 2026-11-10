@@ -107,3 +107,19 @@ fn the_tree_title_and_status_label_take_the_tree_color_when_focused() {
     let mut e = Harness::builder().size(40, 5).file("a.txt", "a\n").start();
     e.snapshot_styles("tree_focus_color");
 }
+
+#[test]
+fn deep_names_scroll_the_tree_sideways_to_fit() {
+    let mut e = Harness::builder()
+        .size(60, 10)
+        .file(
+            "packages/web/src/components/forms/inputs/DatePicker.tsx",
+            "x\n",
+        )
+        .file("README.md", "# demo\n")
+        .start();
+    e.keys("right down right down right down right down right down right down");
+    e.snapshot("tree_deep_name_scrolled");
+    e.keys("home");
+    e.snapshot("tree_deep_name_scrolled_back");
+}

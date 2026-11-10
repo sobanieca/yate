@@ -9,7 +9,7 @@ shipped as one binary. It behaves like a basic VS Code: a file tree, Ctrl+P, liv
 review view, split view, go to definition without a language server, and JavaScript plugins
 in QuickJS.
 
-The current version is 0.1.0, an early release. The 0.x series is still settling, so prefer
+The current version is 0.1.1, an early release. The 0.x series is still settling, so prefer
 the better design over compatibility: change keys, options or the plugin API when needed,
 without shims, and document the change.
 

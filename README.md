@@ -6,17 +6,17 @@ terminal or a tmux pane.
 
 Website and manual: https://sobanieca.github.io/yate/
 
-> **Status:** version 0.1.0, an early release. Keys, options and the plugin API may still
+> **Status:** version 0.1.1, an early release. Keys, options and the plugin API may still
 > change between versions.
 
 ## Features
 
 - **One binary, no runtime dependencies.** Syntax grammars and the JavaScript engine are
   compiled in. yate uses git when it is installed.
-- **Project tools:** a file tree with git status and filters for ignored and changed files,
-  a fuzzy file finder (Ctrl+P), live grep with glob filters, a review of git changes against
-  HEAD, diffs between two files or two folders (also `yate diff <a> <b>` from the shell),
-  bookmarks and a jump list.
+- **Project tools:** a file tree with git status, filters for ignored and changed files and
+  sideways scrolling for deep names, a fuzzy file finder (Ctrl+P), live grep with glob
+  filters, a review of git changes against HEAD, diffs between two files or two folders (also
+  `yate diff <a> <b>` from the shell), bookmarks and a jump list.
 - **Split view** (Ctrl+\\): two panes side by side, showing the same file or two files. Scroll
   sync (Ctrl+J) scrolls both together.
 - **Ctrl keys with hints on screen:** the status line shows the keys for what you are doing,

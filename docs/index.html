@@ -332,7 +332,7 @@ img { max-width: 100%; }
 <main id="top">
   <div class="wrap hero">
     <div class="hero-grid">
-      <div class="eyebrow"><span>yate · yet another text editor</span><span class="pill">v0.1.0 · early</span></div>
+      <div class="eyebrow"><span>yate · yet another text editor</span><span class="pill">v0.1.1 · early</span></div>
       <h1>A terminal editor that works like <em>VS Code</em>, not like vim.</h1>
       <p class="lede">yate is a modeless text editor for quick, comfortable edits in a terminal or a tmux pane. You get a file tree, Ctrl+P, live grep, a git review view and JavaScript plugins, in one binary with no runtime dependencies.</p>
       <div class="install">
@@ -370,7 +370,7 @@ img { max-width: 100%; }
       <div class="features">
         <article class="feature"><h3>Fuzzy file finder <span class="k" data-k="ctrl+p"></span></h3><p>Type a few letters of a path and open the file. The index respects <code>.gitignore</code> and fills in the background.</p></article>
         <article class="feature"><h3>Live grep <span class="k" data-k="alt+f"></span></h3><p>Results update as you type across the whole project. Press Ctrl+F to narrow the search with globs like <code>src/**/*.rs, !*.test.rs</code>, or press <kbd>g</kbd> on a folder in the tree to search only there.</p></article>
-        <article class="feature"><h3>File tree <span class="k" data-k="alt+e"></span></h3><p>Git status colors, a filter for changed files only, a toggle for ignored files, new, rename, delete and copy-path keys, and find file or live grep in the selected folder.</p></article>
+        <article class="feature"><h3>File tree <span class="k" data-k="alt+e"></span></h3><p>Git status colors, a filter for changed files only, a toggle for ignored files, new, rename, delete and copy-path keys, find file or live grep in the selected folder, and sideways scrolling so deep names stay readable in a narrow tree.</p></article>
         <article class="feature"><h3>Go to definition <span class="k" data-k="alt+d"></span></h3><p>Jump to a function, class or variable in the file, through ES imports and re-exports, or across the project. On a path or an import it opens the file. No language server needed.</p></article>
         <article class="feature"><h3>Git review <span class="k" data-k="alt+g"></span></h3><p>Every changed and untracked file against HEAD, with a side diff, word-level highlights and n / p to walk through changes.</p></article>
         <article class="feature"><h3>Syntax highlighting</h3><p>Tree-sitter grammars for 36 languages are compiled in and parsed incrementally, so highlighting stays exact while you type.</p></article>
@@ -545,7 +545,7 @@ cargo dist              <span class="c"># static binary in dist/yate</span></pre
 
           <article class="chapter" id="tree">
             <h2><span class="mode-chip tree">TREE</span> File tree</h2>
-            <p><span class="k" data-k="alt+e|ctrl+shift+e"></span> shows or hides the tree, <span class="k" data-k="ctrl+t"></span> focuses it on the current file. The tree follows the file you are editing; lock it from the palette with <b>File tree: lock</b>. On narrow terminals (below 200 columns) opening a file closes the tree.</p>
+            <p><span class="k" data-k="alt+e|ctrl+shift+e"></span> shows or hides the tree, <span class="k" data-k="ctrl+t"></span> focuses it on the current file. The tree follows the file you are editing; lock it from the palette with <b>File tree: lock</b>. On narrow terminals (below 200 columns) opening a file closes the tree. When a deep name does not fit, the tree scrolls sideways, hiding indentation on the left, so the selected name stays readable.</p>
             <div class="tbl wide"><table>
               <thead><tr><th>Key</th><th>Action</th></tr></thead>
               <tbody>

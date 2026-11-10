@@ -1,0 +1,17 @@
+# tree_deep_name_scrolled_back
+# start: yate (project folder)
+# keys: right down right down right down right down right down right down
+# keys: home
+# 60x10, cursor hidden
+┌────────────────────────────────────────────────────────────┐
+│ PROJECT             untitled                               │
+│ ▾ packages                         Y A T E                 │
+│   ▾ web                    yet another text editor         │
+│     ▾ src                                                  │
+│       ▾ component    find file                     ctrl+p  │
+│         ▾ forms      live grep                      alt+f  │
+│           ▾ input    file tree                      alt+e  │
+│               Dat    switch: tree, files            alt+w  │
+│   README.md          review git changes             alt+g  │
+│ TREE  untitled    ctrl+h keys   text  utf-8  LF  100%  1:1 │
+└────────────────────────────────────────────────────────────┘

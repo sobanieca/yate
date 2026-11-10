@@ -1,0 +1,16 @@
+# tree_deep_name_scrolled
+# start: yate (project folder)
+# keys: right down right down right down right down right down right down
+# 60x10, cursor hidden
+┌────────────────────────────────────────────────────────────┐
+│ PROJECT             untitled                               │
+│                                    Y A T E                 │
+│                            yet another text editor         │
+│                                                            │
+│ onents               find file                     ctrl+p  │
+│ rms                  live grep                      alt+f  │
+│ inputs               file tree                      alt+e  │
+│   DatePicker.tsx     switch: tree, files            alt+w  │
+│                      review git changes             alt+g  │
+│ TREE  untitled    ctrl+h keys   text  utf-8  LF  100%  1:1 │
+└────────────────────────────────────────────────────────────┘

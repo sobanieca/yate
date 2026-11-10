@@ -5,6 +5,9 @@ use super::git::GitStatus;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
+/// Columns of indentation per folder level.
+pub const INDENT: usize = 2;
+
 #[derive(Clone, Debug)]
 pub struct Row {
     pub path: PathBuf,
@@ -20,6 +23,8 @@ pub struct FileTree {
     pub expanded: HashSet<PathBuf>,
     pub selected: usize,
     pub scroll: usize,
+    /// Columns of indentation scrolled off to the left, so deep names fit.
+    pub h_scroll: usize,
     pub show_ignored: bool,
     /// Shows only files git reports as changed.
     pub changed_only: bool,
@@ -42,6 +47,7 @@ impl FileTree {
             expanded: HashSet::new(),
             selected: 0,
             scroll: 0,
+            h_scroll: 0,
             show_ignored: false,
             changed_only: false,
             locked: false,
@@ -184,6 +190,20 @@ impl FileTree {
         let max_scroll = self.rows.len().saturating_sub(height);
         self.scroll = self.scroll.min(max_scroll);
     }
+
+    /// Scrolls sideways as little as needed for the selected row's label
+    /// (`label_width` columns after its indentation) to fit in `width`
+    /// columns, hiding at most that row's indentation, in whole levels.
+    pub fn fit_selected(&mut self, width: usize, label_width: usize) {
+        let Some(row) = self.selected_row() else {
+            self.h_scroll = 0;
+            return;
+        };
+        let indent = row.depth * INDENT;
+        let needed = (indent + label_width).saturating_sub(width);
+        let needed = needed.div_ceil(INDENT) * INDENT;
+        self.h_scroll = self.h_scroll.max(needed).min(indent);
+    }
 }
 
 /// Folders first, then files, by name; marks entries that git ignores.
@@ -239,5 +259,30 @@ mod tests {
         assert_eq!(tree.selected_row().unwrap().name, "a.rs");
         assert_eq!(tree.selected_row().unwrap().depth, 2);
         std::fs::remove_dir_all(&root).unwrap();
+    }
+
+    #[test]
+    fn fit_selected_scrolls_off_whole_indent_levels_only() {
+        let mut tree = FileTree::new(Path::new("/p"));
+        tree.rows = (0..4)
+            .map(|depth| Row {
+                path: PathBuf::from(format!("/p/{depth}")),
+                name: "name".into(),
+                depth,
+                is_dir: true,
+                ignored: false,
+            })
+            .collect();
+        tree.selected = 3;
+        tree.fit_selected(10, 7);
+        assert_eq!(tree.h_scroll, 4);
+        tree.fit_selected(3, 20);
+        assert_eq!(tree.h_scroll, 6);
+        tree.selected = 2;
+        tree.fit_selected(30, 7);
+        assert_eq!(tree.h_scroll, 4);
+        tree.selected = 0;
+        tree.fit_selected(30, 7);
+        assert_eq!(tree.h_scroll, 0);
     }
 }

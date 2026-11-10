@@ -6,6 +6,8 @@ use super::theme::Theme;
 use crate::app::{App, Focus};
 use crate::text;
 use crate::workspace::git::FileStatus;
+use crate::workspace::tree::{FileTree, INDENT, Row};
+use unicode_segmentation::UnicodeSegmentation;
 
 pub fn width(app: &App, screen_width: u16) -> u16 {
     let max = (screen_width / 3).clamp(20, 50);
@@ -25,7 +27,7 @@ pub fn width(app: &App, screen_width: u16) -> u16 {
         app.tree
             .rows
             .iter()
-            .map(|row| row.depth * 2 + text::str_width(&row.name) + 7)
+            .map(|row| row.depth * INDENT + text::str_width(&row.name) + 7)
             .max()
             .unwrap_or(20)
     };
@@ -102,8 +104,16 @@ fn render_tree(app: &mut App, surface: &mut Surface, header: Rect, list: Rect) {
     }
 
     app.tree.ensure_visible(list.h as usize);
-    let current = app.doc().path.clone();
     let nerd = app.options.nerd_icons;
+    if let Some(row) = app.tree.selected_row() {
+        let icon = row_icon(&t, &app.tree, row, nerd).0;
+        let label_width = text::str_width(icon) + 1 + text::str_width(&row.name);
+        app.tree.fit_selected(
+            list.w.saturating_sub(1 + MARKER_SPACE) as usize,
+            label_width,
+        );
+    }
+    let current = app.doc().path.clone();
     let mark = app.compare_mark.clone();
     let tree = &app.tree;
     for (i, row) in tree
@@ -129,7 +139,10 @@ fn render_tree(app: &mut App, surface: &mut Surface, header: Rect, list: Rect) {
             app.git.get(&row.path)
         };
         let dir_changed = row.is_dir && app.git.dir_has_changes(&row.path);
-        let mut x = list.x + 1 + (row.depth * 2) as u16;
+        let indent = (row.depth * INDENT) as isize - tree.h_scroll as isize;
+        let left = list.x + 1;
+        let mut x = left + indent.max(0) as u16;
+        let mut hidden = (-indent).max(0) as usize;
         let name_color = if row.ignored {
             t.dark3
         } else if let Some(status) = status {
@@ -139,36 +152,30 @@ fn render_tree(app: &mut App, surface: &mut Surface, header: Rect, list: Rect) {
         } else {
             t.fg_dark
         };
-        if row.is_dir {
-            let open = tree.expanded.contains(&row.path);
-            x = surface.put_str(
-                x,
-                y,
-                icons::folder(open, nerd),
-                Style::new()
-                    .fg(if row.ignored { t.dark3 } else { t.blue })
-                    .bg(bg),
-                list.right(),
-            );
-            x += 1;
-        } else {
-            let (icon, color) = icons::file(&t, &row.path, nerd);
-            x = surface.put_str(x, y, icon, Style::new().fg(color).bg(bg), list.right());
-            x += 1;
-        }
+        let (icon, icon_color) = row_icon(&t, tree, row, nerd);
+        let icon_label = format!("{icon} ");
+        let (shown_icon, skipped) = clip_left(&icon_label, hidden);
+        hidden -= skipped;
+        x = surface.put_str(
+            x,
+            y,
+            &shown_icon,
+            Style::new().fg(icon_color).bg(bg),
+            list.right(),
+        );
         let mut style = Style::new().fg(name_color).bg(bg);
         if current.as_ref() == Some(&row.path) {
             style = style
                 .bold()
                 .fg(if status.is_some() { name_color } else { t.fg });
         }
-        let marker_space = 2;
+        let (shown_name, _) = clip_left(&row.name, hidden);
         let end = surface.put_str(
             x,
             y,
-            &row.name,
+            &shown_name,
             style,
-            list.right().saturating_sub(marker_space),
+            list.right().saturating_sub(MARKER_SPACE),
         );
         if mark.as_ref() == Some(&row.path) {
             surface.put_str(
@@ -210,6 +217,37 @@ fn render_tree(app: &mut App, surface: &mut Surface, header: Rect, list: Rect) {
             list.right(),
         );
     }
+}
+
+const MARKER_SPACE: u16 = 2;
+
+fn row_icon(t: &Theme, tree: &FileTree, row: &Row, nerd: bool) -> (&'static str, Rgb) {
+    if row.is_dir {
+        let open = tree.expanded.contains(&row.path);
+        let color = if row.ignored { t.dark3 } else { t.blue };
+        (icons::folder(open, nerd), color)
+    } else {
+        icons::file(t, &row.path, nerd)
+    }
+}
+
+/// Drops the first `columns` columns of `text`; a wide character cut in
+/// half becomes a space. Returns the rest and the columns it dropped.
+fn clip_left(text: &str, columns: usize) -> (String, usize) {
+    let mut skipped = 0;
+    let mut rest = String::new();
+    for grapheme in text.graphemes(true) {
+        let width = text::grapheme_width(grapheme);
+        if skipped >= columns {
+            rest.push_str(grapheme);
+        } else if skipped + width > columns {
+            rest.push_str(&" ".repeat(skipped + width - columns));
+            skipped = columns;
+        } else {
+            skipped += width;
+        }
+    }
+    (rest, skipped)
 }
 
 fn render_changes(app: &mut App, surface: &mut Surface, header: Rect, list: Rect) {
