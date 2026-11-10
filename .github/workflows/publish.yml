@@ -49,10 +49,11 @@ jobs:
         run: |
           cargo build --release --locked --package yate --target ${{ matrix.target }}
           cp target/${{ matrix.target }}/release/yate ${{ matrix.asset }}
+          gzip -9 ${{ matrix.asset }}
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.asset }}
-          path: ${{ matrix.asset }}
+          path: ${{ matrix.asset }}.gz
 
   release:
     needs: build
@@ -80,7 +81,7 @@ jobs:
           draft: false
           prerelease: false
           files: |
-            dist/yate-linux-x64
-            dist/yate-linux-arm64
-            dist/yate-macos-x64
-            dist/yate-macos-arm64
+            dist/yate-linux-x64.gz
+            dist/yate-linux-arm64.gz
+            dist/yate-macos-x64.gz
+            dist/yate-macos-arm64.gz

@@ -108,7 +108,7 @@ mkdir -p "${INSTALL_DIR}" 2> /dev/null || install_failed
 
 # Construct binary name
 BINARY_FILE="yate-${OS_TYPE}-${ARCH_TYPE}"
-DOWNLOAD_URL="https://github.com/${REPO}/releases/latest/download/${BINARY_FILE}"
+DOWNLOAD_URL="https://github.com/${REPO}/releases/latest/download/${BINARY_FILE}.gz"
 
 echo "Detected system: ${OS_TYPE}-${ARCH_TYPE}"
 echo "Download URL: ${DOWNLOAD_URL}"
@@ -118,17 +118,26 @@ echo ""
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "${TMP_DIR}"' EXIT
 
+if ! command -v gunzip &> /dev/null; then
+  echo -e "${RED}Error: gunzip is not available${NC}"
+  echo "Please install gzip and try again"
+  exit 1
+fi
+
 # Download binary
 echo "Downloading yate..."
 if command -v curl &> /dev/null; then
-  curl -fsSL -o "${TMP_DIR}/${BINARY_NAME}" "${DOWNLOAD_URL}"
+  curl -fsSL -o "${TMP_DIR}/${BINARY_NAME}.gz" "${DOWNLOAD_URL}"
 elif command -v wget &> /dev/null; then
-  wget -q -O "${TMP_DIR}/${BINARY_NAME}" "${DOWNLOAD_URL}"
+  wget -q -O "${TMP_DIR}/${BINARY_NAME}.gz" "${DOWNLOAD_URL}"
 else
   echo -e "${RED}Error: Neither curl nor wget is available${NC}"
   echo "Please install curl or wget and try again"
   exit 1
 fi
+
+# Unpack binary
+gunzip "${TMP_DIR}/${BINARY_NAME}.gz"
 
 # Make binary executable
 chmod +x "${TMP_DIR}/${BINARY_NAME}"

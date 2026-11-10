@@ -106,17 +106,18 @@ pub fn execute() -> Result<(), String> {
         .map_err(|err| format!("Failed to locate the yate binary: {err}"))?;
 
     println!("Updating yate {VERSION} -> {latest}...");
-    let url = format!("{}/download/v{latest}/{asset}", releases_url());
+    let url = format!("{}/download/v{latest}/{asset}.gz", releases_url());
     let mut response = agent(Some(Duration::from_secs(300)), 10)
         .get(&url)
         .call()
         .map_err(|err| format!("Failed to download {url}: {err}"))?;
-    let binary = response
+    let compressed = response
         .body_mut()
         .with_config()
         .limit(u64::MAX)
         .read_to_vec()
         .map_err(|err| format!("Failed to download {url}: {err}"))?;
+    let binary = gunzip(&compressed).map_err(|err| format!("Failed to unpack {url}: {err}"))?;
 
     let temp = exe.with_file_name(format!(".yate-update-{}", std::process::id()));
     let result = install(&temp, &exe, &binary, &latest);
@@ -127,6 +128,13 @@ pub fn execute() -> Result<(), String> {
 
     println!("yate has been updated to {latest}");
     Ok(())
+}
+
+fn gunzip(compressed: &[u8]) -> std::io::Result<Vec<u8>> {
+    use std::io::Read;
+    let mut binary = Vec::new();
+    flate2::read::GzDecoder::new(compressed).read_to_end(&mut binary)?;
+    Ok(binary)
 }
 
 fn install(temp: &Path, exe: &Path, binary: &[u8], version: &str) -> Result<(), String> {
@@ -219,6 +227,18 @@ pub fn available_message(latest: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn unpacks_gzipped_release_assets() {
+        use std::io::Write;
+        let binary = b"\x7fELF yate binary".repeat(1000);
+        let mut encoder = flate2::write::GzEncoder::new(Vec::new(), flate2::Compression::best());
+        encoder.write_all(&binary).unwrap();
+        let compressed = encoder.finish().unwrap();
+        assert!(compressed.len() < binary.len());
+        assert_eq!(gunzip(&compressed).unwrap(), binary);
+        assert!(gunzip(b"not gzip").is_err());
+    }
 
     #[test]
     fn compares_versions() {

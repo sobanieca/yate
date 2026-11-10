@@ -132,7 +132,7 @@ query. Update the language count and list in `README.md` and `docs/index.html` (
 - Don't add comments to the code; use self-documenting names (module doc comments are fine).
 - Keep dependencies few and modern: crossterm, ropey, tree-sitter and grammar crates,
   rquickjs, ignore, nucleo-matcher, similar, regex, unicode-width/segmentation, ureq (rustls,
-  for updates only). git runs as a child process; never link a git library.
+  for updates only), flate2 (unpacking update downloads). git runs as a child process; never link a git library.
 - UTF-8 only. No other encodings.
 - Keys must not need function keys and must work inside tmux and Termux: every Ctrl+Shift
   binding needs an Alt alternative, and avoid Ctrl+B (tmux prefix), Ctrl+Tab and Shift+Tab as
@@ -163,6 +163,7 @@ a new release, bump `version` in `Cargo.toml` (and `Cargo.lock`, by building) an
 pill in `docs/index.html`.
 
 `.github/workflows/pages.yml` publishes `docs/` (the landing page), `install.sh` and
-`src/help.txt` to `sobanieca.github.io/yate/`. `install.sh` and `yate update` download the
-release assets, so their names (`yate-linux-x64`, `yate-linux-arm64`, `yate-macos-x64`,
-`yate-macos-arm64`) must not change.
+`src/help.txt` to `sobanieca.github.io/yate/`. Each release has gzipped binaries
+(`yate-linux-x64.gz`, `yate-linux-arm64.gz`, `yate-macos-x64.gz`, `yate-macos-arm64.gz`, about
+7 MB each instead of 55 MB). `install.sh` and `yate update` download them, so their names must
+not change.

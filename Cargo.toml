@@ -1,6 +1,6 @@
 [package]
 name = "yate"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2024"
 description = "Yet another text editor: a modeless terminal editor with JavaScript plugins"
 license = "MIT"
@@ -9,6 +9,7 @@ publish = false
 
 [dependencies]
 crossterm = "0.29"
+flate2 = "1"
 ropey = { version = "1.6", default-features = false, features = ["simd"] }
 rquickjs = "0.14.0"
 tree-sitter = "0.25"
