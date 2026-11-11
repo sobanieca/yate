@@ -6,6 +6,12 @@ to work on a project like neovim: a file tree, a fuzzy file finder, live grep, s
 to definition and JavaScript plugins, with no language servers and nothing to set up. It is
 made for quick, comfortable edits in a terminal or a tmux pane.
 
+yate is an editor for the age of coding agents. Agents write most of the code now, but now
+and then you still need to open it, read it and see the bigger picture: how the files fit
+together, where a name is defined, what the agent changed. yate is made for that: walk the
+project in the file tree, jump with Ctrl+P, live grep and go to definition, see the changed
+lines in the gutter, fix a line by hand, and go back to the agent in the next tmux pane.
+
 Website and manual: https://sobanieca.github.io/yate/
 
 > **Status:** version 0.6.0, an early release. Keys, options and the plugin API may still
