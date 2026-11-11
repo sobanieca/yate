@@ -6,7 +6,7 @@
 # keys: ctrl+p
 # type: "c.js"
 # keys: enter
-# keys: alt+w
+# keys: ctrl+o
 # 70x12, cursor at column 5, row 0
 ┌──────────────────────────────────────────────────────────────────────┐
 │  1  let c = 3;                                                       │

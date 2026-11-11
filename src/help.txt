@@ -10,50 +10,62 @@ Options:
   -h, --help            show this help
   -v, --version         show the version
 
-Keys (VS Code style, no modes; ctrl+h in yate lists every binding):
-  ctrl+h                key bindings (search them, enter runs one)
-  ctrl+p                find file (fuzzy)          alt+f    live grep
-  ctrl+f in a picker    glob filter: *.ts, src/**, !*.test.ts (! excludes; kept for the
+Keys (Ctrl keys only, no modes; ctrl+h in yate lists the commands with their keys):
+  ctrl+h                command palette and keys: what the focused panel (editor or file
+                        tree) can do right now, by section; enter runs one
+  ctrl+p                find file (fuzzy)          ctrl+r   live grep
+  tab in a picker       glob filter: *.ts, src/**, !*.test.ts (! excludes; kept for the
                         next search)
-  alt+r                 resume last picker
-  alt+p                 command palette: what the focused panel (editor or file tree) can
-                        do right now, by section (File, Edit, Search, Go to...)
-  alt+w                 then 1 file tree, 2-9 recent files (they pop up when you wait);
-                        alt+w again: next recent file, alt+shift+w: previous
-  alt+e                 toggle file tree           ctrl+t   reveal file in tree
-  alt+s                 split: then 1 vertical (side by side), 2 horizontal (one above
-                        the other), 3 resize the pane (type columns,rows to add: 10, -10
-                        or 10,-2), 4 equal sizes, 5 close the pane, 6 close the others
-  alt+h / j / k / l     focus the pane on the left / below / above / on the right
-  ctrl+o                next pane                  ctrl+j   scroll all panes together
+  up in a picker        the last search again, before typing
   ctrl+s                save                       ctrl+n   new file
   ctrl+q                quit
-  alt+left / alt+right  jump back / forward
-  ctrl+g                go to: then 1 a line, 2 the definition, or the file of the path or
-                        import under the cursor (also ctrl+click; path:line:col works;
-                        ctrl+p takes file:line)
-  ctrl+f / ctrl+r       find / replace in file     enter, down / up  next / previous match
+  ctrl+f                find in file               enter, down / up  next / previous match
+  tab in the find bar   next field: the text, then the checkboxes [ ] Aa (case),
+                        [ ] .* (regex), [ ] replace, and with replace ticked its text and
+                        the buttons Replace and Replace all; left / right move along a
+                        row, space or enter ticks a checkbox or presses a button
   ctrl+z / ctrl+y       undo / redo                ctrl+a   select all
   ctrl+c / ctrl+x       copy / cut (line without a selection; tmux buffer)
   ctrl+v                paste (newest tmux buffer inside tmux)
   ctrl+d                select word / next occurrence
-  ctrl+/                toggle comment             ctrl+k   delete line
-  alt+up / alt+down     move line                  alt+shift+down  duplicate line
-  tab / shift+tab       indent / outdent           alt+i / alt+o   the same
+  ctrl+/                toggle comment             tab / shift+tab  indent / outdent
   ctrl+left / right     10 characters (jumpChars)  ctrl+up / down  5 lines (jumpLines)
-  alt+m                 bookmarks: then 1 toggle, 2 next, 3 previous, 4 list, 5 clear
+  ctrl+click            go to definition, or to the file of the path under the cursor
 
-Every command has one key; ctrl+g, alt+m and alt+s pop up a numbered menu (digit, or arrows and
-enter; esc closes). No key needs ctrl+shift.
+Menus: a key, then the key of a command.
+  ctrl+g  go to         l line, d the definition, or the file of the path or import under
+                        the cursor (path:line:col works; ctrl+p takes file:line),
+                        left jump back, right jump forward
+  ctrl+k  bookmarks     t toggle, down next, up previous, l list, c clear in this file
+  ctrl+w  panes         v split side by side, s split one above the other, h j k l or the
+                        arrows focus the pane on that side, w next pane, r resize (type
+                        columns,rows to add: 10, -10 or 10,-2), = equal sizes, c close
+                        the pane, o close the others, y scroll all panes together
+  ctrl+t  file tree     t toggle, r reveal file, f focus, l lock following the file
+  ctrl+l  lines         up / down move, left / right outdent / indent, d duplicate,
+                        k delete
+  ctrl+o  recent files  1 file tree, 2-9 recent files; ctrl+o again: next recent file
+
+The second key works with ctrl still held (ctrl+w ctrl+v), except ctrl+c, which closes the
+menu like esc. The key of a menu twice runs its usual command: ctrl+t ctrl+t toggles the
+tree, ctrl+w ctrl+w focuses the next pane. Right after an arrow command, ctrl and an arrow
+run it again without the menu: ctrl+g left, then ctrl+left ctrl+left. A menu pops up when
+you wait (keyHintDelay). No key needs alt, ctrl+shift or a function key.
+
+Bars and dialogs are forms: tab (or left / right) moves between their fields, checkboxes
+and buttons, space or enter picks one, and a click does the same. They add no keys.
 
 No tabs: the editor shows one file (one per pane in a split). Opening a file takes the place of the
-one shown; unsaved changes ask first (s save, d discard, esc stay). A file opens again
+one shown; unsaved changes ask first (Save, Discard or Cancel: left / right and enter, or
+the first letter; esc stays). A file opens again
 where the cursor was, and ctrl+p lists the files you had last on top.
 
 File tree: enter open, left/right fold, f find file in the folder, g live grep in the
-           folder, ctrl+n new, r rename, d delete, y copy path, i show ignored files,
-           m only changed files, shift+r refresh, [ narrower, ] wider (or drag the right
-           edge; "treeWidth" in options keeps a width), esc editor.
+           folder, ctrl+n new, r rename, d delete, y copy path, shift+r refresh,
+           [ narrower, ] wider (or drag the right edge; "treeWidth" in options keeps a
+           width), esc editor. Above the files: [ ] changed (only changed files) and
+           [ ] ignored (git-ignored files too); up from the first file reaches them,
+           left / right move, space or enter ticks, down goes back to the files.
 
 Settings: ~/yate.json, overridden by yate.json files closer to the working directory
           (theme, options, keys, plugins); yate.jsonc works too. "Open yate.json" in

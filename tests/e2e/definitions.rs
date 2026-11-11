@@ -32,6 +32,7 @@ fn project() -> Harness {
         .file("lib/legacy.js", "// old\nfunction render() {}\n")
         .file("test/helpers.ts", "\nexport const render = () => null;\n")
         .file("README.md", "See src/editor/view.ts:2 for the details.\n")
+        .home_file("yate.json", r#"{ "options": { "keyHintDelay": 0 } }"#)
         .open("src/app.ts")
         .start()
 }
@@ -45,18 +46,18 @@ fn cursor(e: &Harness) -> (String, (usize, usize)) {
 }
 
 #[test]
-fn an_import_path_opens_the_module_and_alt_left_comes_back() {
+fn an_import_path_opens_the_module_and_ctrl_g_left_comes_back() {
     let mut e = project();
-    e.click(31, 0).keys("ctrl+g 2");
+    e.click(31, 0).keys("ctrl+g d");
     assert_eq!(cursor(&e).0, "src/editor/view.ts");
-    e.keys("alt+left");
+    e.keys("ctrl+g left");
     assert_eq!(cursor(&e), ("src/app.ts".to_string(), (0, 26)));
 }
 
 #[test]
 fn an_imported_name_jumps_to_its_definition_in_the_module() {
     let mut e = project();
-    e.click(5, 5).keys("ctrl+g 2");
+    e.click(5, 5).keys("ctrl+g d");
     assert_eq!(cursor(&e), ("src/editor/view.ts".to_string(), (0, 16)));
     e.snapshot("definitions_imported_function");
 }
@@ -64,7 +65,7 @@ fn an_imported_name_jumps_to_its_definition_in_the_module() {
 #[test]
 fn reexports_and_path_aliases_are_followed() {
     let mut e = project();
-    e.click(26, 4).keys("ctrl+g 2");
+    e.click(26, 4).keys("ctrl+g d");
     assert_eq!(cursor(&e), ("src/editor/model.ts".to_string(), (0, 13)));
 }
 
@@ -78,14 +79,14 @@ fn a_name_defined_in_the_same_file_moves_the_cursor() {
 #[test]
 fn a_member_is_found_in_the_project() {
     let mut e = project();
-    e.click(11, 6).keys("ctrl+g 2");
+    e.click(11, 6).keys("ctrl+g d");
     assert_eq!(cursor(&e), ("src/editor/model.ts".to_string(), (1, 16)));
 }
 
 #[test]
 fn at_a_definition_the_other_definitions_are_listed() {
     let mut e = project();
-    e.click(5, 5).keys("ctrl+g 2").keys("ctrl+g 2");
+    e.click(5, 5).keys("ctrl+g d").keys("ctrl+g d");
     e.snapshot("definitions_picker");
     e.keys("down enter");
     assert_eq!(cursor(&e), ("test/helpers.ts".to_string(), (1, 13)));
@@ -111,7 +112,7 @@ fn an_unknown_name_says_so() {
     let mut e = project();
     e.keys("ctrl+end")
         .type_text("missing();")
-        .keys("home ctrl+g 2");
+        .keys("home ctrl+g d");
     e.assert_screen_contains("No definition of missing found");
 }
 
@@ -120,21 +121,38 @@ fn ctrl_g_asks_for_a_line_or_the_definition() {
     let mut e = project();
     e.click(5, 5).keys("ctrl+g");
     e.snapshot("definitions_go_to_menu");
-    e.keys("2");
+    e.keys("d");
     assert_eq!(cursor(&e), ("src/editor/view.ts".to_string(), (0, 16)));
-    e.keys("ctrl+g 1").type_text("3").keys("enter");
+    e.keys("ctrl+g l").type_text("3").keys("enter");
     assert_eq!(cursor(&e), ("src/editor/view.ts".to_string(), (2, 0)));
 }
 
 #[test]
-fn the_go_to_menu_takes_arrows_enter_and_escape() {
+fn the_go_to_menu_takes_its_keys_with_ctrl_held_and_escape() {
     let mut e = project();
     e.click(5, 5).keys("ctrl+g esc");
     e.assert_screen_lacks("Go to");
     assert_eq!(cursor(&e).0, "src/app.ts");
-    e.keys("ctrl+g x 9");
+    e.keys("ctrl+g x 9 enter");
     e.assert_screen_contains("Go to");
     assert_eq!(e.editor_text(), APP_TS);
-    e.keys("down enter");
+    e.keys("ctrl+d");
     assert_eq!(cursor(&e), ("src/editor/view.ts".to_string(), (0, 16)));
+}
+
+#[test]
+fn ctrl_arrows_repeat_back_and_forward_right_after_the_go_to_menu() {
+    let mut e = project();
+    e.click(5, 5).keys("ctrl+g d ctrl+g l").type_text("3\n");
+    assert_eq!(cursor(&e), ("src/editor/view.ts".to_string(), (2, 0)));
+    e.keys("ctrl+g left");
+    assert_eq!(cursor(&e), ("src/editor/view.ts".to_string(), (0, 16)));
+    e.assert_screen_contains("ctrl+←→ again");
+    e.keys("ctrl+left");
+    assert_eq!(cursor(&e).0, "src/app.ts");
+    e.keys("ctrl+right ctrl+right");
+    assert_eq!(cursor(&e), ("src/editor/view.ts".to_string(), (2, 0)));
+    e.keys("up end ctrl+left");
+    assert_eq!(cursor(&e), ("src/editor/view.ts".to_string(), (1, 10)));
+    e.assert_screen_lacks("again");
 }

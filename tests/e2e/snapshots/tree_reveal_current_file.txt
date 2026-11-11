@@ -1,11 +1,13 @@
 # tree_reveal_current_file
 # start: yate (project folder)
 # keys: end enter
-# keys: ctrl+t
+# keys: ctrl+t r
 # 70x14, cursor hidden
 ┌──────────────────────────────────────────────────────────────────────┐
 │ PROJECT                 1  # demo                                    │
-│ ▸ src                   2                                            │
+│ [ ] changed             2                                            │
+│ [ ] ignored                                                          │
+│ ▸ src                                                                │
 │   .gitignore                                                         │
 │   README.md                                                          │
 │                                                                      │
@@ -15,7 +17,5 @@
 │                                                                      │
 │                                                                      │
 │                                                                      │
-│                                                                      │
-│                                                                      │
-│ TREE  main  README.md     ctrl+h keys   markdown  utf-8  LF  0%  1:1 │
+│ TREE  main  README.md                   markdown  utf-8  LF  0%  1:1 │
 └──────────────────────────────────────────────────────────────────────┘

@@ -6,7 +6,7 @@ use super::theme::Theme;
 use crate::app::{App, Focus};
 use crate::text;
 use crate::workspace::git::FileStatus;
-use crate::workspace::tree::{FileTree, INDENT, Row};
+use crate::workspace::tree::{FileTree, INDENT, Row, TreeFilter};
 use unicode_segmentation::UnicodeSegmentation;
 
 const MIN_WIDTH: u16 = 12;
@@ -44,12 +44,60 @@ pub fn status_color(t: &Theme, status: FileStatus) -> Rgb {
     }
 }
 
-pub fn render(app: &mut App, surface: &mut Surface, area: Rect) {
+/// Where the filter checkboxes are drawn below the title, for drawing and
+/// for mouse clicks: on one row when they fit, else one below the other.
+pub fn filter_controls(area: Rect) -> Vec<(TreeFilter, Rect)> {
+    let left = area.x + 1;
+    let (mut x, mut y) = (left, area.y + 1);
+    let mut controls = Vec::new();
+    for filter in TreeFilter::ALL {
+        let width = text::str_width(filter.label()) as u16 + 4;
+        if x > left && x + width > area.right() {
+            (x, y) = (left, y + 1);
+        }
+        let shown = width.min(area.right().saturating_sub(x));
+        controls.push((filter, Rect::new(x, y, shown, 1)));
+        x += width + 1;
+    }
+    controls
+}
+
+/// The rows of the tree, below the title and the filter checkboxes.
+pub fn list_area(area: Rect) -> Rect {
+    let controls = filter_controls(area);
+    let below = controls.iter().map(|(_, rect)| rect.bottom()).max();
+    let header = below.unwrap_or(area.y + 1).saturating_sub(area.y);
+    area.split_top(header).1
+}
+
+pub fn render(app: &mut App, surface: &mut Surface, area: Rect) -> Option<(u16, u16)> {
     let t = app.theme.clone();
     let base = Style::new().fg(t.fg_dark).bg(t.bg_dark);
     surface.fill(area, base);
-    let (header, list) = area.split_top(1);
-    render_tree(app, surface, header, list);
+    let (header, _) = area.split_top(1);
+    let cursor = render_filters(app, surface, area);
+    render_tree(app, surface, header, list_area(area));
+    cursor
+}
+
+fn render_filters(app: &App, surface: &mut Surface, area: Rect) -> Option<(u16, u16)> {
+    let t = &app.theme;
+    let focused = (app.focus == Focus::Tree)
+        .then_some(app.tree.filter_focus)
+        .flatten();
+    let mut cursor = None;
+    for (filter, rect) in filter_controls(area) {
+        let ticked = app.tree.filter_on(filter);
+        let has_focus = focused == Some(filter);
+        let style = super::checkbox_style(t, ticked, has_focus);
+        let mark = if ticked { "x" } else { " " };
+        let checkbox = format!("[{mark}] {}", filter.label());
+        surface.put_str(rect.x, rect.y, &checkbox, style, rect.right());
+        if has_focus {
+            cursor = Some((rect.x + 1, rect.y));
+        }
+    }
+    cursor
 }
 
 fn render_tree(app: &mut App, surface: &mut Surface, header: Rect, list: Rect) {
@@ -75,22 +123,11 @@ fn render_tree(app: &mut App, surface: &mut Surface, header: Rect, list: Rect) {
         title_style,
         header.right(),
     );
-    let mut flags = Vec::new();
-    if app.tree.changed_only {
-        flags.push("changed");
-    }
-    if app.tree.show_ignored {
-        flags.push("+ignored");
-    }
     if app.tree.locked {
-        flags.push("locked");
-    }
-    if !flags.is_empty() {
-        let text = format!(" {}", flags.join(" "));
         surface.put_str(
             x,
             header.y,
-            &text,
+            " locked",
             Style::new().fg(t.magenta).bg(t.bg_dark),
             header.right(),
         );
@@ -117,7 +154,7 @@ fn render_tree(app: &mut App, surface: &mut Surface, header: Rect, list: Rect) {
     {
         let y = list.y + (i - tree.scroll) as u16;
         let selected = i == tree.selected;
-        let bg = if selected && focused {
+        let bg = if selected && focused && tree.filter_focus.is_none() {
             t.bg_highlight
         } else if selected {
             t.bg

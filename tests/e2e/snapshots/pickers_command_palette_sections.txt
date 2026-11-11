@@ -1,6 +1,6 @@
 # pickers_command_palette_sections
 # start: yate README.md
-# keys: alt+p
+# keys: ctrl+h
 # 80x62, cursor at column 7, row 7
 ┌────────────────────────────────────────────────────────────────────────────────┐
 │  1  Call render() to draw.                                                     │
@@ -9,7 +9,7 @@
 │                                                                                │
 │                                                                                │
 │                                                                                │
-│   ╭─ Commands (editor) ──────────────────────────────────────────── 43/43 ─╮   │
+│   ╭─ Commands (editor) ──────────────────────────────────────────── 66/66 ─╮   │
 │   │ ❯                                                                      │   │
 │   │────────────────────────────────────────────────────────────────────────│   │
 │   │▌ File       Save                                                ctrl+s │   │
@@ -26,37 +26,37 @@
 │   │             Select all                                          ctrl+a │   │
 │   │             Select word / next occurrence                       ctrl+d │   │
 │   │             Toggle line comment                                 ctrl+/ │   │
-│   │             Move line up                                        alt+up │   │
-│   │             Move line down                                    alt+down │   │
-│   │             Duplicate line                              alt+shift+down │   │
-│   │             Delete line                                         ctrl+k │   │
-│   │             Indent lines                                         alt+i │   │
-│   │             Outdent lines                                        alt+o │   │
+│   │             Move line up                                      ctrl+l ↑ │   │
+│   │             Move line down                                    ctrl+l ↓ │   │
+│   │             Duplicate line                                    ctrl+l d │   │
+│   │             Delete line                                       ctrl+l k │   │
+│   │             Indent lines                                      ctrl+l → │   │
+│   │             Outdent lines                                     ctrl+l ← │   │
 │   │  Search     Find in file                                        ctrl+f │   │
-│   │             Replace in file                                     ctrl+r │   │
+│   │             Replace in file                                            │   │
 │   │             Find file                                           ctrl+p │   │
-│   │             Live grep                                            alt+f │   │
+│   │             Live grep                                           ctrl+r │   │
 │   │             Live grep in files matching a glob                         │   │
-│   │  Go to      Line…                                                      │   │
-│   │             Definition or file under the cursor                        │   │
-│   │  Bookmarks  Toggle on this line                                        │   │
-│   │  View       Split vertically (side by side)                            │   │
-│   │             Split horizontally (one above the other)                   │   │
+│   │  Go to      Line…                                             ctrl+g l │   │
+│   │             Definition or file under the cursor               ctrl+g d │   │
+│   │  Bookmarks  Toggle on this line                               ctrl+k t │   │
+│   │  View       Split vertically (side by side)                   ctrl+w v │   │
+│   │             Split horizontally (one above the other)          ctrl+w s │   │
 │   │             Toggle line numbers                                        │   │
 │   │             Toggle indent guides                                       │   │
 │   │             Set language of the file…                                  │   │
-│   │  File tree  Toggle                                               alt+e │   │
-│   │             Reveal current file                                 ctrl+t │   │
+│   │  File tree  Toggle                                            ctrl+t t │   │
+│   │             Focus                                             ctrl+t f │   │
+│   │             Reveal current file                               ctrl+t r │   │
 │   │  Plugins    Git: Blame current line                                    │   │
 │   │             Format document with Prettier                              │   │
 │   │             TypeScript: Add // @ts-nocheck                             │   │
-│   │  yate       Key bindings                                        ctrl+h │   │
-│   │             Open yate.json (the closest one, or a new ~/yate.jsonc)    │   │
+│   │  yate       Open yate.json (the closest one, or a new ~/yate.jsonc)    │   │
 │   │             Reload yate.json and plugins                               │   │
 │   │             Open the log                                               │   │
 │   │             Quit                                                ctrl+q │   │
-│   │                                                                        │   │
-│   │                                                                        │   │
+│   │  Keys       Switch: focus the file tree                       ctrl+o 1 │   │
+│   │             Switch: show recent file 1-8                    ctrl+o 2-9 │   │
 │   ╰────────────────────────────────────────────────────────────────────────╯   │
 │                                                                                │
 │                                                                                │

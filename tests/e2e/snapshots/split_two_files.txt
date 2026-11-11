@@ -1,6 +1,6 @@
 # split_two_files
 # start: yate one.txt
-# keys: alt+s 1
+# keys: ctrl+w v
 # keys: ctrl+p
 # type: "two.txt"
 # keys: enter
@@ -15,5 +15,5 @@
 │  6  one 6                        │  6  two 6                         │
 │  7  one 7                        │  7  two 7                         │
 │  8  one 8                        │  8  two 8                         │
-│ EDIT  two.txt                 ctrl+h keys   text  utf-8  LF  0%  1:1 │
+│ EDIT  two.txt             ctrl+h commands   text  utf-8  LF  0%  1:1 │
 └──────────────────────────────────────────────────────────────────────┘

@@ -19,7 +19,7 @@ fn a_plugin_switched_on_in_yate_json_registers_a_command_with_a_key() {
         .start();
     e.keys("ctrl+d alt+s");
     assert_eq!(e.editor_text(), "HELLO! world\n");
-    e.keys("alt+p").type_text("shout");
+    e.keys("ctrl+h").type_text("shout");
     e.snapshot("plugins_command_in_palette");
 }
 

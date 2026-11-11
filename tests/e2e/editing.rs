@@ -60,8 +60,24 @@ fn cut_line_without_selection_and_paste_it_above() {
         e.editor_text()
             .starts_with("  bg: \"#24283b\",\nconst colors = {\n};")
     );
-    e.keys("up alt+up");
+    e.keys("up ctrl+l up");
     assert!(e.editor_text().starts_with("const colors = {\n  bg:"));
+    e.keys("ctrl+down");
+    assert!(
+        e.editor_text()
+            .starts_with("  bg: \"#24283b\",\nconst colors")
+    );
+    e.keys("ctrl+right ctrl+left ctrl+right");
+    e.keys("ctrl+l ctrl+d");
+    assert!(
+        e.editor_text()
+            .starts_with("  bg: \"#24283b\",\n  const colors = {\n  const colors = {\n")
+    );
+    e.keys("ctrl+l k");
+    assert!(
+        e.editor_text()
+            .starts_with("  bg: \"#24283b\",\n  const colors = {\n};")
+    );
 }
 
 #[test]
@@ -79,9 +95,13 @@ fn quitting_with_unsaved_changes_asks_first() {
     let mut e = app_js();
     e.type_text("x").keys("ctrl+q");
     e.snapshot("editing_quit_prompt");
-    e.keys("n");
+    e.keys("enter");
     assert!(!e.app().quit);
-    e.keys("ctrl+q y");
+    e.keys("ctrl+q n");
+    assert!(!e.app().quit);
+    e.keys("ctrl+q left");
+    e.snapshot_styles("editing_quit_prompt_yes");
+    e.keys("enter");
     assert!(e.app().quit);
 }
 
@@ -196,12 +216,12 @@ fn opening_another_file_with_unsaved_changes_asks_to_save_or_discard() {
     assert_eq!(e.app().doc().name(), "a.js");
     assert_eq!(e.editor_text(), "xlet a = 1;\n");
 
-    e.keys("ctrl+p").type_text("b.js").keys("enter s");
+    e.keys("ctrl+p").type_text("b.js").keys("enter enter");
     assert_eq!(e.app().doc().name(), "b.js");
     assert_eq!(e.read_file("a.js"), "xlet a = 1;\n");
 
     e.type_text("y");
-    e.keys("alt+left d");
+    e.keys("ctrl+g left right enter");
     assert_eq!(e.app().doc().name(), "a.js");
     assert_eq!(e.read_file("b.js"), "let b = 2;\n");
     assert_eq!(e.app().docs.len(), 1);

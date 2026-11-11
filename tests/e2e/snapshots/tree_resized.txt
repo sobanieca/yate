@@ -5,15 +5,15 @@
 # drag: 18,3 -> 33,3
 # 70x14, cursor hidden
 ┌──────────────────────────────────────────────────────────────────────┐
-│ PROJECT                                        Y A T E               │
+│ PROJECT                                                              │
+│ [ ] changed [ ] ignored                        Y A T E               │
 │ ▸ src                                  yet another text editor       │
 │   .gitignore                                                         │
 │   README.md                        find file                 ctrl+p  │
-│                                    live grep                  alt+f  │
-│                                    file tree                  alt+e  │
-│                                    switch: tree, files        alt+w  │
-│                                    command palette            alt+p  │
-│                                    all key bindings          ctrl+h  │
+│                                    live grep                 ctrl+r  │
+│                                    file tree                 ctrl+t  │
+│                                    switch: tree, files       ctrl+o  │
+│                                    commands and keys         ctrl+h  │
 │                                    quit                      ctrl+q  │
 │                                                                      │
 │                                                                      │

@@ -199,35 +199,24 @@ pub struct Keymap {
     bindings: HashMap<(Context, String), String>,
 }
 
-/// The default bindings: one key for each command, and no Ctrl+Shift keys,
-/// which terminals send only with the kitty keyboard protocol and never
-/// through tmux.
+/// The default bindings: Ctrl keys only, and none that a terminal cannot
+/// send (Ctrl+I is Tab, Ctrl+M is Enter), that tmux takes (Ctrl+B) or that
+/// needs Ctrl+Shift. A command has one key at most; the commands of a menu
+/// (`app::MENUS`) are reached through the key of the menu.
 pub const DEFAULTS: &[(Context, &str, &str)] = &[
     (Context::Global, "ctrl+q", "app.quit"),
-    (Context::Global, "ctrl+h", "help.keys"),
+    (Context::Global, "ctrl+h", "picker.commands"),
     (Context::Global, "ctrl+s", "file.save"),
     (Context::Global, "ctrl+n", "file.new"),
     (Context::Global, "ctrl+p", "picker.files"),
-    (Context::Global, "alt+f", "picker.grep"),
-    (Context::Global, "alt+p", "picker.commands"),
-    (Context::Global, "alt+r", "picker.resume"),
-    (Context::Global, "alt+w", "switch.next"),
-    (Context::Global, "alt+shift+w", "switch.previous"),
-    (Context::Global, "alt+e", "tree.toggle"),
-    (Context::Global, "ctrl+t", "tree.reveal"),
-    (Context::Global, "alt+s", "view.splitMenu"),
-    (Context::Global, "ctrl+o", "view.focusNextPane"),
-    (Context::Global, "alt+h", "view.focusPaneLeft"),
-    (Context::Global, "alt+j", "view.focusPaneBelow"),
-    (Context::Global, "alt+k", "view.focusPaneAbove"),
-    (Context::Global, "alt+l", "view.focusPaneRight"),
-    (Context::Global, "ctrl+j", "view.toggleScrollSync"),
-    (Context::Global, "alt+left", "jump.back"),
-    (Context::Global, "alt+right", "jump.forward"),
-    (Context::Global, "ctrl+g", "goto.menu"),
+    (Context::Global, "ctrl+r", "picker.grep"),
     (Context::Global, "ctrl+f", "find.open"),
-    (Context::Global, "ctrl+r", "find.replace"),
-    (Context::Global, "alt+m", "bookmark.menu"),
+    (Context::Global, "ctrl+o", "switch.next"),
+    (Context::Global, "ctrl+g", "goto.menu"),
+    (Context::Global, "ctrl+k", "bookmark.menu"),
+    (Context::Global, "ctrl+w", "view.paneMenu"),
+    (Context::Global, "ctrl+t", "tree.menu"),
+    (Context::Editor, "ctrl+l", "edit.lineMenu"),
     (Context::Editor, "ctrl+z", "edit.undo"),
     (Context::Editor, "ctrl+y", "edit.redo"),
     (Context::Editor, "ctrl+c", "edit.copy"),
@@ -236,17 +225,9 @@ pub const DEFAULTS: &[(Context, &str, &str)] = &[
     (Context::Editor, "ctrl+a", "edit.selectAll"),
     (Context::Editor, "ctrl+d", "edit.selectNext"),
     (Context::Editor, "ctrl+/", "edit.toggleComment"),
-    (Context::Editor, "alt+up", "edit.moveLineUp"),
-    (Context::Editor, "alt+down", "edit.moveLineDown"),
-    (Context::Editor, "alt+shift+down", "edit.duplicateLine"),
-    (Context::Editor, "ctrl+k", "edit.deleteLine"),
-    (Context::Editor, "alt+i", "edit.indent"),
-    (Context::Editor, "alt+o", "edit.outdent"),
     (Context::Tree, "r", "file.rename"),
     (Context::Tree, "d", "file.delete"),
     (Context::Tree, "y", "file.copyPath"),
-    (Context::Tree, "i", "tree.toggleIgnored"),
-    (Context::Tree, "m", "tree.toggleChanged"),
     (Context::Tree, "shift+r", "tree.refresh"),
     (Context::Tree, "f", "picker.filesInFolder"),
     (Context::Tree, "g", "picker.grepInFolder"),
@@ -283,7 +264,7 @@ impl Keymap {
 
     /// Keys bound to `command`, for the command palette: one by default,
     /// more when `yate.json` adds some. Plain Ctrl keys come first, then
-    /// Alt keys, which work everywhere, then the rest.
+    /// Alt keys, then the rest.
     pub fn keys_for(&self, command: &str) -> Vec<String> {
         self.keys_where(command, |_| true)
     }
@@ -378,9 +359,10 @@ mod tests {
     #[test]
     fn hints_name_the_key_of_a_command() {
         let keymap = Keymap::defaults();
-        assert_eq!(keymap.hint("switch.next").as_deref(), Some("alt+w"));
-        assert_eq!(keymap.hint("tree.toggle").as_deref(), Some("alt+e"));
-        assert_eq!(keymap.hint("picker.commands").as_deref(), Some("alt+p"));
+        assert_eq!(keymap.hint("switch.next").as_deref(), Some("ctrl+o"));
+        assert_eq!(keymap.hint("tree.menu").as_deref(), Some("ctrl+t"));
+        assert_eq!(keymap.hint("picker.commands").as_deref(), Some("ctrl+h"));
+        assert_eq!(keymap.hint("tree.toggle"), None);
         assert_eq!(keymap.hint("file.rename").as_deref(), Some("r"));
         assert_eq!(keymap.keys_in(Context::Tree, "file.rename"), ["r"]);
         assert!(keymap.keys_in(Context::Editor, "file.rename").is_empty());
@@ -388,11 +370,19 @@ mod tests {
     }
 
     #[test]
-    fn every_command_has_one_default_key_and_none_needs_ctrl_shift() {
+    fn default_keys_are_ctrl_keys_every_terminal_sends() {
         let mut bound = std::collections::HashSet::new();
-        for (_, key, command) in DEFAULTS {
-            assert!(!key.contains("ctrl+shift+"), "{key} needs Ctrl+Shift");
+        for (context, key, command) in DEFAULTS {
             assert!(bound.insert(*command), "{command} has more than one key");
+            assert!(!key.contains("alt+"), "{key} needs Alt");
+            assert!(!key.contains("ctrl+shift+"), "{key} needs Ctrl+Shift");
+            assert!(
+                !["ctrl+i", "ctrl+m", "ctrl+[", "ctrl+b"].contains(key),
+                "{key} is Tab, Enter, Esc or the tmux prefix"
+            );
+            if *context != Context::Tree {
+                assert!(key.starts_with("ctrl+"), "{key} is not a Ctrl key");
+            }
         }
     }
 

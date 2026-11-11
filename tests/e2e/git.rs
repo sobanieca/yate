@@ -17,6 +17,6 @@ fn repo() -> Harness {
 fn gutter_signs_follow_unsaved_edits() {
     let mut e = repo();
     e.keys("down end").type_text("\nlet greeting = 1;");
-    e.keys("down down ctrl+k");
+    e.keys("down down ctrl+l k");
     e.snapshot("git_gutter_signs");
 }

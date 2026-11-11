@@ -80,7 +80,7 @@ A snapshot is the screen in a box, with the steps that led to it:
 ```
 # find_replace_bar
 # start: yate cart.js
-# keys: ctrl+r
+# keys: ctrl+f ctrl+r
 # type: "total"
 # keys: tab
 # type: "sum"

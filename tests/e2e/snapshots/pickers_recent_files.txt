@@ -3,7 +3,7 @@
 # keys: ctrl+p
 # type: "app.ts"
 # keys: enter
-# keys: down alt+m 1
+# keys: down ctrl+k t
 # keys: ctrl+p
 # type: "model"
 # keys: enter
@@ -13,7 +13,7 @@
 │  1  export const lines = [];                                                   │
 │  2                                                                             │
 │   ╭─ Find file ────────────────────────────────────────────────────── 5/5 ─╮   │
-│   │ ❯                                                glob ctrl+f to filter │   │
+│   │ ❯                                                glob tab to filter    │   │
 │   │────────────────────────────────────────────────────────────────────────│   │
 │   │▌ src/app.ts                                                            │   │
 │   │  README.md                                                             │   │
@@ -23,7 +23,7 @@
 │   │                                                                        │   │
 │   │                                                                        │   │
 │   │                                                                        │   │
-│   ╰─ ctrl+f glob filter, e.g. *.ts, !*.test.ts ────────────────────────────╯   │
+│   ╰─ tab glob filter, e.g. *.ts, !*.test.ts ───────────────────────────────╯   │
 │                                                                                │
 │ PICK  Bookmarked line 2                         typescript  utf-8  LF  0%  1:1 │
 └────────────────────────────────────────────────────────────────────────────────┘

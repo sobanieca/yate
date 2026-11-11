@@ -9,7 +9,10 @@ pub mod sidebar;
 pub mod surface;
 pub mod theme;
 
-use crate::app::{App, Focus, Layout, MenuSpec, Overlay, PaneArea};
+use crate::app::{
+    App, FindField, FindState, Focus, Layout, MenuItem, MenuSpec, Overlay, PaneArea, Prompt,
+    menu_key_label,
+};
 use crate::text;
 use surface::{Rect, Style, Surface};
 
@@ -23,7 +26,7 @@ pub fn layout(app: &App, width: u16, height: u16) -> Layout {
         (None, main)
     };
     let (editor_area, find) = if app.find_open {
-        let (editor_area, find) = rest.split_bottom(1);
+        let (editor_area, find) = rest.split_bottom(app.find.rows().len() as u16);
         (editor_area, Some(find))
     } else {
         (rest, None)
@@ -49,9 +52,9 @@ pub fn render(app: &mut App, surface: &mut Surface) -> Option<(u16, u16)> {
     let layout = app.layout.clone();
     let background = t.background(app.terminal_focused);
     surface.fill(surface.area(), Style::new().fg(t.fg).bg(background));
-    if let Some(area) = layout.sidebar {
-        sidebar::render(app, surface, area);
-    }
+    let tree_cursor = layout
+        .sidebar
+        .and_then(|area| sidebar::render(app, surface, area));
     for pane in &layout.panes {
         render_pane_title(app, surface, pane);
         if pane.id != app.panes.focused {
@@ -62,6 +65,9 @@ pub fn render(app: &mut App, surface: &mut Surface) -> Option<(u16, u16)> {
     let mut cursor = editor_view::render(app, surface, layout.editor);
     if app.focus != Focus::Editor {
         cursor = None;
+    }
+    if app.focus == Focus::Tree {
+        cursor = tree_cursor;
     }
     if let Some(area) = layout.find {
         let find_cursor = render_find(app, surface, area);
@@ -75,25 +81,14 @@ pub fn render(app: &mut App, surface: &mut Surface) -> Option<(u16, u16)> {
     }
     match &app.overlay {
         Some(Overlay::Picker(_)) => picker_view::render(app, surface),
-        Some(Overlay::Prompt(prompt)) => render_prompt(prompt, surface, &app.theme),
-        Some(Overlay::Menu(menu)) => {
-            let rows: Vec<String> = menu
-                .spec
-                .items
-                .iter()
-                .map(|(label, _)| label.to_string())
-                .collect();
-            let area = menu_area(menu.spec, &layout);
-            render_numbered_popup(
-                surface,
-                &app.theme,
-                area,
-                menu.spec.title,
-                &rows,
-                menu.selected,
-            );
+        Some(Overlay::Prompt(prompt)) => render_prompt(prompt, surface, &app.theme, &layout),
+        Some(Overlay::Menu(menu)) if app.menu_visible() => {
+            let rows = menu_rows(menu.spec);
+            let area = key_popup_area(&layout, &rows);
+            render_key_popup(surface, &app.theme, area, menu.spec.title, &rows, None);
             None
         }
+        Some(Overlay::Menu(_)) => cursor,
         None => cursor,
     }
 }
@@ -308,9 +303,10 @@ fn status_hints(app: &App) -> Vec<String> {
     let hint = |command: &str, what: &str| key(command).map(|k| format!("{k} {what}"));
     let mut hints: Vec<Option<String>> = Vec::new();
     if let Some(Overlay::Menu(menu)) = &app.overlay {
+        let keys: Vec<String> = menu_rows(menu.spec).into_iter().map(|row| row.0).collect();
         return vec![
             "esc cancel".to_string(),
-            format!("1-{} choose", menu.spec.items.len()),
+            format!("{}: {}", menu.spec.title, keys.join(" ")),
         ];
     }
     if app.overlay.is_some() {
@@ -328,8 +324,7 @@ fn status_hints(app: &App) -> Vec<String> {
                 hints.push(hint("view.toggleScrollSync", "sync scroll"));
                 hints.push(hint("view.focusNextPane", "next pane"));
             }
-            hints.push(hint("view.splitMenu", "split"));
-            hints.push(hint("picker.commands", "commands"));
+            hints.push(hint("view.paneMenu", "panes"));
             hints.push(hint("picker.files", "files"));
             hints.push(hint("switch.next", "switch"));
         }
@@ -343,7 +338,15 @@ fn status_hints(app: &App) -> Vec<String> {
         }
         Focus::Find => {}
     }
-    hints.push(hint("help.keys", "keys"));
+    hints.push(hint("picker.commands", "commands"));
+    if let Some(spec) = app.repeating_menu() {
+        let repeating = spec.items.iter().filter(|item| item.repeats);
+        let keys: String = repeating
+            .filter_map(|item| item.keys.first())
+            .map(|key| menu_key_label(key))
+            .collect();
+        hints.push(Some(format!("ctrl+{keys} again")));
+    }
     hints.into_iter().flatten().collect()
 }
 
@@ -357,29 +360,45 @@ fn fit_hint(hints: &[String], width: usize) -> String {
     String::new()
 }
 
-/// The numbered targets of Alt+W, after `keyHintDelay`.
+/// The numbered targets of Ctrl+O, after `keyHintDelay`.
 fn render_switcher(app: &App, surface: &mut Surface, layout: &Layout) {
-    let targets = app.switch_targets();
-    let current = app.switch_target_focused().unwrap_or(usize::MAX);
-    let area = numbered_popup_area(layout, &targets);
-    render_numbered_popup(surface, &app.theme, area, "Switch to", &targets, current);
+    let targets = app.switch_targets().into_iter().enumerate();
+    let rows: Vec<(String, String)> = targets
+        .map(|(i, target)| ((i + 1).to_string(), target))
+        .collect();
+    let current = app.switch_target_focused();
+    let area = key_popup_area(layout, &rows);
+    render_key_popup(surface, &app.theme, area, "Switch to", &rows, current);
+}
+
+/// The rows of a menu: the keys of each item and its label.
+fn menu_rows(spec: &MenuSpec) -> Vec<(String, String)> {
+    let keys = |item: &MenuItem| {
+        let labels: Vec<&str> = item.keys.iter().map(|key| menu_key_label(key)).collect();
+        labels.join(" ")
+    };
+    let items = spec.items.iter();
+    items
+        .map(|item| (keys(item), item.label.to_string()))
+        .collect()
 }
 
 /// Where the popup of a menu is drawn, for drawing and for mouse clicks.
 pub fn menu_area(spec: &MenuSpec, layout: &Layout) -> Rect {
-    let rows: Vec<String> = spec
-        .items
-        .iter()
-        .map(|(label, _)| label.to_string())
-        .collect();
-    numbered_popup_area(layout, &rows)
+    key_popup_area(layout, &menu_rows(spec))
 }
 
-fn numbered_popup_area(layout: &Layout, rows: &[String]) -> Rect {
+fn key_column_width(rows: &[(String, String)]) -> usize {
+    let widths = rows.iter().map(|(keys, _)| text::str_width(keys));
+    widths.max().unwrap_or(1)
+}
+
+fn key_popup_area(layout: &Layout, rows: &[(String, String)]) -> Rect {
     let screen = Rect::new(0, 0, layout.status.w, layout.status.y + 1);
+    let keys = key_column_width(rows);
     let width = rows
         .iter()
-        .map(|row| text::str_width(row) + 8)
+        .map(|(_, label)| text::str_width(label) + keys + 7)
         .max()
         .unwrap_or(20)
         .max(24)
@@ -393,148 +412,219 @@ fn numbered_popup_area(layout: &Layout, rows: &[String]) -> Rect {
     )
 }
 
-/// A bordered popup of rows chosen with the digits from 1.
-fn render_numbered_popup(
+/// A bordered popup of rows chosen with the key in front of each.
+fn render_key_popup(
     surface: &mut Surface,
     t: &theme::Theme,
     area: Rect,
     title: &str,
-    rows: &[String],
-    current: usize,
+    rows: &[(String, String)],
+    current: Option<usize>,
 ) {
     surface.fill(area, Style::new().fg(t.fg).bg(t.bg_dark));
     surface.border(area, Style::new().fg(t.blue).bg(t.bg_dark), Some(title));
-    for (i, label) in rows.iter().enumerate() {
+    let keys = key_column_width(rows) as u16;
+    for (i, (key, label)) in rows.iter().enumerate() {
         let y = area.y + 1 + i as u16;
         if y + 1 >= area.bottom() {
             break;
         }
-        let bg = if i == current {
+        let bg = if current == Some(i) {
             t.bg_highlight
         } else {
             t.bg_dark
         };
         let row = Rect::new(area.x + 1, y, area.w.saturating_sub(2), 1);
         surface.fill(row, Style::new().bg(bg));
-        let x = surface.put_str(
-            row.x + 1,
-            y,
-            &(i + 1).to_string(),
-            Style::new().fg(t.orange).bg(bg).bold(),
-            row.right(),
-        );
-        surface.put_str(x + 2, y, label, Style::new().fg(t.fg).bg(bg), row.right());
+        let key_style = Style::new().fg(t.orange).bg(bg).bold();
+        surface.put_str(row.x + 1, y, key, key_style, row.right());
+        let label_x = row.x + 1 + keys + 2;
+        surface.put_str(label_x, y, label, Style::new().fg(t.fg).bg(bg), row.right());
     }
+}
+
+/// The style of a checkbox of a form: the find bar, the tree filters.
+pub fn checkbox_style(t: &theme::Theme, ticked: bool, focused: bool) -> Style {
+    match (ticked, focused) {
+        (true, true) => Style::new().fg(t.cyan).bg(t.bg_highlight).bold(),
+        (true, false) => Style::new().fg(t.cyan).bg(t.bg_dark).bold(),
+        (false, true) => Style::new().fg(t.fg).bg(t.bg_highlight),
+        (false, false) => Style::new().fg(t.dark5).bg(t.bg_dark),
+    }
+}
+
+const FIND_LABEL: &str = " FIND ";
+const FIND_COUNT_WIDTH: u16 = 12;
+const FIND_TEXT_WIDTH: u16 = 10;
+
+fn find_options_width(find: &FindState, gap: u16) -> u16 {
+    let rows = find.rows();
+    let options = rows[0].iter().filter(|field| !field.is_text());
+    let widths = options.map(|field| find_control_width(*field) + gap);
+    widths.sum::<u16>() + FIND_COUNT_WIDTH
+}
+
+/// The space between the controls of the find bar: less on a narrow screen.
+fn find_gap(find: &FindState, area: Rect) -> u16 {
+    let label = text::str_width(FIND_LABEL) as u16 + 1;
+    let roomy = label + FIND_TEXT_WIDTH + find_options_width(find, 2);
+    if area.w >= roomy { 2 } else { 1 }
+}
+
+fn find_control_width(field: FindField) -> u16 {
+    let label = text::str_width(field.label()) as u16;
+    match field {
+        FindField::Query | FindField::Replacement => 0,
+        FindField::Case | FindField::Regex | FindField::Replace => label + 4,
+        FindField::ReplaceOne | FindField::ReplaceAll => label + 2,
+    }
+}
+
+/// Where each control of the find bar is drawn, for drawing and for mouse
+/// clicks: a text field, then the checkboxes or buttons of its row.
+pub fn find_controls(find: &FindState, area: Rect) -> Vec<(FindField, Rect)> {
+    let rows = find.rows();
+    let gap = find_gap(find, area);
+    let label = text::str_width(FIND_LABEL) as u16 + 1;
+    let options = find_options_width(find, gap);
+    let widest = (area.w / 3).max(12);
+    let text_width = area.w.saturating_sub(label + options);
+    let text_width = text_width.clamp(FIND_TEXT_WIDTH, widest);
+    let mut controls = Vec::new();
+    for (i, row) in rows.iter().enumerate() {
+        let mut x = area.x + label;
+        for field in row {
+            let width = match field.is_text() {
+                true => text_width,
+                false => find_control_width(*field),
+            };
+            let shown = width.min(area.right().saturating_sub(x));
+            controls.push((*field, Rect::new(x, area.y + i as u16, shown, 1)));
+            x += width + gap;
+        }
+    }
+    controls
 }
 
 fn render_find(app: &App, surface: &mut Surface, area: Rect) -> Option<(u16, u16)> {
     let t = &app.theme;
     let find = &app.find;
+    let accent = focus_color(t, Focus::Find);
     surface.fill(area, Style::new().fg(t.fg).bg(t.bg_dark));
-    let label_style = Style::new()
-        .fg(t.bg_dark)
-        .bg(focus_color(t, Focus::Find))
-        .bold();
-    let mut x = surface.put_str(area.x, area.y, " FIND ", label_style, area.right());
-    x += 1;
-    let input_width = (area.w / 3).max(12);
-    let input_style = Style::new().fg(t.fg).bg(t.bg_highlight);
-    surface.fill(Rect::new(x, area.y, input_width, 1), input_style);
-    let query_style = match (find.error, find.input.selected) {
-        (true, _) => input_style.fg(t.red),
-        (false, true) => input_style.bg(t.bg_visual),
-        (false, false) => input_style,
-    };
-    surface.put_str(
-        x + 1,
-        area.y,
-        &find.input.text,
-        query_style,
-        x + input_width,
-    );
-    let mut cursor = Some((x + 1 + find.input.cursor_col() as u16, area.y));
-    x += input_width + 1;
-    let toggle = |on: bool| {
-        if on {
-            Style::new().fg(t.bg_dark).bg(t.cyan).bold()
-        } else {
-            Style::new().fg(t.dark5).bg(t.bg_dark)
+    let label_style = Style::new().fg(t.bg_dark).bg(accent).bold();
+    surface.put_str(area.x, area.y, FIND_LABEL, label_style, area.right());
+    let focused = (app.focus == Focus::Find).then_some(find.field);
+    let field_style = Style::new().fg(t.fg).bg(t.bg_highlight);
+    let mut cursor = None;
+    let mut count_x = area.x;
+    let gap = find_gap(find, area);
+    for (field, rect) in find_controls(find, area) {
+        let has_focus = focused == Some(field);
+        let (x, y) = (rect.x, rect.y);
+        match field {
+            FindField::Query | FindField::Replacement => {
+                let input = match field {
+                    FindField::Query => &find.input,
+                    _ => &find.replace,
+                };
+                surface.fill(rect, field_style);
+                let width = rect.w.saturating_sub(2) as usize;
+                let (shown, cursor_col) = input.visible(width);
+                let is_query = field == FindField::Query;
+                let style = match (is_query && find.error, input.selected) {
+                    (true, _) => field_style.fg(t.red),
+                    (false, true) => field_style.bg(t.bg_visual),
+                    (false, false) => field_style,
+                };
+                let right = rect.right().saturating_sub(1);
+                if input.text.is_empty() && !is_query {
+                    surface.put_str(x + 1, y, "replace with", field_style.fg(t.dark3), right);
+                }
+                surface.put_str(x + 1, y, &shown, style, right);
+                if has_focus {
+                    cursor = Some((x + 1 + cursor_col as u16, y));
+                }
+            }
+            FindField::Case | FindField::Regex | FindField::Replace => {
+                let ticked = match field {
+                    FindField::Case => find.case_sensitive,
+                    FindField::Regex => find.regex,
+                    _ => find.replace_open,
+                };
+                let mark = if ticked { "x" } else { " " };
+                let style = checkbox_style(t, ticked, has_focus);
+                let checkbox = format!("[{mark}] {}", field.label());
+                count_x = surface.put_str(x, y, &checkbox, style, area.right());
+                if has_focus {
+                    cursor = Some((x + 1, y));
+                }
+            }
+            FindField::ReplaceOne | FindField::ReplaceAll => {
+                let style = if has_focus {
+                    Style::new().fg(t.bg_dark).bg(accent).bold()
+                } else {
+                    field_style
+                };
+                let button = format!(" {} ", field.label());
+                surface.put_str(x, y, &button, style, area.right());
+                if has_focus {
+                    cursor = Some((x + 1, y));
+                }
+            }
         }
-    };
-    x = surface.put_str(x, area.y, " Aa ", toggle(find.case_sensitive), area.right());
-    x = surface.put_str(x, area.y, " .* ", toggle(find.regex), area.right());
+    }
     let count = match (find.current, find.matches.len()) {
-        (_, 0) if !find.input.text.is_empty() => " no matches".to_string(),
-        (Some(current), total) => format!(" {} of {total}", current + 1),
-        (None, total) if total > 0 => format!(" {total}"),
+        (_, 0) if !find.input.text.is_empty() => "no matches".to_string(),
+        (Some(current), total) => format!("{} of {total}", current + 1),
+        (None, total) if total > 0 => format!("{total}"),
         _ => String::new(),
     };
-    x = surface.put_str(
-        x,
-        area.y,
-        &count,
-        Style::new().fg(t.fg_dark).bg(t.bg_dark),
-        area.right(),
-    );
-    if find.replace_open {
-        x += 2;
-        x = surface.put_str(
-            x,
-            area.y,
-            "REPLACE ",
-            Style::new().fg(t.magenta).bg(t.bg_dark).bold(),
-            area.right(),
-        );
-        surface.fill(
-            Rect::new(
-                x,
-                area.y,
-                input_width.min(area.right().saturating_sub(x)),
-                1,
-            ),
-            input_style,
-        );
-        surface.put_str(
-            x + 1,
-            area.y,
-            &find.replace.text,
-            input_style,
-            x + input_width,
-        );
-        if find.replace_focused {
-            cursor = Some((x + 1 + find.replace.cursor_col() as u16, area.y));
-        }
-        x += input_width;
+    let count_style = Style::new().fg(t.fg_dark).bg(t.bg_dark);
+    let x = surface.put_str(count_x + gap, area.y, &count, count_style, area.right());
+    let hint = "↑↓ matches · tab fields";
+    let hint_x = area
+        .right()
+        .saturating_sub(text::str_width(hint) as u16 + 1);
+    if hint_x >= x + gap {
+        let hint_style = Style::new().fg(t.dark3).bg(t.bg_dark);
+        surface.put_str(hint_x, area.y, hint, hint_style, area.right());
     }
-    let hint = if find.replace_open {
-        "  enter replace · alt+a all · tab switch · alt+c case · alt+r regex"
-    } else {
-        "  enter/↓ next · ↑ prev · alt+c case · alt+r regex"
-    };
-    surface.put_str(
-        x,
-        area.y,
-        hint,
-        Style::new().fg(t.dark3).bg(t.bg_dark),
-        area.right(),
-    );
     cursor
 }
 
-fn render_prompt(
-    prompt: &crate::app::Prompt,
-    surface: &mut Surface,
-    t: &theme::Theme,
-) -> Option<(u16, u16)> {
-    let screen = surface.area();
+fn prompt_area(prompt: &Prompt, layout: &Layout) -> Rect {
+    let screen = Rect::new(0, 0, layout.status.w, layout.status.y + 1);
     let width = (text::str_width(&prompt.title) as u16 + 6)
         .clamp(50.min(screen.w), screen.w.saturating_sub(4).max(10));
-    let area = Rect::new(
+    Rect::new(
         screen.x + (screen.w.saturating_sub(width)) / 2,
         screen.h / 4,
         width,
         3,
-    );
+    )
+}
+
+/// Where the buttons of a confirmation are drawn, for drawing and for
+/// mouse clicks.
+pub fn prompt_buttons(prompt: &Prompt, layout: &Layout) -> Vec<Rect> {
+    let area = prompt_area(prompt, layout);
+    let mut x = area.x + 2;
+    let mut buttons = Vec::new();
+    for choice in prompt.choices() {
+        let width = text::str_width(choice.label) as u16 + 2;
+        buttons.push(Rect::new(x, area.y + 1, width, 1));
+        x += width + 1;
+    }
+    buttons
+}
+
+fn render_prompt(
+    prompt: &Prompt,
+    surface: &mut Surface,
+    t: &theme::Theme,
+    layout: &Layout,
+) -> Option<(u16, u16)> {
+    let area = prompt_area(prompt, layout);
     surface.fill(area, Style::new().fg(t.fg).bg(t.bg_dark));
     surface.border(
         area,
@@ -542,28 +632,24 @@ fn render_prompt(
         Some(&prompt.title),
     );
     if prompt.confirm {
-        let keys = if prompt.saves_or_discards() {
-            "s save · d discard · esc cancel"
-        } else {
-            "y / n"
-        };
-        surface.put_str(
-            area.x + 2,
-            area.y + 1,
-            keys,
-            Style::new().fg(t.dark5).bg(t.bg_dark),
-            area.right() - 1,
-        );
-        return None;
+        let buttons = prompt_buttons(prompt, layout);
+        let right = area.right() - 1;
+        for (i, (choice, button)) in prompt.choices().iter().zip(&buttons).enumerate() {
+            let style = if i == prompt.choice {
+                Style::new().fg(t.bg_dark).bg(t.blue).bold()
+            } else {
+                Style::new().fg(t.fg).bg(t.bg_highlight)
+            };
+            let label = format!(" {} ", choice.label);
+            surface.put_str(button.x, button.y, &label, style, right);
+            let letter: String = choice.label.chars().take(1).collect();
+            surface.put_str(button.x + 1, button.y, &letter, style.underline(), right);
+        }
+        let focused = buttons.get(prompt.choice)?;
+        return Some((focused.x + 1, focused.y));
     }
     let inner_width = area.w.saturating_sub(4) as usize;
-    let cursor = prompt.input.cursor_col();
-    let shown = if cursor >= inner_width {
-        let skip = cursor + 1 - inner_width;
-        prompt.input.text.chars().skip(skip).collect::<String>()
-    } else {
-        prompt.input.text.clone()
-    };
+    let (shown, cursor) = prompt.input.visible(inner_width);
     surface.put_str(
         area.x + 2,
         area.y + 1,
@@ -571,8 +657,5 @@ fn render_prompt(
         Style::new().fg(t.fg).bg(t.bg_dark),
         area.right() - 2,
     );
-    Some((
-        area.x + 2 + cursor.min(inner_width.saturating_sub(1)) as u16,
-        area.y + 1,
-    ))
+    Some((area.x + 2 + cursor as u16, area.y + 1))
 }

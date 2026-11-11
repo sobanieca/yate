@@ -2,7 +2,7 @@
 # start: yate src/main.rs
 # keys: down end
 # type: "\nlet greeting = 1;"
-# keys: down down ctrl+k
+# keys: down down ctrl+l k
 # 80x14, cursor at column 5, row 4
 ┌────────────────────────────────────────────────────────────────────────────────┐
 │  1  fn main() {                                                                │
@@ -18,5 +18,5 @@
 │                                                                                │
 │                                                                                │
 │                                                                                │
-│ EDIT  main  src/main.rs ●             ctrl+h keys   rust  utf-8  LF  100%  5:1 │
+│ EDIT  main  src/main.rs ●         ctrl+h commands   rust  utf-8  LF  100%  5:1 │
 └────────────────────────────────────────────────────────────────────────────────┘

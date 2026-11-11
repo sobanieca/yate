@@ -2,13 +2,13 @@
 # start: yate app.js
 # type: "x"
 # keys: ctrl+q
-# 60x12, cursor hidden
+# 60x12, cursor at column 14, row 4
 ┌────────────────────────────────────────────────────────────┐
 │  1  xconst colors = {                                      │
 │  2  ▏ bg: "#24283b",                                       │
 │  3  };                                                     │
-│  4  ╭─ Unsaved: app.js. Quit anyway? (y/n) ──────────╮     │
-│  5  │ y / n                                          │     │
+│  4  ╭─ Unsaved: app.js. Quit anyway? ────────────────╮     │
+│  5  │  Yes   No                                      │     │
 │  6  ╰────────────────────────────────────────────────╯     │
 │  7  }                                                      │
 │  8                                                         │

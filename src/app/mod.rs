@@ -8,6 +8,7 @@ mod input;
 mod panes;
 mod split;
 
+pub use commands::menu_key_label;
 pub use panes::{Direction, Pane, PaneArea, Panes, Side};
 pub use split::Switcher;
 
@@ -81,27 +82,133 @@ pub struct Prompt {
     pub title: String,
     pub input: LineInput,
     pub kind: PromptKind,
-    /// Answered with a key instead of text: y/n, or s/d for
-    /// `PromptKind::LeaveUnsaved`.
+    /// Answered with a button instead of text.
     pub confirm: bool,
+    /// The focused button of a confirmation.
+    pub choice: usize,
 }
 
+/// A button of a confirmation and the answer it gives.
+pub struct Choice {
+    pub label: &'static str,
+    pub answer: &'static str,
+}
+
+const SAVE_CHOICES: &[Choice] = &[
+    Choice {
+        label: "Save",
+        answer: "s",
+    },
+    Choice {
+        label: "Discard",
+        answer: "d",
+    },
+    Choice {
+        label: "Cancel",
+        answer: "n",
+    },
+];
+
+const YES_NO_CHOICES: &[Choice] = &[
+    Choice {
+        label: "Yes",
+        answer: "y",
+    },
+    Choice {
+        label: "No",
+        answer: "n",
+    },
+];
+
 impl Prompt {
-    pub fn saves_or_discards(&self) -> bool {
-        matches!(self.kind, PromptKind::LeaveUnsaved { .. })
+    /// A prompt answered by typing text.
+    pub fn text(title: impl Into<String>, input: LineInput, kind: PromptKind) -> Prompt {
+        Prompt {
+            title: title.into(),
+            input,
+            kind,
+            confirm: false,
+            choice: 0,
+        }
+    }
+
+    /// A prompt answered with a button: Save focused first, or No.
+    pub fn confirm(title: impl Into<String>, kind: PromptKind) -> Prompt {
+        let choice = match kind {
+            PromptKind::LeaveUnsaved { .. } => 0,
+            _ => 1,
+        };
+        Prompt {
+            title: title.into(),
+            input: LineInput::default(),
+            kind,
+            confirm: true,
+            choice,
+        }
+    }
+
+    pub fn choices(&self) -> &'static [Choice] {
+        match self.kind {
+            PromptKind::LeaveUnsaved { .. } => SAVE_CHOICES,
+            _ => YES_NO_CHOICES,
+        }
+    }
+
+    /// The answer of the button whose label starts with `letter`.
+    pub fn answer_for(&self, letter: char) -> Option<&'static str> {
+        let letter = letter.to_ascii_lowercase();
+        let starts = |choice: &&Choice| choice.label.to_ascii_lowercase().starts_with(letter);
+        self.choices()
+            .iter()
+            .find(starts)
+            .map(|choice| choice.answer)
+    }
+
+    pub fn focus_choice(&mut self, forward: bool) {
+        let count = self.choices().len();
+        let step = if forward { 1 } else { count - 1 };
+        self.choice = (self.choice + step) % count;
     }
 }
 
-/// A group of commands behind one key: a numbered popup.
+/// A command of a menu and the keys that choose it while the menu is open
+/// (`l`, `up`...), with or without Ctrl.
+pub struct MenuItem {
+    pub keys: &'static [&'static str],
+    pub label: &'static str,
+    pub command: &'static str,
+    /// Runs again on Ctrl and its key right after the menu closed.
+    pub repeats: bool,
+}
+
+/// A group of commands behind one key: a popup of keys and commands.
 pub struct MenuSpec {
     pub title: &'static str,
-    /// Label and command id, chosen with the digits from 1.
-    pub items: &'static [(&'static str, &'static str)],
+    /// The command that opens the menu.
+    pub command: &'static str,
+    /// The command of the menu that its own key runs: Ctrl+T Ctrl+T.
+    pub again: Option<&'static str>,
+    pub items: &'static [MenuItem],
+}
+
+impl MenuSpec {
+    /// The item `key` chooses: a key name, Ctrl ignored.
+    pub fn item_for(&self, key: &str) -> Option<&'static MenuItem> {
+        let key = key.strip_prefix("ctrl+").unwrap_or(key);
+        self.items.iter().find(|item| item.keys.contains(&key))
+    }
 }
 
 pub struct Menu {
     pub spec: &'static MenuSpec,
-    pub selected: usize,
+    pub opened: Instant,
+}
+
+/// The menu whose repeating commands run again on Ctrl and their key, for
+/// a moment after it closed.
+pub struct MenuRepeat {
+    pub spec: &'static MenuSpec,
+    pub at: Instant,
 }
 
 pub enum Overlay {
@@ -110,12 +217,43 @@ pub enum Overlay {
     Menu(Menu),
 }
 
+/// A control of the find bar: a text field, a checkbox or a button.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum FindField {
+    #[default]
+    Query,
+    Replacement,
+    Case,
+    Regex,
+    Replace,
+    ReplaceOne,
+    ReplaceAll,
+}
+
+impl FindField {
+    pub fn is_text(self) -> bool {
+        matches!(self, FindField::Query | FindField::Replacement)
+    }
+
+    pub fn label(self) -> &'static str {
+        match self {
+            FindField::Query | FindField::Replacement => "",
+            FindField::Case => "Aa",
+            FindField::Regex => ".*",
+            FindField::Replace => "replace",
+            FindField::ReplaceOne => "Replace",
+            FindField::ReplaceAll => "Replace all",
+        }
+    }
+}
+
 #[derive(Default)]
 pub struct FindState {
     pub input: LineInput,
     pub replace: LineInput,
     pub replace_open: bool,
-    pub replace_focused: bool,
+    /// The control of the bar that has the focus.
+    pub field: FindField,
     pub regex: bool,
     pub case_sensitive: bool,
     /// Char ranges of matches in the active document.
@@ -123,6 +261,70 @@ pub struct FindState {
     pub current: Option<usize>,
     pub key: Option<(usize, u64, String, bool, bool)>,
     pub error: bool,
+}
+
+impl FindState {
+    /// The controls on each row of the bar, left to right.
+    pub fn rows(&self) -> Vec<Vec<FindField>> {
+        use FindField::*;
+        let mut rows = vec![vec![Query, Case, Regex, Replace]];
+        if self.replace_open {
+            rows.push(vec![Replacement, ReplaceOne, ReplaceAll]);
+        }
+        rows
+    }
+
+    /// The order Tab follows: the text fields, then the rest.
+    fn tab_order(&self) -> Vec<FindField> {
+        let fields: Vec<FindField> = self.rows().concat();
+        let (text, rest): (Vec<_>, Vec<_>) = fields.into_iter().partition(|field| field.is_text());
+        [text, rest].concat()
+    }
+
+    pub fn focus_next(&mut self, forward: bool) {
+        let order = self.tab_order();
+        let at = order.iter().position(|field| *field == self.field);
+        let step = if forward { 1 } else { order.len() - 1 };
+        self.field = order[(at.unwrap_or(0) + step) % order.len()];
+    }
+
+    /// Moves the focus to the control left or right of the focused one.
+    /// Returns false at the end of the row.
+    pub fn focus_beside(&mut self, right: bool) -> bool {
+        let rows = self.rows();
+        let Some(row) = rows.iter().find(|row| row.contains(&self.field)) else {
+            return false;
+        };
+        let at = row.iter().position(|field| *field == self.field);
+        let beside = match (at, right) {
+            (Some(at), true) => row.get(at + 1),
+            (Some(at), false) => at.checked_sub(1).and_then(|at| row.get(at)),
+            (None, _) => None,
+        };
+        if let Some(field) = beside {
+            self.field = *field;
+        }
+        beside.is_some()
+    }
+
+    /// Shows or hides the replace row; showing it focuses its text field.
+    pub fn set_replace_open(&mut self, open: bool) {
+        self.replace_open = open;
+        let on_replace_row = !self.rows().concat().contains(&self.field);
+        if open {
+            self.field = FindField::Replacement;
+        } else if on_replace_row {
+            self.field = FindField::Replace;
+        }
+    }
+
+    pub fn focused_input(&mut self) -> Option<&mut LineInput> {
+        match self.field {
+            FindField::Query => Some(&mut self.input),
+            FindField::Replacement => Some(&mut self.replace),
+            _ => None,
+        }
+    }
 }
 
 pub struct Message {
@@ -188,6 +390,7 @@ pub struct App {
     pub find_open: bool,
     pub panes: Panes,
     pub switcher: Option<Switcher>,
+    pub menu_repeat: Option<MenuRepeat>,
     pub files: Vec<String>,
     pub git: GitStatus,
     head: Option<String>,
@@ -252,6 +455,7 @@ impl App {
             find_open: false,
             panes: Panes::default(),
             switcher: None,
+            menu_repeat: None,
             files: Vec::new(),
             git: GitStatus::default(),
             head: None,
@@ -501,15 +705,12 @@ impl App {
             Some(path) => self.relative(path),
             None => doc.name(),
         };
-        self.overlay = Some(Overlay::Prompt(Prompt {
-            title: format!("{name} has unsaved changes"),
-            input: LineInput::default(),
-            kind: PromptKind::LeaveUnsaved {
-                doc_id,
-                then: Box::new(then),
-            },
-            confirm: true,
-        }));
+        let kind = PromptKind::LeaveUnsaved {
+            doc_id,
+            then: Box::new(then),
+        };
+        let title = format!("{name} has unsaved changes");
+        self.overlay = Some(Overlay::Prompt(Prompt::confirm(title, kind)));
         false
     }
 
@@ -521,9 +722,14 @@ impl App {
             && path.starts_with(&self.root)
         {
             self.tree.reveal(&path, &self.git);
-            let height = self.layout.sidebar.map(|r| r.h as usize).unwrap_or(20);
-            self.tree.ensure_visible(height.saturating_sub(1));
+            self.tree.ensure_visible(self.tree_list_height());
         }
+    }
+
+    /// The rows of the file tree that fit below its title and filters.
+    pub fn tree_list_height(&self) -> usize {
+        let list = self.layout.sidebar.map(crate::ui::sidebar::list_area);
+        list.map_or(20, |list| list.h as usize)
     }
 
     /// Recomputes the layout for the current screen size, e.g. after the
@@ -785,6 +991,9 @@ impl App {
 
     /// Work done before each frame: syntax trees, git signs, find matches.
     fn prepare_frame(&mut self) {
+        if self.focus != Focus::Tree {
+            self.tree.filter_focus = None;
+        }
         for index in 0..self.docs.len() {
             self.refresh_doc(index);
         }
@@ -916,12 +1125,9 @@ impl App {
                 }
                 Action::RunCommand(id) => self.run_command(&id),
                 Action::Prompt { label, initial, id } => {
-                    self.overlay = Some(Overlay::Prompt(Prompt {
-                        title: label,
-                        input: LineInput::with_text(&initial),
-                        kind: PromptKind::Plugin(id),
-                        confirm: false,
-                    }));
+                    let input = LineInput::with_text(&initial);
+                    let prompt = Prompt::text(label, input, PromptKind::Plugin(id));
+                    self.overlay = Some(Overlay::Prompt(prompt));
                 }
             }
         }

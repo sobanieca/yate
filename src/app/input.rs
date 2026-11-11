@@ -2,25 +2,39 @@
 //! bindings, then the focused panel.
 
 use super::commands::{self, edit};
-use super::{App, Focus, Menu, Overlay, Prompt};
+use super::{App, FindField, Focus, Menu, MenuItem, MenuRepeat, MenuSpec, Overlay, Prompt};
 use crate::editor::history::EditKind;
 use crate::editor::ops;
 use crate::editor::selection::Selection;
 use crate::keymap;
+use crate::picker::{Picker, PickerKind};
 use crate::text;
+use crate::ui::input::LineInput;
+use crate::ui::surface::Rect;
+use crate::workspace::tree::TreeFilter;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseButton, MouseEvent, MouseEventKind};
 use std::time::{Duration, Instant};
 
 const DOUBLE_CLICK: Duration = Duration::from_millis(400);
+const MENU_REPEAT_WINDOW: Duration = Duration::from_millis(1500);
 
 impl App {
     pub fn handle_key(&mut self, key: KeyEvent) {
+        let repeat = self.menu_repeat.take();
         if self.overlay.is_some() {
             self.switcher = None;
             self.overlay_key(key);
             return;
         }
         let name = keymap::key_name(&key);
+        if let Some(repeat) = repeat
+            && repeat.at.elapsed() < MENU_REPEAT_WINDOW
+            && name.starts_with("ctrl+")
+            && let Some(item) = repeat.spec.item_for(&name).filter(|item| item.repeats)
+        {
+            self.run_menu_item(repeat.spec, item);
+            return;
+        }
         let context = self.context();
         if self.switcher.is_some() {
             let command = self.keymap.lookup(context, &name).map(str::to_string);
@@ -139,42 +153,53 @@ impl App {
     }
 
     fn find_key(&mut self, key: KeyEvent) {
-        let alt = key.modifiers.contains(KeyModifiers::ALT);
         let shift = key.modifiers.contains(KeyModifiers::SHIFT);
+        let ctrl = key.modifiers.contains(KeyModifiers::CONTROL);
+        let field = self.find.field;
+        let at_edge = |input: &LineInput, right: bool| {
+            let edge = if right { input.text.chars().count() } else { 0 };
+            !input.selected && input.cursor == edge
+        };
+        let leaves_field = match (key.code, self.find.focused_input()) {
+            (KeyCode::Left, Some(input)) => at_edge(input, false),
+            (KeyCode::Right, Some(input)) => at_edge(input, true),
+            (KeyCode::Left | KeyCode::Right, None) => true,
+            _ => false,
+        };
         match key.code {
             KeyCode::Esc => {
                 self.find_open = false;
                 self.focus = Focus::Editor;
                 return;
             }
-            KeyCode::Char('c') if alt => {
-                self.find.case_sensitive = !self.find.case_sensitive;
+            KeyCode::Tab => {
+                self.find.focus_next(true);
                 return;
             }
-            KeyCode::Char('r') if alt => {
-                self.find.regex = !self.find.regex;
+            KeyCode::BackTab => {
+                self.find.focus_next(false);
                 return;
             }
-            KeyCode::Char('a') if alt && self.find.replace_open => {
-                commands::replace_all(self);
+            KeyCode::Left | KeyCode::Right if leaves_field => {
+                self.find.focus_beside(key.code == KeyCode::Right);
                 return;
             }
-            KeyCode::Tab | KeyCode::BackTab if self.find.replace_open => {
-                self.find.replace_focused = !self.find.replace_focused;
-                return;
-            }
-            KeyCode::Char('v') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+            KeyCode::Char('v') if ctrl => {
                 let (text, _) = self.clipboard.paste();
                 let text = text.lines().next().unwrap_or("").to_string();
                 self.handle_paste(&text);
                 return;
             }
-            KeyCode::Enter if self.find.replace_focused => {
-                commands::replace_current(self);
+            KeyCode::Enter if field == FindField::Query => {
+                commands::find_step(self, !shift);
                 return;
             }
             KeyCode::Enter => {
-                commands::find_step(self, !shift);
+                self.find_activate(field);
+                return;
+            }
+            KeyCode::Char(' ') if !field.is_text() => {
+                self.find_activate(field);
                 return;
             }
             KeyCode::Down => {
@@ -187,31 +212,114 @@ impl App {
             }
             _ => {}
         }
-        let input = if self.find.replace_focused {
-            &mut self.find.replace
-        } else {
-            &mut self.find.input
+        if !field.is_text() && matches!(key.code, KeyCode::Char(_)) && !ctrl {
+            self.find.field = FindField::Query;
+        }
+        let field = self.find.field;
+        let Some(input) = self.find.focused_input() else {
+            return;
         };
-        if input.handle(key) == Some(true) && !self.find.replace_focused {
-            self.find.key = None;
-            commands::update_find_matches(self);
-            if let Some(index) = self.find.current {
-                let (start, end) = self.find.matches[index];
-                self.doc_mut().selection = Selection::new(start, end);
-                self.scroll_to_cursor();
+        if input.handle(key) == Some(true) && field == FindField::Query {
+            self.find_query_changed();
+        }
+    }
+
+    fn find_query_changed(&mut self) {
+        self.find.key = None;
+        commands::update_find_matches(self);
+        if let Some(index) = self.find.current {
+            let (start, end) = self.find.matches[index];
+            self.doc_mut().selection = Selection::new(start, end);
+            self.scroll_to_cursor();
+        }
+    }
+
+    /// Enter, Space or a click on a control of the find bar: ticks a
+    /// checkbox, presses a button.
+    fn find_activate(&mut self, field: FindField) {
+        match field {
+            FindField::Query => {}
+            FindField::Case => self.find.case_sensitive = !self.find.case_sensitive,
+            FindField::Regex => self.find.regex = !self.find.regex,
+            FindField::Replace => {
+                let open = !self.find.replace_open;
+                self.find.set_replace_open(open);
             }
+            FindField::Replacement | FindField::ReplaceOne => commands::replace_current(self),
+            FindField::ReplaceAll => commands::replace_all(self),
+        }
+    }
+
+    fn find_click(&mut self, x: u16, y: u16) {
+        self.focus = Focus::Find;
+        let Some(area) = self.layout.find else {
+            return;
+        };
+        let controls = crate::ui::find_controls(&self.find, area);
+        let clicked = controls.iter().find(|(_, rect)| rect.contains(x, y));
+        let Some((field, rect)) = clicked.copied() else {
+            return;
+        };
+        self.find.field = field;
+        match self.find.focused_input() {
+            Some(input) => {
+                let col = x.saturating_sub(rect.x + 1) as usize;
+                input.click(col, rect.w.saturating_sub(2) as usize);
+            }
+            None => self.find_activate(field),
+        }
+    }
+
+    /// The filter checkboxes of the tree, row by row as they are drawn.
+    fn tree_filter_rows(&self) -> Vec<Vec<TreeFilter>> {
+        let Some(sidebar) = self.layout.sidebar else {
+            return vec![TreeFilter::ALL.to_vec()];
+        };
+        let mut rows: Vec<(u16, Vec<TreeFilter>)> = Vec::new();
+        for (filter, rect) in crate::ui::sidebar::filter_controls(sidebar) {
+            match rows.last_mut() {
+                Some((y, row)) if *y == rect.y => row.push(filter),
+                _ => rows.push((rect.y, vec![filter])),
+            }
+        }
+        rows.into_iter().map(|(_, row)| row).collect()
+    }
+
+    /// A key while a filter checkbox of the tree has the focus: the arrows
+    /// move between the checkboxes, Down from the last row goes to the files.
+    fn tree_filter_key(&mut self, filter: TreeFilter, key: KeyEvent) {
+        let rows = self.tree_filter_rows();
+        let row = rows.iter().position(|row| row.contains(&filter));
+        let row = row.unwrap_or(0);
+        let all = TreeFilter::ALL;
+        let at = all.iter().position(|f| *f == filter).unwrap_or(0);
+        let first_of = |row: Option<&Vec<TreeFilter>>| row.and_then(|row| row.first().copied());
+        match key.code {
+            KeyCode::Up => {
+                let above = row.checked_sub(1).and_then(|row| rows.get(row));
+                self.tree.filter_focus = first_of(above).or(Some(filter));
+            }
+            KeyCode::Down => self.tree.filter_focus = first_of(rows.get(row + 1)),
+            KeyCode::Left => self.tree.filter_focus = Some(all[at.saturating_sub(1)]),
+            KeyCode::Right => self.tree.filter_focus = Some(all[(at + 1).min(all.len() - 1)]),
+            KeyCode::Enter | KeyCode::Char(' ') => self.run_command(filter.command()),
+            KeyCode::Esc | KeyCode::Tab => self.focus = Focus::Editor,
+            _ => {}
         }
     }
 
     fn tree_key(&mut self, key: KeyEvent) {
-        let height = self
-            .layout
-            .sidebar
-            .map(|r| r.h as usize)
-            .unwrap_or(20)
-            .saturating_sub(1);
+        if let Some(filter) = self.tree.filter_focus {
+            self.tree_filter_key(filter, key);
+            return;
+        }
+        let height = self.tree_list_height();
         let page = height.max(1) as isize;
         match key.code {
+            KeyCode::Up if self.tree.selected == 0 => {
+                let rows = self.tree_filter_rows();
+                self.tree.filter_focus = rows.last().and_then(|row| row.first().copied());
+            }
             KeyCode::Up => self.tree.move_selection(-1),
             KeyCode::Down => self.tree.move_selection(1),
             KeyCode::PageUp => self.tree.move_selection(-page),
@@ -247,34 +355,48 @@ impl App {
         }
     }
 
-    fn menu_key(&mut self, mut menu: Menu, key: KeyEvent) {
-        let modified = key
-            .modifiers
-            .intersects(KeyModifiers::CONTROL | KeyModifiers::ALT);
-        let count = menu.spec.items.len();
-        match key.code {
-            KeyCode::Esc => return,
-            KeyCode::Char('c') if key.modifiers.contains(KeyModifiers::CONTROL) => return,
-            KeyCode::Char(digit @ '1'..='9') if !modified => {
-                if let Some((_, command)) = menu.spec.items.get(digit as usize - '1' as usize) {
-                    self.run_command(command);
-                    return;
-                }
-            }
-            KeyCode::Enter => {
-                self.run_command(menu.spec.items[menu.selected].1);
-                return;
-            }
-            KeyCode::Up => menu.selected = (menu.selected + count - 1) % count,
-            KeyCode::Down => menu.selected = (menu.selected + 1) % count,
-            _ => {}
+    /// A key while a menu is open: the key of an item, with or without
+    /// Ctrl, or the key of the menu again for the item it names.
+    fn menu_key(&mut self, menu: Menu, key: KeyEvent) {
+        let name = keymap::key_name(&key);
+        if matches!(name.as_str(), "esc" | "ctrl+c") {
+            return;
         }
-        self.overlay = Some(Overlay::Menu(menu));
+        let spec = menu.spec;
+        let pressed_again = self.keymap.lookup(self.context(), &name) == Some(spec.command);
+        let named = |command| spec.items.iter().find(|item| item.command == command);
+        let again = spec.again.filter(|_| pressed_again).and_then(named);
+        match spec.item_for(&name).or(again) {
+            Some(item) => self.run_menu_item(spec, item),
+            None => self.overlay = Some(Overlay::Menu(menu)),
+        }
     }
 
-    fn picker_key(&mut self, mut picker: Box<crate::picker::Picker>, key: KeyEvent) {
+    fn run_menu_item(&mut self, spec: &'static MenuSpec, item: &'static MenuItem) {
+        self.run_command(item.command);
+        if item.repeats && self.overlay.is_none() {
+            self.menu_repeat = Some(MenuRepeat {
+                spec,
+                at: Instant::now(),
+            });
+        }
+    }
+
+    /// The menu whose arrow commands Ctrl and an arrow run again right now.
+    pub fn repeating_menu(&self) -> Option<&'static MenuSpec> {
+        let repeat = self.menu_repeat.as_ref()?;
+        (repeat.at.elapsed() < MENU_REPEAT_WINDOW).then_some(repeat.spec)
+    }
+
+    fn picker_key(&mut self, mut picker: Box<Picker>, key: KeyEvent) {
         let ctrl = key.modifiers.contains(KeyModifiers::CONTROL);
         let list_height = self.picker_list_height();
+        let moves_up =
+            key.code == KeyCode::Up || (ctrl && matches!(key.code, KeyCode::Char('p' | 'k')));
+        if moves_up && self.is_last_search_again(&picker) {
+            self.overlay = self.last_picker.take().map(Overlay::Picker);
+            return;
+        }
         match key.code {
             KeyCode::Esc => {
                 self.close_picker(picker);
@@ -300,9 +422,6 @@ impl App {
             KeyCode::Tab | KeyCode::BackTab if picker.has_glob() => {
                 picker.glob_focused = !picker.glob_focused;
             }
-            KeyCode::Char('f') if ctrl && picker.has_glob() => {
-                picker.glob_focused = !picker.glob_focused;
-            }
             _ => {
                 let input = if picker.glob_focused {
                     &mut picker.glob
@@ -326,7 +445,18 @@ impl App {
         self.overlay = Some(Overlay::Picker(picker));
     }
 
-    fn close_picker(&mut self, picker: Box<crate::picker::Picker>) {
+    /// Whether `picker` is the file finder or live grep closed last, opened
+    /// again with nothing typed or chosen yet: Up brings the last one back.
+    fn is_last_search_again(&self, picker: &Picker) -> bool {
+        let untouched = picker.input.text.is_empty() && picker.selected == 0;
+        let searches = matches!(picker.kind, PickerKind::Files | PickerKind::Grep);
+        self.last_picker.as_deref().is_some_and(|last| {
+            let same = last.kind == picker.kind && last.title == picker.title;
+            untouched && searches && same && !picker.glob_focused && !last.input.text.is_empty()
+        })
+    }
+
+    fn close_picker(&mut self, picker: Box<Picker>) {
         if picker.searching {
             self.grep_generation
                 .fetch_add(1, std::sync::atomic::Ordering::SeqCst);
@@ -344,20 +474,26 @@ impl App {
     fn prompt_key(&mut self, mut prompt: Prompt, key: KeyEvent) {
         let ctrl = key.modifiers.contains(KeyModifiers::CONTROL);
         if prompt.confirm {
-            let choices = if prompt.saves_or_discards() {
-                "sd"
-            } else {
-                "y"
+            let answer = match key.code {
+                KeyCode::Left | KeyCode::BackTab => {
+                    prompt.focus_choice(false);
+                    None
+                }
+                KeyCode::Right | KeyCode::Tab => {
+                    prompt.focus_choice(true);
+                    None
+                }
+                KeyCode::Enter | KeyCode::Char(' ') => {
+                    prompt.choices().get(prompt.choice).map(|c| c.answer)
+                }
+                KeyCode::Char('c') if ctrl => Some("n"),
+                KeyCode::Esc => Some("n"),
+                KeyCode::Char(c) => prompt.answer_for(c),
+                _ => None,
             };
-            match key.code {
-                KeyCode::Char(c) if choices.contains(c.to_ascii_lowercase()) => {
-                    let answer = c.to_ascii_lowercase().to_string();
-                    commands::answer_prompt(self, prompt, Some(answer))
-                }
-                KeyCode::Char('n') | KeyCode::Char('N') | KeyCode::Esc | KeyCode::Enter => {
-                    commands::answer_prompt(self, prompt, Some("n".to_string()))
-                }
-                _ => self.overlay = Some(Overlay::Prompt(prompt)),
+            match answer {
+                Some(answer) => commands::answer_prompt(self, prompt, Some(answer.to_string())),
+                None => self.overlay = Some(Overlay::Prompt(prompt)),
             }
             return;
         }
@@ -376,6 +512,7 @@ impl App {
     }
 
     pub fn handle_paste(&mut self, text: &str) {
+        self.menu_repeat = None;
         let text = text.replace("\r\n", "\n").replace('\r', "\n");
         match &mut self.overlay {
             Some(Overlay::Picker(picker)) => {
@@ -402,11 +539,11 @@ impl App {
         }
         match self.focus {
             Focus::Find => {
-                if self.find.replace_focused {
-                    self.find.replace.insert(&text);
-                } else {
-                    self.find.input.insert(&text);
-                    self.find.key = None;
+                if let Some(input) = self.find.focused_input() {
+                    input.insert(&text);
+                }
+                if self.find.field == FindField::Query {
+                    self.find_query_changed();
                 }
             }
             Focus::Editor => edit(self, |doc, _| ops::insert_text(doc, &text, EditKind::Other)),
@@ -417,8 +554,16 @@ impl App {
     pub fn handle_mouse(&mut self, mouse: MouseEvent) {
         let (x, y) = (mouse.column, mouse.row);
         let lines = self.options.mouse_scroll_lines;
-        if matches!(self.overlay, Some(Overlay::Menu(_))) {
+        self.menu_repeat = None;
+        if self.menu_visible() {
             self.menu_mouse(mouse);
+            return;
+        }
+        if matches!(self.overlay, Some(Overlay::Menu(_))) {
+            self.overlay = None;
+        }
+        if matches!(self.overlay, Some(Overlay::Prompt(_))) {
+            self.prompt_mouse(mouse);
             return;
         }
         if self.overlay.is_some() {
@@ -426,6 +571,11 @@ impl App {
             return;
         }
         if self.tree_resize_mouse(mouse) {
+            return;
+        }
+        let pressed = mouse.kind == MouseEventKind::Down(MouseButton::Left);
+        if pressed && self.layout.find.is_some_and(|area| area.contains(x, y)) {
+            self.find_click(x, y);
             return;
         }
         let focused_pane = self.panes.focused;
@@ -444,10 +594,9 @@ impl App {
                 let down = mouse.kind == MouseEventKind::ScrollDown;
                 if in_sidebar {
                     let rows = self.tree.rows.len();
-                    let height = self.layout.sidebar.map(|r| r.h as usize).unwrap_or(1);
+                    let height = self.tree_list_height();
                     self.tree.scroll = if down {
-                        (self.tree.scroll + lines)
-                            .min(rows.saturating_sub(height.saturating_sub(1)))
+                        (self.tree.scroll + lines).min(rows.saturating_sub(height))
                     } else {
                         self.tree.scroll.saturating_sub(lines)
                     };
@@ -479,7 +628,7 @@ impl App {
                         self.focus_pane(pane.id);
                     }
                 } else if in_sidebar {
-                    self.sidebar_click(y);
+                    self.sidebar_click(x, y);
                 } else if in_other_pane || in_editor {
                     if let Some(pane) = other_pane {
                         self.focus_pane(pane.id);
@@ -555,38 +704,58 @@ impl App {
     }
 
     fn menu_mouse(&mut self, mouse: MouseEvent) {
-        let Some(Overlay::Menu(menu)) = &mut self.overlay else {
+        let Some(Overlay::Menu(menu)) = &self.overlay else {
             return;
         };
-        let count = menu.spec.items.len();
-        match mouse.kind {
-            MouseEventKind::ScrollUp => menu.selected = (menu.selected + count - 1) % count,
-            MouseEventKind::ScrollDown => menu.selected = (menu.selected + 1) % count,
-            MouseEventKind::Down(MouseButton::Left) => {
-                let area = crate::ui::menu_area(menu.spec, &self.layout);
-                let row = mouse.row.wrapping_sub(area.y + 1) as usize;
-                let command = (area.contains(mouse.column, mouse.row) && row < count)
-                    .then(|| menu.spec.items[row].1);
-                self.overlay = None;
-                if let Some(command) = command {
-                    self.run_command(command);
-                }
-            }
-            _ => {}
+        if mouse.kind != MouseEventKind::Down(MouseButton::Left) {
+            return;
+        }
+        let spec = menu.spec;
+        let area = crate::ui::menu_area(spec, &self.layout);
+        let row = mouse.row.wrapping_sub(area.y + 1) as usize;
+        let inside = area.contains(mouse.column, mouse.row);
+        self.overlay = None;
+        if let Some(item) = spec.items.get(row).filter(|_| inside) {
+            self.run_command(item.command);
         }
     }
 
-    fn sidebar_click(&mut self, y: u16) {
+    /// A click on a button of a confirmation answers it.
+    fn prompt_mouse(&mut self, mouse: MouseEvent) {
+        if mouse.kind != MouseEventKind::Down(MouseButton::Left) {
+            return;
+        }
+        let Some(Overlay::Prompt(prompt)) = self.overlay.take() else {
+            return;
+        };
+        let buttons = crate::ui::prompt_buttons(&prompt, &self.layout);
+        let hit = |button: &Rect| button.contains(mouse.column, mouse.row);
+        let clicked = buttons.iter().position(hit).filter(|_| prompt.confirm);
+        match clicked.and_then(|i| prompt.choices().get(i)) {
+            Some(choice) => commands::answer_prompt(self, prompt, Some(choice.answer.to_string())),
+            None => self.overlay = Some(Overlay::Prompt(prompt)),
+        }
+    }
+
+    fn sidebar_click(&mut self, x: u16, y: u16) {
         let Some(sidebar) = self.layout.sidebar else {
             return;
         };
-        if y <= sidebar.y {
+        let filters = crate::ui::sidebar::filter_controls(sidebar);
+        if let Some((filter, _)) = filters.iter().find(|(_, rect)| rect.contains(x, y)) {
+            self.focus = Focus::Tree;
+            self.tree.filter_focus = Some(*filter);
+            self.run_command(filter.command());
             return;
         }
-        let row = (y - sidebar.y - 1) as usize;
-        let index = self.tree.scroll + row;
+        let list = crate::ui::sidebar::list_area(sidebar);
+        if y < list.y {
+            return;
+        }
+        let index = self.tree.scroll + (y - list.y) as usize;
         if index < self.tree.rows.len() {
             self.tree.selected = index;
+            self.tree.filter_focus = None;
             self.focus = Focus::Tree;
             self.tree_activate();
         }

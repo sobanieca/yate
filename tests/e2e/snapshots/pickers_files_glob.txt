@@ -1,9 +1,9 @@
 # pickers_files_glob
 # start: yate README.md
 # keys: ctrl+p
-# keys: ctrl+f
+# keys: tab
 # type: "*.ts, !src/editor/**"
-# keys: ctrl+f
+# keys: tab
 # type: "view"
 # 80x16, cursor at column 11, row 3
 ┌────────────────────────────────────────────────────────────────────────────────┐
@@ -20,7 +20,7 @@
 │   │                                                                        │   │
 │   │                                                                        │   │
 │   │                                                                        │   │
-│   ╰─ ctrl+f glob filter, e.g. *.ts, !*.test.ts ────────────────────────────╯   │
+│   ╰─ tab glob filter, e.g. *.ts, !*.test.ts ───────────────────────────────╯   │
 │                                                                                │
 │ PICK  README.md                                   markdown  utf-8  LF  0%  1:1 │
 └────────────────────────────────────────────────────────────────────────────────┘

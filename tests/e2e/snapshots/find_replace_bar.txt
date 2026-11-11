@@ -1,11 +1,11 @@
 # find_replace_bar
 # start: yate cart.js
-# keys: ctrl+r
+# keys: ctrl+f
 # type: "total"
-# keys: tab
+# keys: tab tab tab enter
 # type: "sum"
 # keys: enter
-# 70x10, cursor at column 60, row 8
+# 70x10, cursor at column 11, row 8
 ┌──────────────────────────────────────────────────────────────────────┐
 │  1  let sum = 0;                                                     │
 │  2  for (const item of items) {                                      │
@@ -14,7 +14,7 @@
 │  5  console.log(total);                                              │
 │  6                                                                   │
 │                                                                      │
-│                                                                      │
-│ FIND   total                   Aa  .*  1 of 2  REPLACE  sum          │
+│ FIND   total                  [ ] Aa  [ ] .*  [x] replace  1 of 2    │
+│        sum                     Replace    Replace all                │
 │ FIND  cart.js ●         (5 selected) javascript  utf-8  LF  40%  3:8 │
 └──────────────────────────────────────────────────────────────────────┘

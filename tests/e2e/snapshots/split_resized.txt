@@ -1,10 +1,10 @@
 # split_resized
 # start: yate one.txt
-# keys: alt+s 1
+# keys: ctrl+w v
 # keys: ctrl+p
 # type: "two.txt"
 # keys: enter
-# keys: alt+s 2 alt+s 3
+# keys: ctrl+w s ctrl+w r
 # type: "10,-2\n"
 # 80x16, cursor at column 35, row 10
 ┌────────────────────────────────────────────────────────────────────────────────┐
@@ -23,5 +23,5 @@
 │ 12  one 12                  │  3  two 3                                        │
 │ 13  one 13                  │  4  two 4                                        │
 │ 14  one 14                  │  5  two 5                                        │
-│ EDIT  two.txt            alt+w switch · ctrl+h keys   text  utf-8  LF  0%  1:1 │
+│ EDIT  two.txt       ctrl+o switch · ctrl+h commands   text  utf-8  LF  0%  1:1 │
 └────────────────────────────────────────────────────────────────────────────────┘

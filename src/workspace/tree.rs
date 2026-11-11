@@ -17,6 +17,32 @@ pub struct Row {
     pub ignored: bool,
 }
 
+/// A checkbox above the tree that chooses the files it lists.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum TreeFilter {
+    Changed,
+    Ignored,
+}
+
+impl TreeFilter {
+    pub const ALL: [TreeFilter; 2] = [TreeFilter::Changed, TreeFilter::Ignored];
+
+    pub fn label(self) -> &'static str {
+        match self {
+            TreeFilter::Changed => "changed",
+            TreeFilter::Ignored => "ignored",
+        }
+    }
+
+    /// The command that ticks or clears the checkbox.
+    pub fn command(self) -> &'static str {
+        match self {
+            TreeFilter::Changed => "tree.toggleChanged",
+            TreeFilter::Ignored => "tree.toggleIgnored",
+        }
+    }
+}
+
 pub struct FileTree {
     pub root: PathBuf,
     pub rows: Vec<Row>,
@@ -30,6 +56,8 @@ pub struct FileTree {
     pub changed_only: bool,
     /// Stops following the current file (`TreeLock` in the nvim setup).
     pub locked: bool,
+    /// The filter checkbox that has the focus instead of a row.
+    pub filter_focus: Option<TreeFilter>,
 }
 
 struct Entry {
@@ -51,6 +79,14 @@ impl FileTree {
             show_ignored: false,
             changed_only: false,
             locked: false,
+            filter_focus: None,
+        }
+    }
+
+    pub fn filter_on(&self, filter: TreeFilter) -> bool {
+        match filter {
+            TreeFilter::Changed => self.changed_only,
+            TreeFilter::Ignored => self.show_ignored,
         }
     }
 

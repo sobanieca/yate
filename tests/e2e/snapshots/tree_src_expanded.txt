@@ -3,18 +3,18 @@
 # keys: enter
 # 70x14, cursor hidden
 ┌──────────────────────────────────────────────────────────────────────┐
-│ PROJECT                                  Y A T E                     │
-│ ▾ src                            yet another text editor             │
-│   ▸ lib                                                              │
-│     app.ts               find file                         ctrl+p    │
-│   .gitignore             live grep                          alt+f    │
-│   README.md              file tree                          alt+e    │
-│                          switch: tree, files                alt+w    │
-│                          command palette                    alt+p    │
-│                          all key bindings                  ctrl+h    │
+│ PROJECT                                                              │
+│ [ ] changed                              Y A T E                     │
+│ [ ] ignored                      yet another text editor             │
+│ ▾ src                                                                │
+│   ▸ lib                  find file                         ctrl+p    │
+│     app.ts               live grep                         ctrl+r    │
+│   .gitignore             file tree                         ctrl+t    │
+│   README.md              switch: tree, files               ctrl+o    │
+│                          commands and keys                 ctrl+h    │
 │                          quit                              ctrl+q    │
 │                                                                      │
 │                                                                      │
 │                                          project                     │
-│ TREE  main  untitled        ctrl+h keys   text  utf-8  LF  100%  1:1 │
+│ TREE  main  untitled    ctrl+h commands   text  utf-8  LF  100%  1:1 │
 └──────────────────────────────────────────────────────────────────────┘

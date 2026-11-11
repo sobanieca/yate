@@ -45,7 +45,7 @@ Lines and columns are 0-based.
 ## API
 
 ```js
-// Commands appear in the command palette (Alt+P) while the editor has focus, and can
+// Commands appear in the command palette (Ctrl+H) while the editor has focus, and can
 // be bound to keys.
 yate.registerCommand(id, title, fn)
 yate.registerCommand(id, fn)                 // the title is the id
@@ -108,7 +108,7 @@ console.log(...)            // shows in the status line
 | `jumpChars`          | `10`    | Characters moved by Ctrl+Left / Ctrl+Right                 |
 | `jumpLines`          | `5`     | Lines moved by Ctrl+Up / Ctrl+Down                         |
 | `updateCheck`        | `true`  | Check once a day for a new release (read at startup)       |
-| `keyHintDelay`       | `500`   | Milliseconds after Alt+W before the targets pop up         |
+| `keyHintDelay`       | `500`   | Milliseconds before a menu or the Ctrl+O targets pop up    |
 
 ## Examples
 

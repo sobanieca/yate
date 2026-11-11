@@ -1,10 +1,10 @@
 # split_nested
 # start: yate one.txt
-# keys: alt+s 1
+# keys: ctrl+w v
 # keys: ctrl+p
 # type: "two.txt"
 # keys: enter
-# keys: alt+s 2
+# keys: ctrl+w s
 # keys: ctrl+p
 # type: "three.txt"
 # keys: enter
@@ -25,5 +25,5 @@
 │ 12  one 12                            │  5  three 5                            │
 │ 13  one 13                            │  6  three 6                            │
 │ 14  one 14                            │  7  three 7                            │
-│ EDIT  three.txt          alt+w switch · ctrl+h keys   text  utf-8  LF  0%  1:1 │
+│ EDIT  three.txt     ctrl+o switch · ctrl+h commands   text  utf-8  LF  0%  1:1 │
 └────────────────────────────────────────────────────────────────────────────────┘

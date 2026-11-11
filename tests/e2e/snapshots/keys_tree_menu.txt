@@ -1,0 +1,18 @@
+# keys_tree_menu
+# start: yate a.js
+# keys: ctrl+t
+# 70x12, cursor hidden
+┌──────────────────────────────────────────────────────────────────────┐
+│  1  let a = 1;                                                       │
+│  2            ╭─ File tree ──────────────────────────╮               │
+│               │ t  Toggle                            │               │
+│               │ r  Reveal current file               │               │
+│               │ f  Focus                             │               │
+│               │ l  Lock / unlock following the file  │               │
+│               ╰──────────────────────────────────────╯               │
+│                                                                      │
+│                                                                      │
+│                                                                      │
+│                                                                      │
+│ MENU  a.js       File tree: t r f l   javascript  utf-8  LF  0%  1:1 │
+└──────────────────────────────────────────────────────────────────────┘

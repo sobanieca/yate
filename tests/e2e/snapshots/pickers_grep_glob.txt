@@ -1,6 +1,6 @@
 # pickers_grep_glob
 # start: yate README.md
-# keys: alt+f
+# keys: ctrl+r
 # type: "render"
 # keys: tab
 # type: "*.ts,!*.test.ts"
@@ -21,7 +21,7 @@
 │   │                                                                        │   │
 │   │                                                                        │   │
 │   │                                                                        │   │
-│   ╰─ ctrl+f glob filter, e.g. *.ts, !*.test.ts ────────────────────────────╯   │
+│   ╰─ tab glob filter, e.g. *.ts, !*.test.ts ───────────────────────────────╯   │
 │                                                                                │
 │ PICK  README.md                                   markdown  utf-8  LF  0%  1:1 │
 └────────────────────────────────────────────────────────────────────────────────┘

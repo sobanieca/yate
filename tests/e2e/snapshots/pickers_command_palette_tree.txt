@@ -1,25 +1,25 @@
 # pickers_command_palette_tree
 # start: yate README.md
-# keys: alt+p
+# keys: ctrl+h
 # type: "line"
 # keys: ctrl+u
 # type: "wider"
-# keys: esc alt+e alt+p
+# keys: esc ctrl+t t ctrl+h
 # 80x16, cursor at column 7, row 3
 ┌────────────────────────────────────────────────────────────────────────────────┐
 │ PROJECT                  1  Call render() to draw.                             │
-│ ▸ src                    2                                                     │
-│ ▸ ╭─ Commands (tree) ────────────────────────────────────────────── 24/24 ─╮   │
-│   │ ❯                                                                      │   │
+│ [ ] changed [ ] ignored  2                                                     │
+│ ▸ ╭─ Commands (tree) ────────────────────────────────────────────── 46/46 ─╮   │
+│ ▸ │ ❯                                                                      │   │
 │   │────────────────────────────────────────────────────────────────────────│   │
 │   │▌ File       New file…                                           ctrl+n │   │
 │   │             Rename…                                                  r │   │
 │   │             Delete…                                                  d │   │
 │   │             Copy relative path                                       y │   │
-│   │  File tree  Toggle                                               alt+e │   │
-│   │             Reveal current file                                 ctrl+t │   │
-│   │             Lock / unlock following the current file                   │   │
-│   │             Show / hide git-ignored files                            i │   │
+│   │  File tree  Toggle                                            ctrl+t t │   │
+│   │             Reveal current file                               ctrl+t r │   │
+│   │             Lock / unlock following the current file          ctrl+t l │   │
+│   │             Show / hide git-ignored files                              │   │
 │   ╰────────────────────────────────────────────────────────────────────────╯   │
 │                                                                                │
 │ PICK  README.md                                   markdown  utf-8  LF  0%  1:1 │

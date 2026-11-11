@@ -370,7 +370,7 @@ pub fn toggle_comment(doc: &mut Document) {
     doc.apply(changes, sel, EditKind::Other);
 }
 
-/// Alt+Up / Alt+Down: moves the selected lines.
+/// Moves the selected lines.
 pub fn move_lines(doc: &mut Document, down: bool) {
     let (first, last) = selected_lines(doc);
     let count = doc.line_count();

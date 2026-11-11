@@ -1,6 +1,6 @@
 # split_stacked
 # start: yate one.txt
-# keys: alt+s 2
+# keys: ctrl+w s
 # keys: ctrl+p
 # type: "two.txt"
 # keys: enter
@@ -15,5 +15,5 @@
 │  2  two 2                                                            │
 │  3  two 3                                                            │
 │  4  two 4                                                            │
-│ EDIT  two.txt                 ctrl+h keys   text  utf-8  LF  0%  1:1 │
+│ EDIT  two.txt             ctrl+h commands   text  utf-8  LF  0%  1:1 │
 └──────────────────────────────────────────────────────────────────────┘

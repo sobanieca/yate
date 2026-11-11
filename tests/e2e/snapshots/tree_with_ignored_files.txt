@@ -1,20 +1,58 @@
 # tree_with_ignored_files
 # start: yate (project folder)
-# keys: i
-# 70x14, cursor hidden
+# keys: up down
+# keys: up space
+# 70x14, cursor at column 2, row 2
 ┌──────────────────────────────────────────────────────────────────────┐
-│ PROJECT +ignored                         Y A T E                     │
-│ ▸ dist                           yet another text editor             │
-│ ▸ src                                                                │
-│   .gitignore             find file                         ctrl+p    │
-│   debug.log              live grep                          alt+f    │
-│   README.md              file tree                          alt+e    │
-│                          switch: tree, files                alt+w    │
-│                          command palette                    alt+p    │
-│                          all key bindings                  ctrl+h    │
+│ PROJECT                                                              │
+│ [ ] changed                              Y A T E                     │
+│ [x] ignored                      yet another text editor             │
+│ ▸ dist                                                               │
+│ ▸ src                    find file                         ctrl+p    │
+│   .gitignore             live grep                         ctrl+r    │
+│   debug.log              file tree                         ctrl+t    │
+│   README.md              switch: tree, files               ctrl+o    │
+│                          commands and keys                 ctrl+h    │
 │                          quit                              ctrl+q    │
 │                                                                      │
 │                                                                      │
 │                                          project                     │
-│ TREE  main  untitled        ctrl+h keys   text  utf-8  LF  100%  1:1 │
+│ TREE  main  untitled    ctrl+h commands   text  utf-8  LF  100%  1:1 │
 └──────────────────────────────────────────────────────────────────────┘
+
+styles
+┌──────────────────────────────────────────────────────────────────────┐
+│abbbbbbbaaaaaaaaaaaaaaaccccccccccccccccccccccccccccccccccccccccccccccc│
+│adadadddddddaaaaaaaaaaacccccccccccccccccccececececcccccccccccccccccccc│
+│afffgfffffffaaaaaaaaaaaccccccccccchhhchhhhhhhchhhhchhhhhhccccccccccccc│
+│aiaiiiiaaaaaaaaaaaaaaaaccccccccccccccccccccccccccccccccccccccccccccccc│
+│cjcjjjcccccccccccccccccccckkkkckkkkcccccccccccccccccccccccccllllllcccc│
+│aaammmmmmmmmmaaaaaaaaaaccckkkkckkkkcccccccccccccccccccccccccllllllcccc│
+│aaaiiiiiiiiiaaaaaaaaaaaccckkkkckkkkcccccccccccccccccccccccccllllllcccc│
+│aaammmmmmmmmaaaaaaaaaaaccckkkkkkkckkkkkckkkkkcccccccccccccccllllllcccc│
+│aaaaaaaaaaaaaaaaaaaaaaaccckkkkkkkkckkkckkkkcccccccccccccccccllllllcccc│
+│aaaaaaaaaaaaaaaaaaaaaaaccckkkkccccccccccccccccccccccccccccccllllllcccc│
+│aaaaaaaaaaaaaaaaaaaaaaaccccccccccccccccccccccccccccccccccccccccccccccc│
+│aaaaaaaaaaaaaaaaaaaaaaaccccccccccccccccccccccccccccccccccccccccccccccc│
+│aaaaaaaaaaaaaaaaaaaaaaacccccccccccccccccccnnnnnnnccccccccccccccccccccc│
+│oppppoqrrrrqassssssssaaaaddddddaddddddddaaammmmaammmmmaammaammmmaopppo│
+└──────────────────────────────────────────────────────────────────────┘
+a  bg BG_DARK #1f2335
+b  fg GREEN #9ece6a, bg BG_DARK #1f2335, bold
+c  bg BG #24283b
+d  fg DARK5 #737aa2, bg BG_DARK #1f2335
+e  fg BLUE #7aa2f7, bg BG #24283b, bold
+f  fg CYAN #7dcfff, bg BG_HIGHLIGHT #292e42, bold
+g  bg BG_HIGHLIGHT #292e42
+h  fg DARK5 #737aa2, bg BG #24283b, italic
+i  fg DARK3 #545c7e, bg BG_DARK #1f2335
+j  fg BLUE #7aa2f7, bg BG #24283b
+k  fg FG_DARK #a9b1d6, bg BG #24283b
+l  fg ORANGE #ff9e64, bg BG #24283b
+m  fg FG_DARK #a9b1d6, bg BG_DARK #1f2335
+n  fg DARK3 #545c7e, bg BG #24283b
+o  bg GREEN #9ece6a
+p  fg BG_DARK #1f2335, bg GREEN #9ece6a, bold
+q  bg FG_GUTTER #3b4261
+r  fg GREEN #9ece6a, bg FG_GUTTER #3b4261
+s  fg FG #c0caf5, bg BG_DARK #1f2335

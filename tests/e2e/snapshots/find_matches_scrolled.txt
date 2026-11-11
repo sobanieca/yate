@@ -4,7 +4,7 @@
 # type: "needle"
 # keys: down down down
 # keys: up
-# keys: esc ctrl+g 1
+# keys: esc ctrl+g l
 # type: "30"
 # keys: enter ctrl+f
 # 60x10, cursor at column 14, row 8
@@ -17,8 +17,8 @@
 │ 31  line 31: needle and Needle                             │
 │ 32  line 32: needle and Needle                             │
 │ 33  line 33: needle and Needle                             │
-│ FIND   needle               Aa  .*  59 of 80  enter/↓ next │
-│ FIND  long.txt    ctrl+h keys   text  utf-8  LF  72%  30:1 │
+│ FIND   needle       [ ] Aa  [ ] .*  [ ] replace  59 of 80  │
+│ FIND  long.txt                  text  utf-8  LF  72%  30:1 │
 └────────────────────────────────────────────────────────────┘
 
 styles
@@ -31,8 +31,8 @@ styles
 │abbaaccccacccaddddddacccaddddddaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
 │abbaaccccacccaddddddacccaddddddaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
 │abbaaccccacccaddddddacccaddddddaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
-│ijjjjikelllllleeeeeeeeeeeeekkmmkkmmkknnknnknnkkoooooookooook│
-│ijjjjikppppppppkkkkmmmmmmkmmmmkkknnnnkknnnnnkknnkknnnkijjjji│
+│ijjjjikelllllleeeeekkmkmkmmkkmkmkmmkkmkmkmmmmmmmkknnknnknnkk│
+│ijjjjikooooooookkkkkkkkkkkkkkkkkknnnnkknnnnnkknnkknnnkijjjji│
 └────────────────────────────────────────────────────────────┘
 a  bg BG #24283b
 b  fg FG_GUTTER #3b4261, bg BG #24283b
@@ -48,5 +48,4 @@ k  bg BG_DARK #1f2335
 l  fg FG #c0caf5, bg BG_VISUAL #364a82
 m  fg DARK5 #737aa2, bg BG_DARK #1f2335
 n  fg FG_DARK #a9b1d6, bg BG_DARK #1f2335
-o  fg DARK3 #545c7e, bg BG_DARK #1f2335
-p  fg FG #c0caf5, bg BG_DARK #1f2335
+o  fg FG #c0caf5, bg BG_DARK #1f2335

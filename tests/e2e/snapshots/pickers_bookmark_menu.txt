@@ -3,16 +3,16 @@
 # keys: ctrl+p
 # type: "view.ts"
 # keys: enter
-# keys: alt+m 1 down down alt+m 1 ctrl+home alt+m
+# keys: ctrl+k t down down ctrl+k t ctrl+home ctrl+k
 # 80x16, cursor hidden
 ┌────────────────────────────────────────────────────────────────────────────────┐
 │  1◆ export function render(view) {                                             │
 │  2  ▏ return view.lines; ╭─ Bookmarks ─────────────╮                           │
-│  3◆ }                    │ 1  Toggle on this line  │                           │
-│  4                       │ 2  Next                 │                           │
-│                          │ 3  Previous             │                           │
-│                          │ 4  List                 │                           │
-│                          │ 5  Clear in this file   │                           │
+│  3◆ }                    │ t  Toggle on this line  │                           │
+│  4                       │ ↓  Next                 │                           │
+│                          │ ↑  Previous             │                           │
+│                          │ l  List                 │                           │
+│                          │ c  Clear in this file   │                           │
 │                          ╰─────────────────────────╯                           │
 │                                                                                │
 │                                                                                │

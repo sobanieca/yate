@@ -3,12 +3,12 @@
 # keys: ctrl+p
 # type: "app.ts"
 # keys: enter
-# keys: down alt+m 1
+# keys: down ctrl+k t
 # keys: ctrl+p
 # type: "model"
 # keys: enter
 # keys: ctrl+p
-# keys: esc alt+m 4
+# keys: esc ctrl+k l
 # 80x16, cursor at column 7, row 3
 ┌────────────────────────────────────────────────────────────────────────────────┐
 │  1  export const lines = [];                                                   │

@@ -1,7 +1,7 @@
 # definitions_imported_function
 # start: yate src/app.ts
 # click: 5,5
-# keys: ctrl+g 2
+# keys: ctrl+g d
 # 80x16, cursor at column 21, row 0
 ┌────────────────────────────────────────────────────────────────────────────────┐
 │  1  export function render(view) {                                             │
@@ -19,5 +19,5 @@
 │                                                                                │
 │                                                                                │
 │                                                                                │
-│ EDIT  src/editor/view.ts         ctrl+h keys   typescript  utf-8  LF  0%  1:17 │
+│ EDIT  src/editor/view.ts     ctrl+h commands   typescript  utf-8  LF  0%  1:17 │
 └────────────────────────────────────────────────────────────────────────────────┘

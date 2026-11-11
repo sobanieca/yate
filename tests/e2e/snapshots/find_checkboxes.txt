@@ -1,0 +1,46 @@
+# find_checkboxes
+# start: yate words.txt
+# keys: ctrl+f
+# type: "needle"
+# keys: right space
+# keys: right enter
+# type: "."
+# 70x8, cursor at column 15, row 6
+┌──────────────────────────────────────────────────────────────────────┐
+│  1  needle Needle                                                    │
+│  2  needles                                                          │
+│  3                                                                   │
+│                                                                      │
+│                                                                      │
+│                                                                      │
+│ FIND   needle.                [x] Aa  [x] .*  [ ] replace  1 of 2    │
+│ FIND  words.txt                (7 selected) text  utf-8  LF  0%  1:8 │
+└──────────────────────────────────────────────────────────────────────┘
+
+styles
+┌──────────────────────────────────────────────────────────────────────┐
+│aabaaccccccdeeeeeeaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
+│aafaagggggggaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
+│aafaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
+│aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
+│aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
+│aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
+│hiiiihjklllllllkkkkkkkkkkkkkkjjmmmjmmjjmmmjmmjjnjnjnnnnnnnjjojoojojjjj│
+│hiiiihjpppppppppjjjjjjjjjjjjjjjjoojooooooooojoooojjooooojjoojjoojhiiih│
+└──────────────────────────────────────────────────────────────────────┘
+a  bg BG #24283b
+b  fg ORANGE #ff9e64, bg BG #24283b, bold
+c  fg BG_DARK #1f2335, bg ORANGE #ff9e64
+d  bg ORANGE #ff9e64
+e  fg FG #c0caf5, bg BG #24283b
+f  fg FG_GUTTER #3b4261, bg BG #24283b
+g  fg FG #c0caf5, bg BG_SEARCH #3d59a1
+h  bg YELLOW #e0af68
+i  fg BG_DARK #1f2335, bg YELLOW #e0af68, bold
+j  bg BG_DARK #1f2335
+k  bg BG_HIGHLIGHT #292e42
+l  fg FG #c0caf5, bg BG_HIGHLIGHT #292e42
+m  fg CYAN #7dcfff, bg BG_DARK #1f2335, bold
+n  fg DARK5 #737aa2, bg BG_DARK #1f2335
+o  fg FG_DARK #a9b1d6, bg BG_DARK #1f2335
+p  fg FG #c0caf5, bg BG_DARK #1f2335

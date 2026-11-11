@@ -6,30 +6,29 @@ terminal or a tmux pane.
 
 Website and manual: https://sobanieca.github.io/yate/
 
-> **Status:** version 0.3.0, an early release. Keys, options and the plugin API may still
+> **Status:** version 0.5.0, an early release. Keys, options and the plugin API may still
 > change between versions.
 
 ## Features
 
 - **One binary, no runtime dependencies.** Syntax grammars and the JavaScript engine are
   compiled in. yate uses git when it is installed.
-- **Project tools:** a file tree with git status, filters for ignored and changed files,
+- **Project tools:** a file tree with git status, checkboxes for ignored and changed files,
   sideways scrolling for deep names and a width you set (`[` / `]` or drag its edge), a fuzzy file finder (Ctrl+P), live grep with glob
   filters, git signs in the gutter, bookmarks and a jump list.
 - **No tabs and no buffers.** The editor shows one file. Opening another one takes its
   place, and unsaved changes ask first (save, discard or stay). A file opens again where the
-  cursor was, Ctrl+P lists the files you had last on top, and Alt+W numbers them.
-- **Split view** (Alt+S): as many panes as you need, side by side or one above the other,
+  cursor was, Ctrl+P lists the files you had last on top, and Ctrl+O numbers them.
+- **Split view** (Ctrl+W): as many panes as you need, side by side or one above the other,
   showing the same file or different files. Panes share the space evenly; resize one by
-  typing the columns and rows to add. Scroll sync (Ctrl+J) scrolls all of them together.
-- **Ctrl keys with hints on screen:** the status line shows the keys for what you are doing,
-  and Ctrl+H lists every binding. Every command has one key, and related commands share
-  one: Ctrl+G pops up "Go to" (1 line, 2 definition), Alt+M the bookmark commands, Alt+S
-  the split commands. The
-  command palette (Alt+P) lists only what the focused panel can do right now, by section. Alt+W
-  followed by a digit focuses the file tree (1) or shows a recent file (2-9); the numbers pop
-  up when you wait. No function keys and no Ctrl+Shift keys are needed.
-- **Go to definition** (Ctrl+G 2, Ctrl+click) without a language server. tree-sitter finds the
+  typing the columns and rows to add. Scroll sync (Ctrl+W Y) scrolls all of them together.
+- **Ctrl keys only, with hints on screen:** a few direct keys for what you do all the time
+  (save, find, copy, undo), and six keys that pop up a menu of related commands: Ctrl+G go
+  to, Ctrl+K bookmarks, Ctrl+W panes, Ctrl+T file tree, Ctrl+L lines and Ctrl+O recent
+  files. A letter or an arrow then picks the command, with Ctrl still held or not, and the
+  menu shows only when you wait. The command palette (Ctrl+H) lists what the focused panel
+  can do right now with the keys for it. No Alt, function or Ctrl+Shift keys are needed.
+- **Go to definition** (Ctrl+G D, Ctrl+click) without a language server. tree-sitter finds the
   definition in the file, follows ES imports and re-exports to the module that defines a
   name, or searches the project. On a path, an import or `file:line:col` it opens that file.
   Imports resolve like Node and TypeScript (`tsconfig.json` paths, `package.json` exports,
@@ -87,49 +86,70 @@ yate --help           list the keys
 yate --version        show the version
 ```
 
-Ctrl+H inside yate lists every binding and runs the one you pick. The important ones:
+Ctrl+H inside yate lists the commands with their keys and runs the one you pick. All of them:
 
-| Keys                            | Action                                                     |
-| ------------------------------- | ---------------------------------------------------------- |
-| Ctrl+H                          | Key bindings (searchable, Enter runs)                      |
-| Ctrl+P                          | Find file (recent files first)                             |
-| Alt+F                           | Live grep                                                  |
-| Ctrl+F in Ctrl+P / Alt+F        | Glob filter: `*.ts, src/**, !*.test.ts` (`!` excludes)     |
-| `f` / `g` in the tree           | Find file / live grep in the selected folder               |
-| Alt+P                           | Command palette: what the focused panel can do, by section |
-| Alt+W, then 1-9                 | 1 file tree, 2-9 recent files; Alt+W again: next one       |
-| Alt+E / Ctrl+T                  | Toggle file tree / reveal current file                     |
-| `[` / `]` in the tree           | Narrower / wider file tree (or drag its right edge)        |
-| Alt+S, then 1-6                 | Split: 1 side by side, 2 stacked, 3 resize, 5 close pane   |
-| Alt+H / J / K / L               | Focus the pane on the left / below / above / on the right  |
-| Ctrl+O / Ctrl+J                 | Next pane / scroll sync                                    |
-| Ctrl+S, Ctrl+Q                  | Save, quit                                                 |
-| Ctrl+F / Ctrl+R                 | Find / replace in file                                     |
-| Ctrl+C / X / V                  | Copy / cut / paste (whole line without a selection)        |
-| Ctrl+Z / Ctrl+Y                 | Undo / redo                                                |
-| Ctrl+/                          | Toggle comment                                             |
-| Alt+Up / Alt+Down               | Move lines                                                 |
-| Ctrl+Left/Right, Ctrl+Up/Down   | 10 characters / 5 lines (`jumpChars`, `jumpLines`)         |
-| Tab / Shift+Tab (Alt+I / Alt+O) | Indent / outdent                                           |
-| Alt+Left / Alt+Right            | Jump back / forward                                        |
-| Ctrl+G, then 1 or 2             | Go to: 1 a line, 2 the definition or file under the cursor |
-| Ctrl+click                      | Go to definition, or to the file under the cursor          |
-| Alt+M, then 1-5                 | Bookmark: 1 toggle, 2 next, 3 previous, 4 list, 5 clear    |
+| Keys                          | Action                                                       |
+| ----------------------------- | ------------------------------------------------------------ |
+| Ctrl+H                        | Command palette and keys (searchable, Enter runs)            |
+| Ctrl+P                        | Find file (recent files first)                               |
+| Ctrl+R                        | Live grep                                                    |
+| Tab in Ctrl+P / Ctrl+R        | Glob filter: `*.ts, src/**, !*.test.ts` (`!` excludes)       |
+| Up in Ctrl+P / Ctrl+R         | The last search again, before typing                         |
+| `f` / `g` in the tree         | Find file / live grep in the selected folder                 |
+| Ctrl+S, Ctrl+N, Ctrl+Q        | Save, new file, quit                                         |
+| Ctrl+F                        | Find in file; Enter, ↓ / ↑ next / previous match             |
+| Tab in the find bar           | Next field: `[ ] Aa` case, `[ ] .*` regex, `[ ] replace`; ← → move along a row, Space or Enter ticks a checkbox or presses Replace / Replace all |
+| Ctrl+C / X / V                | Copy / cut / paste (whole line without a selection)          |
+| Ctrl+Z / Ctrl+Y               | Undo / redo                                                  |
+| Ctrl+A / Ctrl+D               | Select all / select word, then its next occurrence           |
+| Ctrl+/                        | Toggle comment                                               |
+| Tab / Shift+Tab               | Indent / outdent                                             |
+| Ctrl+Left/Right, Ctrl+Up/Down | 10 characters / 5 lines (`jumpChars`, `jumpLines`)           |
+| Ctrl+click                    | Go to definition, or to the file under the cursor            |
+| `[` / `]` in the tree         | Narrower / wider file tree (or drag its right edge)          |
 
-Every command has one key. A key that groups commands (Ctrl+G, Alt+M, Alt+S) pops up a numbered
-menu: press the digit, or move with the arrows and press Enter; Esc closes it. Commands
-without a key are in the command palette (Alt+P). It lists what the focused panel can do
-right now, in sections: with the editor focused File, Edit, Search, Go to, Bookmarks, View,
-File tree, Plugins and yate; with the file tree focused the commands for the selected file
-or folder, the tree, search and yate. Commands with nothing to work on are left out (the
-split commands without a split, "Find next" without a search, bookmark navigation without
-bookmarks). Typing filters by section and name ("tree toggle").
+Six keys open a menu; the second key picks the command:
 
-Terminals send Ctrl+Shift combinations only with the kitty keyboard protocol (kitty, WezTerm,
-foot, Ghostty), and not through tmux, so no default binding uses Ctrl+Shift: Alt+P opens the
-palette, Alt+F live grep. Keys avoid Ctrl+B (the tmux prefix), Ctrl+Tab and Shift+Tab,
-which many terminals (Termux, terminals over SSH) do not send: Alt+W switches files, Alt+E
-toggles the tree and Alt+I / Alt+O indent and outdent.
+| Menu                | Keys in the menu                                                         |
+| ------------------- | ------------------------------------------------------------------------ |
+| Ctrl+G go to        | `l` line, `d` definition or file under the cursor, ← back, → forward     |
+| Ctrl+K bookmarks    | `t` toggle, ↓ next, ↑ previous, `l` list, `c` clear in this file         |
+| Ctrl+W panes        | `v` split side by side, `s` split stacked, `h` `j` `k` `l` or arrows focus the pane on that side, `w` next pane, `r` resize, `=` equal sizes, `c` close, `o` close the others, `y` scroll sync |
+| Ctrl+T file tree    | `t` toggle, `r` reveal current file, `f` focus, `l` lock                 |
+| Ctrl+L lines        | ↑ ↓ move, ← → outdent / indent, `d` duplicate, `k` delete                |
+| Ctrl+O recent files | `1` file tree, `2`-`9` recent files; Ctrl+O again: the next one          |
+
+- The second key works with Ctrl still held: Ctrl+W Ctrl+V is Ctrl+W V. Only Ctrl+C differs:
+  it closes the menu, like Esc.
+- The key of a menu twice runs its usual command: Ctrl+T Ctrl+T toggles the tree, Ctrl+W
+  Ctrl+W focuses the next pane, Ctrl+O Ctrl+O shows the next recent file.
+- The arrow commands repeat: right after one, Ctrl and an arrow run it again without the
+  menu (Ctrl+G ←, then Ctrl+← Ctrl+← goes back twice more). Any other key, or a pause of a
+  second and a half, ends that.
+- The menu pops up only when you wait (`keyHintDelay`, 500 ms), so keys you know show
+  nothing. A click picks a command too.
+
+Commands without a key are in the command palette (Ctrl+H). It lists what the focused panel
+can do right now, in sections: with the editor focused File, Edit, Search, Go to, Bookmarks,
+View, File tree, Plugins and yate; with the file tree focused the commands for the selected
+file or folder, the tree, search and yate; and last Keys, the keys that are not commands.
+Commands with nothing to work on are left out (the pane commands without a split, "Find
+next" without a search, bookmark navigation without bookmarks). Typing filters by section
+and name ("tree toggle"). `yate.json` can give any command a key of its own.
+
+Every default key is Ctrl and a letter, so it works in every terminal, through tmux and in
+Termux: no Alt keys (terminals and window managers take many of them), no Ctrl+Shift (sent
+only with the kitty keyboard protocol, and not through tmux), no Ctrl+B (the tmux prefix)
+and no Ctrl+I or Ctrl+M, which terminals send as Tab and Enter. Shift+Tab is never the only
+way: Ctrl+L ← outdents.
+
+Bars and dialogs add no keys: they are forms. In the find bar Tab moves from the text to the
+checkboxes for case, regex and replace and to the Replace buttons, ← and → move along a
+row, and Space or Enter ticks or presses. Questions (unsaved changes, delete, quit) show
+buttons: ← → and Enter, or the first letter of a button. The file tree has two checkboxes
+above the files, `[ ] changed` (only changed files) and `[ ] ignored` (git-ignored files
+too): ↑ from the first file reaches them, Space or Enter ticks, ↓ goes back. Clicks work
+everywhere.
 
 ## Configuration
 

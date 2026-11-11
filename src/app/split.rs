@@ -1,4 +1,4 @@
-//! Split view and the Alt+W switcher.
+//! Split view and the Ctrl+O switcher.
 //!
 //! The editor is split into any number of panes, side by side or one above
 //! the other (`panes.rs` holds the tree and its sizes). The focused pane
@@ -10,8 +10,8 @@
 //! Each pane shows one file. A file that leaves the screen is forgotten,
 //! except for its path and cursor in the recent files.
 //!
-//! Alt+W arms the switcher: a digit then focuses the file tree (1) or shows
-//! a recent file (2-9), and every further Alt+W shows the next recent file.
+//! Ctrl+O arms the switcher: a digit then focuses the file tree (1) or shows
+//! a recent file (2-9), and every further Ctrl+O shows the next recent file.
 //! The numbered targets pop up after `keyHintDelay` milliseconds.
 
 use super::panes::{self, Direction, Side};
@@ -78,7 +78,7 @@ impl App {
         if self.panes.is_split() {
             return false;
         }
-        let key = self.keymap.hint("view.splitMenu");
+        let key = self.keymap.hint("view.paneMenu");
         let how = key.map(|key| format!(": {key} splits the editor"));
         self.notify(format!("Not split{}", how.unwrap_or_default()));
         true
@@ -212,12 +212,8 @@ impl App {
             (true, false) => format!("Add columns to this pane ({width} now), e.g. 10 or -10"),
             _ => format!("Add rows to this pane ({height} now), e.g. 3 or -3"),
         };
-        self.overlay = Some(Overlay::Prompt(Prompt {
-            title,
-            input: LineInput::default(),
-            kind: PromptKind::ResizePane,
-            confirm: false,
-        }));
+        let prompt = Prompt::text(title, LineInput::default(), PromptKind::ResizePane);
+        self.overlay = Some(Overlay::Prompt(prompt));
     }
 
     /// Resizes the focused pane by the answer to `resize_pane_prompt`.
@@ -354,17 +350,26 @@ impl App {
         })
     }
 
+    /// Whether the popup of the open menu is on screen: like the switcher,
+    /// it waits `keyHintDelay` so a key pressed right away shows nothing.
+    pub fn menu_visible(&self) -> bool {
+        let delay = Duration::from_millis(self.options.key_hint_delay);
+        matches!(&self.overlay, Some(Overlay::Menu(menu)) if menu.opened.elapsed() >= delay)
+    }
+
     /// How long the event loop may wait before the next frame is due.
     pub fn wake_in(&self, tick: Duration) -> Duration {
-        match &self.switcher {
-            Some(switcher) if !self.switcher_visible() => {
-                let delay = Duration::from_millis(self.options.key_hint_delay);
-                delay
-                    .saturating_sub(switcher.started.elapsed())
-                    .max(Duration::from_millis(1))
-                    .min(tick)
-            }
-            _ => tick,
+        let waiting_since = match (&self.overlay, &self.switcher) {
+            (Some(Overlay::Menu(menu)), _) if !self.menu_visible() => Some(menu.opened),
+            (None, Some(switcher)) if !self.switcher_visible() => Some(switcher.started),
+            _ => None,
+        };
+        match waiting_since {
+            Some(since) => Duration::from_millis(self.options.key_hint_delay)
+                .saturating_sub(since.elapsed())
+                .max(Duration::from_millis(1))
+                .min(tick),
+            None => tick,
         }
     }
 
@@ -425,18 +430,23 @@ impl App {
     /// are `files`.
     fn switch_to(&mut self, number: usize, files: &[PathBuf]) {
         if number == 1 {
-            if !self.tree_visible {
-                self.tree_visible = true;
-                self.tree.rebuild(&self.git);
-            }
-            self.follow_in_tree();
-            self.focus = Focus::Tree;
+            self.focus_tree();
             return;
         }
         match files.get(number - 2) {
             Some(path) => self.show_file(path),
             None => self.notify(format!("No recent file {number}")),
         }
+    }
+
+    /// Focuses the file tree, showing it when it is hidden.
+    pub fn focus_tree(&mut self) {
+        if !self.tree_visible {
+            self.tree_visible = true;
+            self.tree.rebuild(&self.git);
+        }
+        self.follow_in_tree();
+        self.focus = Focus::Tree;
     }
 
     /// Focuses the pane that shows `path`, or shows it in the focused pane.

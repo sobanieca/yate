@@ -1,7 +1,10 @@
 //! Built-in commands. Every key binding and the command palette run
 //! commands by id; plugin commands share the same namespace.
 
-use super::{App, Direction, Focus, Menu, MenuSpec, Overlay, Preview, Prompt, PromptKind, Side};
+use super::{
+    App, Direction, FindField, Focus, Menu, MenuItem, MenuSpec, Overlay, Preview, Prompt,
+    PromptKind, Side,
+};
 use crate::clipboard::CopyOutcome;
 use crate::editor::history::EditKind;
 use crate::editor::ops;
@@ -14,6 +17,7 @@ use crate::workspace::grep::{self, GrepEvent};
 use crate::workspace::resolve;
 use std::collections::HashSet;
 use std::sync::atomic::Ordering;
+use std::time::Instant;
 
 /// Where a command makes sense: the command palette lists the commands of
 /// the focused panel only.
@@ -94,13 +98,6 @@ pub struct Command {
     run: fn(&mut App),
 }
 
-impl Command {
-    /// The title with its section, for lists that are not grouped.
-    pub fn full_title(&self) -> String {
-        format!("{}: {}", self.group.name(), self.title)
-    }
-}
-
 macro_rules! commands {
     ($($id:literal, $title:literal, $group:ident, $scope:ident => $run:expr;)*) => {
         pub const COMMANDS: &[Command] = &[$(Command {
@@ -115,36 +112,146 @@ macro_rules! commands {
 
 const TREE_RESIZE_STEP: i32 = 4;
 
+const fn once(
+    keys: &'static [&'static str],
+    label: &'static str,
+    command: &'static str,
+) -> MenuItem {
+    MenuItem {
+        keys,
+        label,
+        command,
+        repeats: false,
+    }
+}
+
+const fn repeating(
+    keys: &'static [&'static str],
+    label: &'static str,
+    command: &'static str,
+) -> MenuItem {
+    MenuItem {
+        keys,
+        label,
+        command,
+        repeats: true,
+    }
+}
+
 const GO_TO_MENU: MenuSpec = MenuSpec {
     title: "Go to",
+    command: "goto.menu",
+    again: None,
     items: &[
-        ("Line…", "goto.line"),
-        ("Definition or file under the cursor", "goto.definition"),
+        once(&["l"], "Line…", "goto.line"),
+        once(
+            &["d"],
+            "Definition or file under the cursor",
+            "goto.definition",
+        ),
+        repeating(&["left"], "Back", "jump.back"),
+        repeating(&["right"], "Forward", "jump.forward"),
     ],
 };
 
 const BOOKMARK_MENU: MenuSpec = MenuSpec {
     title: "Bookmarks",
+    command: "bookmark.menu",
+    again: None,
     items: &[
-        ("Toggle on this line", "bookmark.toggle"),
-        ("Next", "bookmark.next"),
-        ("Previous", "bookmark.previous"),
-        ("List", "picker.bookmarks"),
-        ("Clear in this file", "bookmark.clear"),
+        once(&["t"], "Toggle on this line", "bookmark.toggle"),
+        repeating(&["down"], "Next", "bookmark.next"),
+        repeating(&["up"], "Previous", "bookmark.previous"),
+        once(&["l"], "List", "picker.bookmarks"),
+        once(&["c"], "Clear in this file", "bookmark.clear"),
     ],
 };
 
-const SPLIT_MENU: MenuSpec = MenuSpec {
-    title: "Split",
+const PANE_MENU: MenuSpec = MenuSpec {
+    title: "Panes",
+    command: "view.paneMenu",
+    again: Some("view.focusNextPane"),
     items: &[
-        ("Vertical: side by side", "view.splitVertical"),
-        ("Horizontal: one above the other", "view.splitHorizontal"),
-        ("Resize this pane…", "view.resizePane"),
-        ("Equal sizes", "view.equalPanes"),
-        ("Close this pane", "view.closePane"),
-        ("Close the other panes", "view.closeOtherPanes"),
+        once(&["v"], "Split: side by side", "view.splitVertical"),
+        once(&["s"], "Split: one above the other", "view.splitHorizontal"),
+        once(&["h", "left"], "Focus left", "view.focusPaneLeft"),
+        once(&["j", "down"], "Focus below", "view.focusPaneBelow"),
+        once(&["k", "up"], "Focus above", "view.focusPaneAbove"),
+        once(&["l", "right"], "Focus right", "view.focusPaneRight"),
+        once(&["w"], "Focus the next pane", "view.focusNextPane"),
+        once(&["r"], "Resize this pane…", "view.resizePane"),
+        once(&["="], "Equal sizes", "view.equalPanes"),
+        once(&["c"], "Close this pane", "view.closePane"),
+        once(&["o"], "Close the other panes", "view.closeOtherPanes"),
+        once(
+            &["y"],
+            "Scroll together (on / off)",
+            "view.toggleScrollSync",
+        ),
     ],
 };
+
+const TREE_MENU: MenuSpec = MenuSpec {
+    title: "File tree",
+    command: "tree.menu",
+    again: Some("tree.toggle"),
+    items: &[
+        once(&["t"], "Toggle", "tree.toggle"),
+        once(&["r"], "Reveal current file", "tree.reveal"),
+        once(&["f"], "Focus", "tree.focus"),
+        once(&["l"], "Lock / unlock following the file", "tree.lock"),
+    ],
+};
+
+const LINE_MENU: MenuSpec = MenuSpec {
+    title: "Line",
+    command: "edit.lineMenu",
+    again: None,
+    items: &[
+        repeating(&["up"], "Move up", "edit.moveLineUp"),
+        repeating(&["down"], "Move down", "edit.moveLineDown"),
+        repeating(&["left"], "Outdent", "edit.outdent"),
+        repeating(&["right"], "Indent", "edit.indent"),
+        once(&["d"], "Duplicate", "edit.duplicateLine"),
+        once(&["k"], "Delete", "edit.deleteLine"),
+    ],
+};
+
+/// Every menu, for the keys the palette shows next to a command.
+pub const MENUS: &[&MenuSpec] = &[
+    &GO_TO_MENU,
+    &BOOKMARK_MENU,
+    &PANE_MENU,
+    &TREE_MENU,
+    &LINE_MENU,
+];
+
+/// A key of a menu as shown on screen: the arrow keys as arrows.
+pub fn menu_key_label(key: &str) -> &str {
+    match key {
+        "up" => "↑",
+        "down" => "↓",
+        "left" => "←",
+        "right" => "→",
+        other => other,
+    }
+}
+
+/// The keys that run command `id` while the panel of `context` has the
+/// focus: its own keys, then the key of a menu with its key in the menu.
+pub fn key_hints(app: &App, context: Context, id: &str) -> Vec<String> {
+    let mut keys = app.keymap.keys_in(context, id);
+    let listed = |menu: &&&MenuSpec| menu.command != id;
+    for menu in MENUS.iter().filter(listed) {
+        let item_keys = menu.items.iter().filter(|item| item.command == id);
+        for item_key in item_keys.filter_map(|item| item.keys.first()) {
+            for menu_key in app.keymap.keys_in(context, menu.command) {
+                keys.push(format!("{menu_key} {}", menu_key_label(item_key)));
+            }
+        }
+    }
+    keys
+}
 
 commands! {
     "file.save", "Save", File, Editor => save;
@@ -173,6 +280,7 @@ commands! {
         ops::indent_lines(doc, first, last, options);
     });
     "edit.outdent", "Outdent lines", Edit, Editor => |app| edit(app, ops::outdent);
+    "edit.lineMenu", "Move, indent, duplicate or delete lines…", Edit, Editor => |app| open_menu(app, &LINE_MENU);
     "find.open", "Find in file", Search, Editor => |app| open_find(app, false);
     "find.replace", "Replace in file", Search, Editor => |app| open_find(app, true);
     "find.next", "Find next", Search, Editor => |app| find_step(app, true);
@@ -189,7 +297,7 @@ commands! {
     };
     "picker.grepGlob", "Live grep in files matching a glob", Search, Anywhere => |app| open_grep_picker(app, true, None);
     "picker.resume", "Resume last picker", Search, Anywhere => resume_picker;
-    "goto.menu", "Line or definition…", GoTo, Editor => |app| open_menu(app, &GO_TO_MENU);
+    "goto.menu", "Line, definition, back or forward…", GoTo, Editor => |app| open_menu(app, &GO_TO_MENU);
     "goto.line", "Line…", GoTo, Editor => goto_line_prompt;
     "goto.definition", "Definition or file under the cursor", GoTo, Editor => super::goto::goto_definition;
     "jump.back", "Jump back", GoTo, Anywhere => |app| app.jump(true);
@@ -200,7 +308,7 @@ commands! {
     "bookmark.previous", "Previous", Bookmarks, Editor => |app| bookmark_step(app, false);
     "picker.bookmarks", "List", Bookmarks, Anywhere => open_bookmarks_picker;
     "bookmark.clear", "Clear in this file", Bookmarks, Editor => clear_bookmarks;
-    "view.splitMenu", "Split, resize or close panes…", View, Editor => |app| open_menu(app, &SPLIT_MENU);
+    "view.paneMenu", "Split, focus, resize or close panes…", View, Anywhere => |app| open_menu(app, &PANE_MENU);
     "view.splitVertical", "Split vertically (side by side)", View, Editor => |app| app.split_pane(Direction::SideBySide);
     "view.splitHorizontal", "Split horizontally (one above the other)", View, Editor => |app| app.split_pane(Direction::Stacked);
     "view.resizePane", "Resize this pane…", View, Editor => App::resize_pane_prompt;
@@ -230,7 +338,9 @@ commands! {
     "view.toggleLineNumbers", "Toggle line numbers", View, Editor => |app| app.options.line_numbers = !app.options.line_numbers;
     "view.toggleIndentGuides", "Toggle indent guides", View, Editor => |app| app.options.indent_guides = !app.options.indent_guides;
     "language.choose", "Set language of the file…", View, Editor => open_language_picker;
+    "tree.menu", "Toggle, reveal, focus or lock…", Tree, Anywhere => |app| open_menu(app, &TREE_MENU);
     "tree.toggle", "Toggle", Tree, Anywhere => toggle_tree;
+    "tree.focus", "Focus", Tree, Anywhere => App::focus_tree;
     "tree.reveal", "Reveal current file", Tree, Anywhere => reveal_in_tree;
     "tree.lock", "Lock / unlock following the current file", Tree, Anywhere => toggle_tree_lock;
     "tree.toggleIgnored", "Show / hide git-ignored files", Tree, Tree => |app| {
@@ -252,8 +362,7 @@ commands! {
         app.options.tree_width = 0;
         app.notify("File tree: automatic width");
     };
-    "help.keys", "Key bindings", App, Anywhere => open_keys_picker;
-    "picker.commands", "Command palette", App, Anywhere => open_commands_picker;
+    "picker.commands", "Command palette and keys", App, Anywhere => open_commands_picker;
     "settings.open", "Open yate.json (the closest one, or a new ~/yate.jsonc)", App, Anywhere => open_settings;
     "config.reload", "Reload yate.json and plugins", App, Anywhere => |app| {
         if app.load_config() {
@@ -269,16 +378,14 @@ commands! {
 
 /// Commands the palette leaves out: the ones that only make sense as a
 /// key (the palette itself, the switcher, the menus whose entries it lists
-/// one by one, moving to the pane on a side).
+/// one by one).
 const NOT_IN_PALETTE: &[&str] = &[
     "picker.commands",
     "goto.menu",
     "bookmark.menu",
-    "view.splitMenu",
-    "view.focusPaneLeft",
-    "view.focusPaneRight",
-    "view.focusPaneAbove",
-    "view.focusPaneBelow",
+    "view.paneMenu",
+    "tree.menu",
+    "edit.lineMenu",
     "switch.next",
     "switch.previous",
 ];
@@ -321,11 +428,16 @@ const LISTED_WHEN: &[(&[&str], Condition)] = &[
             "view.closePane",
             "view.closeOtherPanes",
             "view.focusNextPane",
+            "view.focusPaneLeft",
+            "view.focusPaneRight",
+            "view.focusPaneAbove",
+            "view.focusPaneBelow",
             "view.toggleScrollSync",
         ],
         |app| app.panes.is_split(),
     ),
     (&["tree.lock"], |app| app.tree_visible),
+    (&["tree.focus"], |app| app.focus != Focus::Tree),
 ];
 
 /// Whether the palette of the focused panel lists a command right now.
@@ -410,23 +522,16 @@ fn quit(app: &mut App) {
         app.quit = true;
         return;
     }
-    app.overlay = Some(Overlay::Prompt(Prompt {
-        title: format!("Unsaved: {}. Quit anyway? (y/n)", unsaved.join(", ")),
-        input: LineInput::default(),
-        kind: PromptKind::QuitUnsaved,
-        confirm: true,
-    }));
+    let title = format!("Unsaved: {}. Quit anyway?", unsaved.join(", "));
+    let prompt = Prompt::confirm(title, PromptKind::QuitUnsaved);
+    app.overlay = Some(Overlay::Prompt(prompt));
 }
 
 pub fn save(app: &mut App) {
     if app.doc().path.is_none() {
         let id = app.doc().id;
-        app.overlay = Some(Overlay::Prompt(Prompt {
-            title: "Save as".to_string(),
-            input: LineInput::default(),
-            kind: PromptKind::SaveAs(id),
-            confirm: false,
-        }));
+        let prompt = Prompt::text("Save as", LineInput::default(), PromptKind::SaveAs(id));
+        app.overlay = Some(Overlay::Prompt(prompt));
         return;
     }
     let path = app
@@ -481,21 +586,16 @@ pub fn new_file_prompt(app: &mut App, dir: Option<std::path::PathBuf>) {
     } else {
         initial.clear();
     }
-    app.overlay = Some(Overlay::Prompt(Prompt {
-        title: "New file (end with / for a folder)".to_string(),
-        input: LineInput::with_text(&initial),
-        kind: PromptKind::NewFile,
-        confirm: false,
-    }));
+    let input = LineInput::with_text(&initial);
+    let title = "New file (end with / for a folder)";
+    let prompt = Prompt::text(title, input, PromptKind::NewFile);
+    app.overlay = Some(Overlay::Prompt(prompt));
 }
 
 fn goto_line_prompt(app: &mut App) {
-    app.overlay = Some(Overlay::Prompt(Prompt {
-        title: format!("Go to line (1-{})", app.doc().line_count()),
-        input: LineInput::default(),
-        kind: PromptKind::GoToLine,
-        confirm: false,
-    }));
+    let title = format!("Go to line (1-{})", app.doc().line_count());
+    let prompt = Prompt::text(title, LineInput::default(), PromptKind::GoToLine);
+    app.overlay = Some(Overlay::Prompt(prompt));
 }
 
 /// The files of the project for a picker: the recent ones first, the
@@ -702,22 +802,29 @@ fn open_commands_picker(app: &mut App) {
         .filter_map(|(group, id, title)| Some((rank(group)?, group, id, title)))
         .collect();
     listed.sort_by_key(|(rank, ..)| *rank);
-    let items = listed
-        .into_iter()
-        .map(|(_, group, id, title)| PickerItem {
-            detail: app.keymap.keys_in(context, &id).join("  "),
-            label: title,
-            group: group.name().to_string(),
-            data: id,
-            ..PickerItem::default()
-        })
-        .collect();
+    let commands = listed.into_iter().map(|(_, group, id, title)| PickerItem {
+        detail: key_hints(app, context, &id).join("  "),
+        label: title,
+        group: group.name().to_string(),
+        data: id,
+        ..PickerItem::default()
+    });
+    let built_in = BUILT_IN_KEYS.iter().map(|(keys, what)| PickerItem {
+        detail: keys.to_string(),
+        label: what.to_string(),
+        group: "Keys".to_string(),
+        ..PickerItem::default()
+    });
+    let items = commands.chain(built_in).collect();
     let title = format!("Commands ({})", context.name());
     set_picker(app, Picker::new(PickerKind::Commands, &title, items));
 }
 
 fn open_menu(app: &mut App, spec: &'static MenuSpec) {
-    app.overlay = Some(Overlay::Menu(Menu { spec, selected: 0 }));
+    app.overlay = Some(Overlay::Menu(Menu {
+        spec,
+        opened: Instant::now(),
+    }));
 }
 
 fn resize_tree(app: &mut App, delta: i32) {
@@ -879,8 +986,7 @@ fn reveal_in_tree(app: &mut App) {
     match app.doc().path.clone() {
         Some(path) => {
             app.tree.reveal(&path, &app.git);
-            let height = app.layout.sidebar.map(|r| r.h as usize).unwrap_or(20);
-            app.tree.ensure_visible(height.saturating_sub(1));
+            app.tree.ensure_visible(app.tree_list_height());
         }
         None => app.tree.rebuild(&app.git),
     }
@@ -912,12 +1018,9 @@ fn rename_prompt(app: &mut App) {
         return;
     };
     let relative = app.relative(&path);
-    app.overlay = Some(Overlay::Prompt(Prompt {
-        title: "Rename to".to_string(),
-        input: LineInput::with_text(&relative),
-        kind: PromptKind::Rename(path),
-        confirm: false,
-    }));
+    let input = LineInput::with_text(&relative);
+    let prompt = Prompt::text("Rename to", input, PromptKind::Rename(path));
+    app.overlay = Some(Overlay::Prompt(prompt));
 }
 
 fn delete_prompt(app: &mut App) {
@@ -925,12 +1028,9 @@ fn delete_prompt(app: &mut App) {
         app.notify("Nothing to delete: save the file first");
         return;
     };
-    app.overlay = Some(Overlay::Prompt(Prompt {
-        title: format!("Delete {}? (y/n)", app.relative(&path)),
-        input: LineInput::default(),
-        kind: PromptKind::Delete(path),
-        confirm: true,
-    }));
+    let title = format!("Delete {}?", app.relative(&path));
+    let prompt = Prompt::confirm(title, PromptKind::Delete(path));
+    app.overlay = Some(Overlay::Prompt(prompt));
 }
 
 fn copy_path(app: &mut App) {
@@ -944,101 +1044,35 @@ fn copy_path(app: &mut App) {
     app.notify(format!("Copied {relative}"));
 }
 
-/// Help: every key binding, the bindings of the focused panel first, then
-/// the keys that are not commands. Enter runs the selected command.
-fn open_keys_picker(app: &mut App) {
-    let context = app.context();
-    let title_of = |id: &str| {
-        COMMANDS
-            .iter()
-            .find(|c| c.id == id)
-            .map(Command::full_title)
-            .or_else(|| {
-                app.plugin_commands
-                    .iter()
-                    .find(|(cid, _)| cid == id)
-                    .map(|(_, title)| title.clone())
-            })
-            .unwrap_or_else(|| id.to_string())
-    };
-    let mut grouped: Vec<(crate::keymap::Context, String, Vec<String>)> = Vec::new();
-    for (bound_context, key, command) in app.keymap.all() {
-        match grouped
-            .iter_mut()
-            .find(|(c, id, _)| *c == bound_context && *id == command)
-        {
-            Some((_, _, keys)) => keys.push(key),
-            None => grouped.push((bound_context, command, vec![key])),
-        }
-    }
-    let rank = |c: crate::keymap::Context| {
-        if c == context || c == crate::keymap::Context::Global {
-            0
-        } else {
-            1
-        }
-    };
-    let order = |id: &str| {
-        COMMANDS
-            .iter()
-            .position(|c| c.id == id)
-            .unwrap_or(COMMANDS.len())
-    };
-    grouped.sort_by_key(|(c, id, _)| (rank(*c), order(id)));
-    let mut items: Vec<PickerItem> = grouped
-        .into_iter()
-        .map(|(bound_context, command, keys)| PickerItem {
-            label: format!("{:<20} {}", keys.join(" "), title_of(&command)),
-            detail: bound_context.name().to_string(),
-            data: command,
-            ..PickerItem::default()
-        })
-        .collect();
-    items.extend(BUILT_IN_KEYS.iter().map(|(keys, what, where_)| PickerItem {
-        label: format!("{keys:<20} {what}"),
-        detail: where_.to_string(),
-        ..PickerItem::default()
-    }));
-    set_picker(
-        app,
-        Picker::new(PickerKind::Commands, "Key bindings (enter runs)", items),
-    );
-}
-
-/// Keys handled by the panels themselves, not bound to commands.
-const BUILT_IN_KEYS: &[(&str, &str, &str)] = &[
-    ("alt+w 1", "Focus the file tree", "switcher"),
-    ("alt+w 2-9", "Show recent file 1-8", "switcher"),
-    ("alt+w alt+w", "Next recent file", "switcher"),
-    ("ctrl+g 1-2", "Go to a line / the definition", "menu"),
-    (
-        "alt+m 1-5",
-        "Bookmark toggle, next, previous, list, clear",
-        "menu",
-    ),
-    ("up down enter", "Choose from a menu", "menu"),
-    ("shift+arrows", "Select", "editor"),
+/// Keys handled by the panels themselves, not bound to commands: the last
+/// section of the palette.
+const BUILT_IN_KEYS: &[(&str, &str)] = &[
+    ("ctrl+o 1", "Switch: focus the file tree"),
+    ("ctrl+o 2-9", "Switch: show recent file 1-8"),
+    ("ctrl+o ctrl+o", "Switch: next recent file"),
+    ("ctrl+key", "Menu: the same as the key"),
+    ("ctrl+arrow", "Menu: run its arrow command again"),
+    ("shift+arrows", "Editor: select"),
     (
         "ctrl+left ctrl+right",
-        "Move jumpChars characters (10)",
-        "editor",
+        "Editor: move jumpChars characters (10)",
     ),
-    ("ctrl+up ctrl+down", "Move jumpLines lines (5)", "editor"),
-    ("ctrl+home ctrl+end", "Start / end of the file", "editor"),
-    ("tab shift+tab", "Indent / outdent", "editor"),
-    ("ctrl+click", "Go to definition", "editor"),
-    (
-        "ctrl+f tab",
-        "Glob filter (*.rs, src/**, !*.test.ts)",
-        "picker",
-    ),
-    ("enter down up", "Next / previous match", "find"),
-    ("alt+c alt+r", "Case sensitive / regex", "find"),
-    ("alt+a", "Replace all", "find"),
-    ("enter space", "Open file / fold folder", "tree"),
-    ("left right", "Fold / unfold", "tree"),
-    ("esc tab", "Back to the editor", "tree"),
-    ("drag the right edge", "Resize the file tree", "tree"),
+    ("ctrl+up ctrl+down", "Editor: move jumpLines lines (5)"),
+    ("ctrl+home ctrl+end", "Editor: start / end of the file"),
+    ("tab shift+tab", "Editor: indent / outdent"),
+    ("ctrl+click", "Editor: go to definition"),
+    ("tab", "Picker: glob filter (*.rs, src/**, !*.test.ts)"),
+    ("up", "Picker: the last search, before typing"),
+    ("enter down up", "Find: next / previous match"),
+    ("tab left right", "Find: next field or option"),
+    ("space enter", "Find: toggle an option, run a button"),
+    ("left right enter", "Dialog: pick a button"),
+    ("enter space", "Tree: open file / fold folder"),
+    ("left right", "Tree: fold / unfold"),
+    ("up", "Tree: from the first file to the filters"),
+    ("space enter", "Tree: tick a filter (changed, ignored)"),
+    ("esc tab", "Tree: back to the editor"),
+    ("drag the right edge", "Tree: resize the file tree"),
 ];
 
 /// Saves document `id`, also when a pane without the focus shows it.
@@ -1055,13 +1089,18 @@ fn save_doc(app: &mut App, id: usize) {
 }
 
 fn open_find(app: &mut App, replace: bool) {
-    if app.focus == Focus::Find && !replace && !app.find.input.text.is_empty() {
+    if app.focus == Focus::Find && replace {
+        let open = !app.find.replace_open;
+        app.find.set_replace_open(open);
+        return;
+    }
+    if app.focus == Focus::Find && !app.find.input.text.is_empty() {
         find_step(app, true);
         return;
     }
     app.find_open = true;
     app.find.replace_open = replace || (app.find.replace_open && app.focus == Focus::Find);
-    app.find.replace_focused = false;
+    app.find.field = FindField::Query;
     let selected = app.doc().selected_text();
     if !selected.is_empty() && !selected.contains('\n') {
         app.find.input.prefill(&selected);
@@ -1273,7 +1312,7 @@ fn paste(app: &mut App) {
     });
 }
 
-/// Answers a prompt (Enter, or y/n for confirmations).
+/// Answers a prompt: the typed text, or the answer of a button.
 pub fn answer_prompt(app: &mut App, prompt: Prompt, answer: Option<String>) {
     match prompt.kind {
         PromptKind::Plugin(id) => {

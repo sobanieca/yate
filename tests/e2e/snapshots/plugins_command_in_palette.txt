@@ -1,15 +1,15 @@
 # plugins_command_in_palette
 # start: yate a.txt
 # keys: ctrl+d alt+s
-# keys: alt+p
+# keys: ctrl+h
 # type: "shout"
 # 60x8, cursor at column 12, row 1
 ┌────────────────────────────────────────────────────────────┐
-│  1╭─ Commands (editor) ───────────────────────── 1/44 ─╮   │
+│  1╭─ Commands (editor) ───────────────────────── 2/67 ─╮   │
 │  2│ ❯ shout                                            │   │
 │   │────────────────────────────────────────────────────│   │
 │   │▌ Plugins    Shout the selection              alt+s │   │
-│   │                                                    │   │
+│   │  Keys       Switch: focus the file tree   ctrl+o 1 │   │
 │   │                                                    │   │
 │   │                                                    │   │
 │ PI╰────────────────────────────────────────────────────╯:7 │

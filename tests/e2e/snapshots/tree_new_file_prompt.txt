@@ -3,15 +3,15 @@
 # keys: ctrl+n
 # 70x14, cursor at column 16, row 4
 ┌──────────────────────────────────────────────────────────────────────┐
-│ PROJECT                                  Y A T E                     │
-│ ▸ src                            yet another text editor             │
-│   .gitignore                                                         │
-│   README.╭─ New file (end with / for a folder) ───────────╮ctrl+p    │
-│          │ src/                                           │ alt+f    │
-│          ╰────────────────────────────────────────────────╯ alt+e    │
-│                          switch: tree, files                alt+w    │
-│                          command palette                    alt+p    │
-│                          all key bindings                  ctrl+h    │
+│ PROJECT                                                              │
+│ [ ] changed                              Y A T E                     │
+│ [ ] ignored                      yet another text editor             │
+│ ▸ src    ╭─ New file (end with / for a folder) ───────────╮          │
+│   .gitign│ src/                                           │ctrl+p    │
+│   README.╰────────────────────────────────────────────────╯ctrl+r    │
+│                          file tree                         ctrl+t    │
+│                          switch: tree, files               ctrl+o    │
+│                          commands and keys                 ctrl+h    │
 │                          quit                              ctrl+q    │
 │                                                                      │
 │                                                                      │

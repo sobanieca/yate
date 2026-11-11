@@ -3,16 +3,16 @@
 # keys: ctrl+h
 # 70x12, cursor at column 7, row 1
 ┌──────────────────────────────────────────────────────────────────────┐
-│  1╭─ Key bindings (enter runs) ────────────────────────── 69/69 ─╮   │
+│  1╭─ Commands (editor) ────────────────────────────────── 66/66 ─╮   │
 │  2│ ❯                                                            │   │
 │   │──────────────────────────────────────────────────────────────│   │
-│   │▌ ctrl+s               File: Save                      global │   │
-│   │  ctrl+n               File: New file…                 global │   │
-│   │  ctrl+z               Edit: Undo                      editor │   │
-│   │  ctrl+y               Edit: Redo                      editor │   │
-│   │  ctrl+c               Edit: Copy                      editor │   │
-│   │  ctrl+x               Edit: Cut                       editor │   │
-│   │  ctrl+v               Edit: Paste                     editor │   │
-│   │  ctrl+a               Edit: Select all                editor │   │
+│   │▌ File       Save                                      ctrl+s │   │
+│   │             New file…                                 ctrl+n │   │
+│   │             Rename…                                          │   │
+│   │             Delete…                                          │   │
+│   │             Copy relative path                               │   │
+│   │             Reload from disk                                 │   │
+│   │  Edit       Undo                                      ctrl+z │   │
+│   │             Redo                                      ctrl+y │   │
 │ PI╰──────────────────────────────────────────────────────────────╯:1 │
 └──────────────────────────────────────────────────────────────────────┘

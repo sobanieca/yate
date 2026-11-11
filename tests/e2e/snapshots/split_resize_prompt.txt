@@ -1,10 +1,10 @@
 # split_resize_prompt
 # start: yate one.txt
-# keys: alt+s 1
+# keys: ctrl+w v
 # keys: ctrl+p
 # type: "two.txt"
 # keys: enter
-# keys: alt+s 2 alt+s 3
+# keys: ctrl+w s ctrl+w r
 # 80x16, cursor at column 13, row 5
 ┌────────────────────────────────────────────────────────────────────────────────┐
 │ one.txt                                 two.txt                                │

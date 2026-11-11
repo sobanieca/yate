@@ -19,7 +19,7 @@ only, so it is safe to commit: its `plugins` section only picks plugins by name,
 code comes from `~/.config/yate/plugins`. Plugins run after `yate.json` is applied, so they
 can override it.
 
-The command **Open yate.json** (command palette, Alt+P) opens the closest file, or creates
+The command **Open yate.json** (command palette, Ctrl+H) opens the closest file, or creates
 `~/yate.jsonc` from a commented template that lists every default key binding with its
 command id and title, so keys can be changed in place. Saving a `yate.json` or `yate.jsonc` (or a file in `~/.config/yate`)
 applies it at once; **Reload yate.json and plugins** does the same by hand. Mistakes show in the status
@@ -111,8 +111,9 @@ line; `jumpLines` (default `5`) is how many lines Ctrl+Up and Ctrl+Down move.
 `treeWidth` (default `0`) is the width of the file tree in columns; `0` fits the names. `[`
 and `]` in the tree, or dragging its right edge, change it until yate closes.
 
-`keyHintDelay` (default `500`) is the time in milliseconds after Alt+W before the numbered
-switch targets pop up; `0` shows them at once.
+`keyHintDelay` (default `500`) is the time in milliseconds before the popup of a menu
+(Ctrl+G, Ctrl+K, Ctrl+W, Ctrl+T, Ctrl+L) or of the Ctrl+O switch targets shows; `0` shows it
+at once. The keys work before it shows.
 
 `updateCheck` (default `true`) checks once a day for a new release of yate and shows a
 message when there is one; `yate update` installs it. The environment variable
@@ -121,24 +122,35 @@ message when there is one; `yate update` installs it. The environment variable
 ## keys
 
 Bindings per context: `global` (everywhere), `editor` and `tree`. A context
-binding wins over a global one. Values are command ids: Ctrl+H lists every binding, the
-command palette (Alt+P) shows the commands of the focused panel, and the template of **Open
-yate.json** lists all default bindings and the commands without a key. Key names are like
+binding wins over a global one. Values are command ids: the command palette (Ctrl+H) shows
+the commands of the focused panel with their keys, and the template of **Open yate.json**
+lists all default bindings and the commands without a key. Key names are like
 `ctrl+p`, `alt+shift+down`, `alt+tab`, `ctrl+\\`, `ctrl+/`; a single letter like `"c"` binds
 a key of the tree. A key can run a plugin command too.
 
-By default every command has one key and no key uses Ctrl+Shift. Two keys open a numbered
-menu of related commands: Ctrl+G (`goto.menu`: `goto.line`, `goto.definition`) and Alt+M
-(`bookmark.menu`: `bookmark.toggle`, `bookmark.next`, `bookmark.previous`,
-`picker.bookmarks`, `bookmark.clear`). The commands behind a menu have no key of their own;
-bind one to skip the menu:
+Every default key is Ctrl and a letter: no Alt, no Ctrl+Shift. Five keys open a menu of
+related commands, and a letter or an arrow then runs one:
+
+| Key    | Command         | Commands in the menu                                              |
+| ------ | --------------- | ----------------------------------------------------------------- |
+| Ctrl+G | `goto.menu`     | `goto.line`, `goto.definition`, `jump.back`, `jump.forward`       |
+| Ctrl+K | `bookmark.menu` | `bookmark.toggle`, `bookmark.next`, `bookmark.previous`, `picker.bookmarks`, `bookmark.clear` |
+| Ctrl+W | `view.paneMenu` | `view.splitVertical`, `view.splitHorizontal`, `view.focusPaneLeft` / `Below` / `Above` / `Right`, `view.focusNextPane`, `view.resizePane`, `view.equalPanes`, `view.closePane`, `view.closeOtherPanes`, `view.toggleScrollSync` |
+| Ctrl+T | `tree.menu`     | `tree.toggle`, `tree.reveal`, `tree.focus`, `tree.lock`           |
+| Ctrl+L | `edit.lineMenu` | `edit.moveLineUp`, `edit.moveLineDown`, `edit.outdent`, `edit.indent`, `edit.duplicateLine`, `edit.deleteLine` |
+
+The key of a menu can be changed, the keys inside it are fixed. The commands behind a menu
+have no key of their own; bind one to skip the menu:
 
 ```jsonc
-{ "keys": { "editor": { "alt+d": "goto.definition" }, "global": { "alt+n": "bookmark.next" } } }
+{ "keys": { "editor": { "ctrl+e": "goto.definition" }, "global": { "ctrl+j": "bookmark.next" } } }
 ```
 
-Alt+W (`switch.next`) waits for a digit: `1` focuses the file tree, `2`-`9` show a recent
-file, the latest first. Pressing it again shows the next recent file instead.
+Ctrl+O (`switch.next`) waits for a digit: `1` focuses the file tree, `2`-`9` show a recent
+file, the latest first. Pressing it again shows the next recent file instead;
+`switch.previous` goes the other way and has no key.
+
+Ctrl+I, Ctrl+M and Ctrl+[ cannot be bound: terminals send them as Tab, Enter and Esc.
 
 ## plugins
 

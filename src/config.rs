@@ -33,7 +33,7 @@ pub struct Options {
     pub jump_lines: usize,
     /// Checks once a day for a new release and tells when there is one.
     pub update_check: bool,
-    /// Milliseconds after Alt+W before the numbered targets pop up.
+    /// Milliseconds before the popup of a menu or of the switcher shows.
     pub key_hint_delay: u64,
 }
 

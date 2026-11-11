@@ -9,7 +9,7 @@ shipped as one binary. It behaves like a basic VS Code: a file tree, Ctrl+P, liv
 split view, go to definition without a language server, and JavaScript plugins
 in QuickJS.
 
-The current version is 0.3.0, an early release. The 0.x series is still settling, so prefer
+The current version is 0.5.0, an early release. The 0.x series is still settling, so prefer
 the better design over compatibility: change keys, options or the plugin API when needed,
 without shims, and document the change.
 
@@ -86,7 +86,7 @@ How the pieces fit:
   per file the panes of a split show (`App::panes`; the cursor and scroll of the focused pane
   live in its document, the other panes keep theirs in `Pane`). `App::open` shows a file in place of the one in the
   focused pane; a document no pane shows is dropped (`drop_hidden_docs`), and only its path,
-  cursor and scroll stay in `App::recent` (Ctrl+P order, the Alt+W switcher). Anything that
+  cursor and scroll stay in `App::recent` (Ctrl+P order, the Ctrl+O switcher). Anything that
   takes a file off the screen first calls `App::may_leave` (or `may_drop`), which asks to
   save or discard unsaved changes and then runs the action again.
 - **All text changes go through `Document::apply`**, which records undo history and feeds
@@ -97,7 +97,7 @@ How the pieces fit:
 - **Everything a key does is a command id** (`file.save`, `picker.grep`...). Key bindings,
   the command palette and plugins all run commands by id. Cursor motions and typing are
   handled directly in `app/input.rs`. Default bindings are `keymap::DEFAULTS`; the `yate.json`
-  template (`settings::template`) and the Ctrl+H help are generated from them.
+  template (`settings::template`) and the keys in the Ctrl+H palette are generated from them.
 - **Rendering** draws into a `Surface`; `Terminal::flush` writes only the cells that changed.
   Views read `App`; `App::prepare_frame` updates caches (syntax, git signs, find matches,
   picker preview) before drawing.
@@ -141,12 +141,22 @@ query. Update the language count and list in `README.md` and `docs/index.html` (
   rquickjs, ignore, nucleo-matcher, similar, regex, unicode-width/segmentation, ureq (rustls,
   for updates only), flate2 (unpacking update downloads). git runs as a child process; never link a git library.
 - UTF-8 only. No other encodings.
-- Keys must not need function keys and must work inside tmux and Termux: no default binding
-  uses Ctrl+Shift, and avoid Ctrl+B (tmux prefix), Ctrl+Tab and Shift+Tab as the only way to
-  do something.
-- Every command has at most one default key (a test in `src/keymap.rs` checks it). Related
-  commands share one key that opens a numbered menu (`MenuSpec` in `src/app/commands.rs`:
-  Ctrl+G go to, Alt+M bookmarks, Alt+S split) instead of getting a key each.
+- Default keys are Ctrl and a letter only, so they work in every terminal, inside tmux and
+  in Termux: no Alt, no Ctrl+Shift, no function keys, no Ctrl+B (tmux prefix), no Ctrl+I or
+  Ctrl+M (Tab and Enter to a terminal), and never Ctrl+Tab or Shift+Tab as the only way to
+  do something. A test in `src/keymap.rs` checks it.
+- Keep the direct keys few: only what is pressed all the time (save, find, clipboard, undo)
+  gets one. Everything else goes into a menu (`MenuSpec` in `src/app/commands.rs`: Ctrl+G go
+  to, Ctrl+K bookmarks, Ctrl+W panes, Ctrl+T file tree, Ctrl+L lines), where a letter or an
+  arrow picks the command, with Ctrl held or not. Do not use `i`, `m` or a digit as a menu
+  key (Ctrl+I and Ctrl+M are Tab and Enter, terminals send no Ctrl+digit). Only commands on
+  the arrow keys repeat (`repeats`): right after one, Ctrl and an arrow run it again, so a
+  letter there would shadow a direct key.
+- Bars and dialogs are forms, not key maps: an option is a checkbox, an action is a button,
+  and Tab, the arrows, Space, Enter and clicks work them (the find bar: `FindField` and
+  `ui::find_controls`; confirmations: `Prompt::choices` and `ui::prompt_buttons`; the tree
+  filters: `TreeFilter` and `sidebar::filter_controls`). Do not
+  give an option or a button of a form a key of its own.
 - Every command has a `Group` (its section in the palette; titles do not repeat it) and a
   `Scope` in `COMMANDS`. The command palette lists only what the focused panel can do right
   now: a command with nothing to work on gets a condition in `LISTED_WHEN`, and one that only

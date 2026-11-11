@@ -134,6 +134,26 @@ impl LineInput {
         let prefix: String = self.text.chars().take(self.cursor).collect();
         text::str_width(&prefix)
     }
+
+    fn chars_scrolled(&self, width: usize) -> usize {
+        (self.cursor_col() + 1).saturating_sub(width)
+    }
+
+    /// The text that fits in `width` columns with the cursor in view, and
+    /// the column of the cursor in it.
+    pub fn visible(&self, width: usize) -> (String, usize) {
+        let skipped = self.chars_scrolled(width);
+        let shown = self.text.chars().skip(skipped).collect();
+        let cursor = self.cursor_col().min(width.saturating_sub(1));
+        (shown, cursor)
+    }
+
+    /// Puts the cursor at a clicked column of a field `width` columns wide.
+    pub fn click(&mut self, col: usize, width: usize) {
+        let at = self.chars_scrolled(width) + col;
+        self.cursor = at.min(self.text.chars().count());
+        self.selected = false;
+    }
 }
 
 #[cfg(test)]
@@ -156,6 +176,15 @@ mod tests {
         assert_eq!(input.cursor, 1);
         input.handle(KeyEvent::new(KeyCode::Char('u'), KeyModifiers::CONTROL));
         assert_eq!(input.text, "");
+    }
+
+    #[test]
+    fn long_text_scrolls_to_keep_the_cursor_in_view() {
+        let mut input = LineInput::with_text("abcdefghij");
+        assert_eq!(input.visible(6), ("fghij".to_string(), 5));
+        input.click(1, 6);
+        assert_eq!(input.cursor, 6);
+        assert_eq!(input.visible(20), ("abcdefghij".to_string(), 6));
     }
 
     #[test]

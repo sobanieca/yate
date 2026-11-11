@@ -34,8 +34,8 @@ const TEMPLATE_START: &str = r##"{
   "options": {},
   // Every key binding, by context: global (everywhere), editor and tree.
   // A context binding wins over a global one. Change a key or a command id here;
-  // "" removes a key. Each command has one key; ctrl+g and alt+m open a menu of
-  // commands, and binding one of those commands to a key skips the menu.
+  // "" removes a key. Some keys open a menu of commands (ctrl+g, ctrl+w...);
+  // binding one of those commands to a key of its own skips the menu.
   "keys": {
 "##;
 

@@ -5,13 +5,13 @@
 # 60x10, cursor hidden
 ┌────────────────────────────────────────────────────────────┐
 │ PROJECT                            Y A T E                 │
-│ ▾ packages                 yet another text editor         │
-│   ▾ web                                                    │
-│     ▾ src            find file                     ctrl+p  │
-│       ▾ component    live grep                      alt+f  │
-│         ▾ forms      file tree                      alt+e  │
-│           ▾ input    switch: tree, files            alt+w  │
-│               Dat    command palette                alt+p  │
-│   README.md          all key bindings              ctrl+h  │
-│ TREE  untitled    ctrl+h keys   text  utf-8  LF  100%  1:1 │
+│ [ ] changed                yet another text editor         │
+│ [ ] ignored                                                │
+│ ▾ packages           find file                     ctrl+p  │
+│   ▾ web              live grep                     ctrl+r  │
+│     ▾ src            file tree                     ctrl+t  │
+│       ▾ component    switch: tree, files           ctrl+o  │
+│         ▾ forms      commands and keys             ctrl+h  │
+│           ▾ input    quit                          ctrl+q  │
+│ TREE  untitled                  text  utf-8  LF  100%  1:1 │
 └────────────────────────────────────────────────────────────┘

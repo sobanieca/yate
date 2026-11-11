@@ -112,7 +112,7 @@ pub fn render(app: &mut App, surface: &mut Surface) -> Option<(u16, u16)> {
             .bg(t.bg_dark);
         let x = surface.put_str(label_x, input_y, "glob ", label_style, list_box.right() - 1);
         let glob_text = match (picker.glob.text.is_empty(), picker.glob_focused) {
-            (true, false) => "ctrl+f to filter",
+            (true, false) => "tab to filter",
             (true, true) => "*.ts, !test/**",
             _ => &picker.glob.text,
         };
@@ -131,9 +131,9 @@ pub fn render(app: &mut App, surface: &mut Surface) -> Option<(u16, u16)> {
     }
     if picker.has_glob() && list_box.h > 2 {
         let hint = if picker.glob_focused {
-            " globs: *.rs, src/** · !glob excludes · ctrl+f back "
+            " globs: *.rs, src/** · !glob excludes · tab back "
         } else {
-            " ctrl+f glob filter, e.g. *.ts, !*.test.ts "
+            " tab glob filter, e.g. *.ts, !*.test.ts "
         };
         surface.put_str(
             list_box.x + 2,

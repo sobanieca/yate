@@ -25,8 +25,39 @@ fn folders_come_first_and_expand_on_enter() {
 fn ignored_files_are_hidden_until_toggled() {
     let mut e = project();
     e.assert_screen_lacks("bundle");
-    e.keys("i");
-    e.snapshot("tree_with_ignored_files");
+    e.keys("up down");
+    assert_eq!(e.app().tree.selected, 0);
+    e.keys("up space");
+    e.snapshot_styles("tree_with_ignored_files");
+    e.keys("enter down");
+    e.assert_screen_contains("[ ] ignored");
+    e.assert_screen_lacks("bundle");
+    assert_eq!(e.app().tree.filter_focus, None);
+}
+
+#[test]
+fn filters_share_a_row_in_a_wide_tree_and_take_clicks() {
+    let mut e = Harness::builder()
+        .size(90, 8)
+        .file(".gitignore", "dist/\n")
+        .file("src/app.ts", "export const app = 1;\n")
+        .file("dist/bundle.js", "built\n")
+        .git()
+        .start();
+    e.assert_screen_contains("[ ] changed [ ] ignored");
+    e.keys("up right space");
+    e.assert_screen_contains("[ ] changed [x] ignored");
+    e.assert_screen_contains("dist");
+    e.keys("left down");
+    assert_eq!(e.app().tree.filter_focus, None);
+    e.click(14, 1);
+    e.assert_screen_contains("[ ] changed [ ] ignored");
+    e.click(2, 1);
+    e.assert_screen_contains("[x] changed [ ] ignored");
+    e.assert_screen_contains("No changed files");
+    e.keys("space esc");
+    e.assert_screen_contains("[ ] changed [ ] ignored");
+    assert_eq!(e.app().focus, yate::app::Focus::Editor);
 }
 
 #[test]
@@ -35,7 +66,7 @@ fn only_changed_files_filter() {
     e.write_file("src/lib/util.ts", "export const util = 3;\n")
         .write_file("new.ts", "new\n")
         .focus_gained();
-    e.keys("m");
+    e.keys("up up space down down");
     e.keys("right down right");
     e.snapshot("tree_changed_only");
 }
@@ -46,7 +77,7 @@ fn enter_on_a_file_opens_it_and_closes_the_tree_on_narrow_terminals() {
     e.keys("end enter");
     assert_eq!(e.app().doc().name(), "README.md");
     e.assert_screen_lacks("SRC");
-    e.keys("ctrl+t");
+    e.keys("ctrl+t r");
     e.snapshot("tree_reveal_current_file");
 }
 
@@ -59,24 +90,44 @@ fn new_rename_and_delete() {
     assert!(e.file_exists("src/routes/home.ts"));
     assert_eq!(e.app().doc().name(), "home.ts");
 
-    e.keys("ctrl+t r ctrl+u")
+    e.keys("ctrl+t r r ctrl+u")
         .type_text("src/routes/index.ts")
         .keys("enter");
     assert!(e.file_exists("src/routes/index.ts"));
     assert_eq!(e.app().doc().name(), "index.ts");
 
     e.keys("d");
-    e.assert_screen_contains("Delete src/routes/index.ts? (y/n)");
-    e.keys("y");
+    e.assert_screen_contains("Delete src/routes/index.ts?");
+    e.keys("enter");
+    assert!(e.file_exists("src/routes/index.ts"));
+    e.keys("d left enter");
     assert!(!e.file_exists("src/routes/index.ts"));
+}
+
+#[test]
+fn a_click_on_a_button_answers_a_question() {
+    let mut e = Harness::builder()
+        .size(60, 12)
+        .file("old.txt", "old\n")
+        .file("new.txt", "new\n")
+        .start();
+    e.keys("down d");
+    let row = (0..12)
+        .find(|y| e.screen().line(*y).contains(" Yes "))
+        .unwrap();
+    let line = e.screen().line(row);
+    let column = line[..line.find("Yes").unwrap()].chars().count() as u16;
+    e.click(column, row);
+    assert!(!e.file_exists("old.txt"));
+    assert!(e.file_exists("new.txt"));
 }
 
 #[test]
 fn mouse_click_on_a_folder_toggles_it() {
     let mut e = project();
-    e.click(4, 1);
+    e.click(4, 3);
     e.assert_screen_contains("lib");
-    e.click(4, 1);
+    e.click(4, 3);
     e.assert_screen_lacks("lib");
 }
 
@@ -92,7 +143,7 @@ fn f_and_g_search_in_the_selected_folder() {
     e.keys("down f");
     e.assert_screen_contains("Find file in src/");
     e.assert_screen_lacks("docs/app.md");
-    e.keys("ctrl+f").type_text("!*.test.ts");
+    e.keys("tab").type_text("!*.test.ts");
     e.snapshot("tree_files_in_folder");
     e.keys("esc enter down g").type_text("app");
     e.assert_screen_contains("Live grep in src/lib/");

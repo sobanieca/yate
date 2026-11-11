@@ -4,7 +4,7 @@
 # type: "needle"
 # keys: down down down
 # keys: up
-# keys: esc ctrl+g 1
+# keys: esc ctrl+g l
 # type: "30"
 # keys: enter ctrl+f
 # keys: esc
@@ -19,7 +19,7 @@
 │ 32  line 32: needle and Needle                             │
 │ 33  line 33: needle and Needle                             │
 │ 34  line 34: needle and Needle                             │
-│ EDIT  long.txt    ctrl+h keys   text  utf-8  LF  72%  30:1 │
+│ EDIT  long.txt                  text  utf-8  LF  72%  30:1 │
 └────────────────────────────────────────────────────────────┘
 
 styles
@@ -33,7 +33,7 @@ styles
 │abbaaccccacccaccccccacccaccccccaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
 │abbaaccccacccaccccccacccaccccccaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
 │abbaaccccacccaccccccacccaccccccaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
-│ghhhhgijjjjjjjjiiiikkkkkkikkkkiiilllliillllliilliilllighhhhg│
+│ghhhhgijjjjjjjjiiiiiiiiiiiiiiiiiikkkkiikkkkkiikkiikkkighhhhg│
 └────────────────────────────────────────────────────────────┘
 a  bg BG #24283b
 b  fg FG_GUTTER #3b4261, bg BG #24283b
@@ -45,5 +45,4 @@ g  bg BLUE #7aa2f7
 h  fg BG_DARK #1f2335, bg BLUE #7aa2f7, bold
 i  bg BG_DARK #1f2335
 j  fg FG #c0caf5, bg BG_DARK #1f2335
-k  fg DARK5 #737aa2, bg BG_DARK #1f2335
-l  fg FG_DARK #a9b1d6, bg BG_DARK #1f2335
+k  fg FG_DARK #a9b1d6, bg BG_DARK #1f2335

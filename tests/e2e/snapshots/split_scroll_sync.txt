@@ -1,14 +1,14 @@
 # split_scroll_sync
 # start: yate one.txt
-# keys: alt+s 1
+# keys: ctrl+w v
 # keys: ctrl+p
 # type: "two.txt"
 # keys: enter
-# keys: alt+s 1
+# keys: ctrl+w v
 # keys: ctrl+p
 # type: "three.txt"
 # keys: enter
-# keys: ctrl+j
+# keys: ctrl+w y
 # keys: down
 # keys: down
 # keys: down

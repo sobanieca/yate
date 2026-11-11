@@ -4,13 +4,13 @@
 # 60x10, cursor hidden
 ┌────────────────────────────────────────────────────────────┐
 │ PROJECT                            Y A T E                 │
-│                            yet another text editor         │
-│                                                            │
+│ [ ] changed                yet another text editor         │
+│ [ ] ignored                                                │
 │                      find file                     ctrl+p  │
-│ onents               live grep                      alt+f  │
-│ rms                  file tree                      alt+e  │
-│ inputs               switch: tree, files            alt+w  │
-│   DatePicker.tsx     command palette                alt+p  │
-│                      all key bindings              ctrl+h  │
-│ TREE  untitled    ctrl+h keys   text  utf-8  LF  100%  1:1 │
+│                      live grep                     ctrl+r  │
+│ onents               file tree                     ctrl+t  │
+│ rms                  switch: tree, files           ctrl+o  │
+│ inputs               commands and keys             ctrl+h  │
+│   DatePicker.tsx     quit                          ctrl+q  │
+│ TREE  untitled                  text  utf-8  LF  100%  1:1 │
 └────────────────────────────────────────────────────────────┘

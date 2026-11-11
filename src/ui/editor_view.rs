@@ -263,10 +263,9 @@ fn render_pane(
 const WELCOME: &[(&str, &str)] = &[
     ("picker.files", "find file"),
     ("picker.grep", "live grep"),
-    ("tree.toggle", "file tree"),
+    ("tree.menu", "file tree"),
     ("switch.next", "switch: tree, files"),
-    ("picker.commands", "command palette"),
-    ("help.keys", "all key bindings"),
+    ("picker.commands", "commands and keys"),
     ("app.quit", "quit"),
 ];
 

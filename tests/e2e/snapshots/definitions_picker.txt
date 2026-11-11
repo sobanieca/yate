@@ -1,8 +1,8 @@
 # definitions_picker
 # start: yate src/app.ts
 # click: 5,5
-# keys: ctrl+g 2
-# keys: ctrl+g 2
+# keys: ctrl+g d
+# keys: ctrl+g d
 # 80x16, cursor at column 7, row 3
 ┌────────────────────────────────────────────────────────────────────────────────┐
 │  1  export function render(view) {                                             │

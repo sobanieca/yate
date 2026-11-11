@@ -1,15 +1,15 @@
 # pickers_command_palette
 # start: yate README.md
-# keys: alt+p
+# keys: ctrl+h
 # type: "toggle tree"
 # 80x16, cursor at column 18, row 3
 ┌────────────────────────────────────────────────────────────────────────────────┐
 │  1  Call render() to draw.                                                     │
 │  2                                                                             │
-│   ╭─ Commands (editor) ───────────────────────────────────────────── 1/43 ─╮   │
+│   ╭─ Commands (editor) ───────────────────────────────────────────── 1/66 ─╮   │
 │   │ ❯ toggle tree                                                          │   │
 │   │────────────────────────────────────────────────────────────────────────│   │
-│   │▌ File tree  Toggle                                               alt+e │   │
+│   │▌ File tree  Toggle                                            ctrl+t t │   │
 │   │                                                                        │   │
 │   │                                                                        │   │
 │   │                                                                        │   │

@@ -3,19 +3,19 @@
 # 70x16, cursor hidden
 ┌──────────────────────────────────────────────────────────────────────┐
 │ PROJECT                                                              │
-│ ▸ src                                    Y A T E                     │
-│   README.md                      yet another text editor             │
-│                                                                      │
-│                          find file                         ctrl+p    │
-│                          live grep                          alt+f    │
-│                          file tree                          alt+e    │
-│                          switch: tree, files                alt+w    │
-│                          command palette                    alt+p    │
-│                          all key bindings                  ctrl+h    │
+│ [ ] changed                              Y A T E                     │
+│ [ ] ignored                      yet another text editor             │
+│ ▸ src                                                                │
+│   README.md              find file                         ctrl+p    │
+│                          live grep                         ctrl+r    │
+│                          file tree                         ctrl+t    │
+│                          switch: tree, files               ctrl+o    │
+│                          commands and keys                 ctrl+h    │
 │                          quit                              ctrl+q    │
 │                                                                      │
 │                                                                      │
 │                                          project                     │
 │                                                                      │
-│ TREE  untitled              ctrl+h keys   text  utf-8  LF  100%  1:1 │
+│                                                                      │
+│ TREE  untitled          ctrl+h commands   text  utf-8  LF  100%  1:1 │
 └──────────────────────────────────────────────────────────────────────┘
