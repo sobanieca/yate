@@ -188,3 +188,18 @@ fn ctrl_shift_keys_are_not_bound() {
     e.assert_screen_contains("EDIT");
     assert!(!e.app().tree_visible);
 }
+
+#[test]
+fn double_esc_shows_quit_key() {
+    let mut e = Harness::builder()
+        .size(60, 12)
+        .file("app.js", "let a = 1;\n")
+        .open("app.js")
+        .start();
+
+    e.keys("esc");
+    e.assert_screen_lacks("To quit yate");
+    e.keys("esc");
+    e.assert_screen_contains("To quit yate, press ctrl+q");
+    e.snapshot("keys_double_esc_quit_hint");
+}

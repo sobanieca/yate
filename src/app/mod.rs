@@ -412,6 +412,8 @@ pub struct App {
     pub panes: Panes,
     pub switcher: Option<Switcher>,
     pub menu_repeat: Option<MenuRepeat>,
+    /// When Esc was last pressed, to spot a double Esc.
+    pub last_esc: Option<Instant>,
     pub files: Vec<String>,
     pub git: GitStatus,
     head: Option<String>,
@@ -479,6 +481,7 @@ impl App {
             panes: Panes::default(),
             switcher: None,
             menu_repeat: None,
+            last_esc: None,
             files: Vec::new(),
             git: GitStatus::default(),
             head: None,

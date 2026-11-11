@@ -17,10 +17,14 @@ use std::time::{Duration, Instant};
 
 const DOUBLE_CLICK: Duration = Duration::from_millis(400);
 const MENU_REPEAT_WINDOW: Duration = Duration::from_millis(1500);
+const DOUBLE_ESC: Duration = Duration::from_millis(600);
 
 impl App {
     pub fn handle_key(&mut self, key: KeyEvent) {
         let repeat = self.menu_repeat.take();
+        if self.is_double_esc(key) && self.dialog.is_none() && self.overlay.is_none() {
+            self.hint_quit_key();
+        }
         if self.dialog.is_some() {
             self.dialog_key(key);
             return;
@@ -69,6 +73,22 @@ impl App {
             Focus::Editor => self.editor_key(key),
             Focus::Find => self.find_key(key),
             Focus::Tree => self.tree_key(key),
+        }
+    }
+
+    fn is_double_esc(&mut self, key: KeyEvent) -> bool {
+        if key.code != KeyCode::Esc || !key.modifiers.is_empty() {
+            self.last_esc = None;
+            return false;
+        }
+        let double = self.last_esc.is_some_and(|at| at.elapsed() < DOUBLE_ESC);
+        self.last_esc = (!double).then(Instant::now);
+        double
+    }
+
+    fn hint_quit_key(&mut self) {
+        if let Some(key) = self.keymap.keys_for("app.quit").into_iter().next() {
+            self.notify(format!("To quit yate, press {key}"));
         }
     }
 

@@ -1,0 +1,19 @@
+# keys_double_esc_quit_hint
+# start: yate app.js
+# keys: esc
+# keys: esc
+# 60x12, cursor at column 5, row 1
+┌────────────────────────────────────────────────────────────┐
+│ app.js ×                                                   │
+│  1  let a = 1;                                             │
+│  2                                                         │
+│                                                            │
+│                                                            │
+│                                                            │
+│                                                            │
+│                                                            │
+│                                                            │
+│                                                            │
+│                                                            │
+│ EDIT  To quit yate, press ctrl+q                       1:1 │
+└────────────────────────────────────────────────────────────┘
