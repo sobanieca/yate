@@ -1,13 +1,17 @@
-# compare_folders
-# start: yate (project folder)
-# keys: down c
-# keys: up c
-# 80x12, cursor hidden
+# definitions_go_to_menu
+# start: yate src/app.ts
+# click: 5,5
+# keys: ctrl+g
+# 80x16, cursor hidden
 ┌────────────────────────────────────────────────────────────────────────────────┐
-│ DIFFERENT (3)           COMPARE  new/added.js  +1 -0  n/p next/prev change · en│
-│ A added.js                        @@ -1,0 +1,1 @@                              │
-│ M app.js                      1 + hello                                        │
-│ D gone.js                                                                      │
+│  1  import { render } from './editor/view';                                    │
+│  2  import { rows╭─ Go to ─────────────────────────────────╮                   │
+│  3  import * as m│ 1  Line…                                │                   │
+│  4               │ 2  Definition or file under the cursor  │                   │
+│  5  const app = {╰─────────────────────────────────────────╯                   │
+│  6  render(app);                                                               │
+│  7  model.reset();                                                             │
+│  8                                                                             │
 │                                                                                │
 │                                                                                │
 │                                                                                │
@@ -15,5 +19,5 @@
 │                                                                                │
 │                                                                                │
 │                                                                                │
-│ REVIEW  untitled       alt+w switch · ctrl+h keys   text  utf-8  LF  100%  1:1 │
+│ MENU  src/app.ts     esc cancel · 1-2 choose   typescript  utf-8  LF  71%  6:1 │
 └────────────────────────────────────────────────────────────────────────────────┘

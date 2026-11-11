@@ -1,11 +1,12 @@
 //! Pickers (Telescope style): a query, a filtered list and a preview. Files,
-//! open buffers, commands and bookmarks are filtered with fuzzy matching;
+//! commands and bookmarks are filtered with fuzzy matching;
 //! live grep results come from background searches.
 
 use crate::ui::input::LineInput;
 use crate::workspace::glob::GlobFilter;
 use nucleo_matcher::pattern::{CaseMatching, Normalization, Pattern};
 use nucleo_matcher::{Config, Matcher, Utf32Str};
+use std::borrow::Cow;
 use std::path::PathBuf;
 
 const MAX_SHOWN: usize = 2_000;
@@ -14,11 +15,9 @@ const MAX_SHOWN: usize = 2_000;
 pub enum PickerKind {
     Files,
     Grep,
-    Buffers,
     Commands,
     Bookmarks,
     Definitions,
-    CompareWith,
 }
 
 #[derive(Clone, Debug, Default)]
@@ -31,8 +30,32 @@ pub struct PickerItem {
     pub col: usize,
     /// Command id for the command palette.
     pub data: String,
+    /// The section of a command: shown in a column before the label and
+    /// matched by the query like the label.
+    pub group: String,
     /// Byte range in `detail` to emphasize (the grep match).
     pub detail_match: Option<(usize, usize)>,
+}
+
+impl PickerItem {
+    /// What the query is matched against: the label, after the section
+    /// when the item has one.
+    fn searched_text(&self) -> Cow<'_, str> {
+        if self.group.is_empty() {
+            Cow::Borrowed(&self.label)
+        } else {
+            Cow::Owned(format!("{} {}", self.group, self.label))
+        }
+    }
+
+    /// The char index in the matched text where the label starts.
+    pub fn label_offset(&self) -> usize {
+        if self.group.is_empty() {
+            0
+        } else {
+            self.group.chars().count() + 1
+        }
+    }
 }
 
 #[derive(Clone)]
@@ -50,7 +73,8 @@ pub struct Picker {
     filter: Option<GlobFilter>,
     filter_globs: String,
     pub items: Vec<PickerItem>,
-    /// Indices of shown items and the char positions of matched characters.
+    /// Indices of shown items and the char positions of matched characters
+    /// (in the section and the label, see `PickerItem::label_offset`).
     pub shown: Vec<(usize, Vec<u32>)>,
     pub selected: usize,
     pub scroll: usize,
@@ -60,7 +84,7 @@ pub struct Picker {
 
 impl Picker {
     pub fn new(kind: PickerKind, title: &str, items: Vec<PickerItem>) -> Picker {
-        let config = if matches!(kind, PickerKind::Files | PickerKind::CompareWith) {
+        let config = if kind == PickerKind::Files {
             Config::DEFAULT.match_paths()
         } else {
             Config::DEFAULT
@@ -164,7 +188,8 @@ impl Picker {
         let mut scored: Vec<(u32, usize)> = candidates
             .into_iter()
             .filter_map(|index| {
-                let haystack = Utf32Str::new(&self.items[index].label, &mut buffer);
+                let text = self.items[index].searched_text();
+                let haystack = Utf32Str::new(&text, &mut buffer);
                 pattern
                     .score(haystack, &mut self.matcher)
                     .map(|score| (score, index))
@@ -185,7 +210,8 @@ impl Picker {
             .into_iter()
             .map(|(_, index)| {
                 let mut indices = Vec::new();
-                let haystack = Utf32Str::new(&self.items[index].label, &mut buffer);
+                let text = self.items[index].searched_text();
+                let haystack = Utf32Str::new(&text, &mut buffer);
                 pattern.indices(haystack, &mut self.matcher, &mut indices);
                 indices.sort_unstable();
                 indices.dedup();

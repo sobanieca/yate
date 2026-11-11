@@ -1,12 +1,12 @@
 # split_same_file
 # start: yate one.txt
-# keys: ctrl+\ ctrl+g
+# keys: alt+s 1 ctrl+g 1
 # type: "40\n"
 # keys: ctrl+o
 # keys: ctrl+o
 # 70x10, cursor at column 40, row 8
 ┌──────────────────────────────────────────────────────────────────────┐
-│ one.txt                                                              │
+│ one.txt                            one.txt                           │
 │  1  one 1                        │ 33  one 33                        │
 │  2  one 2                        │ 34  one 34                        │
 │  3  one 3                        │ 35  one 35                        │

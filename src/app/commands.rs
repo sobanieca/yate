@@ -1,141 +1,341 @@
 //! Built-in commands. Every key binding and the command palette run
 //! commands by id; plugin commands share the same namespace.
 
-use super::{App, Focus, Overlay, Preview, Prompt, PromptKind, Review};
+use super::{App, Direction, Focus, Menu, MenuSpec, Overlay, Preview, Prompt, PromptKind, Side};
 use crate::clipboard::CopyOutcome;
 use crate::editor::history::EditKind;
 use crate::editor::ops;
 use crate::editor::selection::Selection;
+use crate::keymap::Context;
 use crate::picker::{Picker, PickerItem, PickerKind};
 use crate::syntax::{self, languages};
 use crate::ui::input::LineInput;
 use crate::workspace::grep::{self, GrepEvent};
 use crate::workspace::resolve;
+use std::collections::HashSet;
 use std::sync::atomic::Ordering;
+
+/// Where a command makes sense: the command palette lists the commands of
+/// the focused panel only.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Scope {
+    Anywhere,
+    Editor,
+    Tree,
+    /// The current file in the editor, or the selected row of the file tree.
+    File,
+}
+
+impl Scope {
+    pub fn includes(self, context: Context) -> bool {
+        match self {
+            Scope::Anywhere => true,
+            Scope::Editor => context == Context::Editor,
+            Scope::Tree => context == Context::Tree,
+            Scope::File => matches!(context, Context::Editor | Context::Tree),
+        }
+    }
+}
+
+/// The sections of the command palette.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Group {
+    File,
+    Edit,
+    Search,
+    GoTo,
+    Bookmarks,
+    View,
+    Tree,
+    Plugins,
+    App,
+}
+
+impl Group {
+    pub fn name(self) -> &'static str {
+        match self {
+            Group::File => "File",
+            Group::Edit => "Edit",
+            Group::Search => "Search",
+            Group::GoTo => "Go to",
+            Group::Bookmarks => "Bookmarks",
+            Group::View => "View",
+            Group::Tree => "File tree",
+            Group::Plugins => "Plugins",
+            Group::App => "yate",
+        }
+    }
+
+    /// The sections of the palette for a panel, the ones about the panel
+    /// first.
+    fn palette_order(context: Context) -> &'static [Group] {
+        match context {
+            Context::Tree => &[Group::File, Group::Tree, Group::Search, Group::App],
+            _ => &[
+                Group::File,
+                Group::Edit,
+                Group::Search,
+                Group::GoTo,
+                Group::Bookmarks,
+                Group::View,
+                Group::Tree,
+                Group::Plugins,
+                Group::App,
+            ],
+        }
+    }
+}
 
 pub struct Command {
     pub id: &'static str,
     pub title: &'static str,
+    pub group: Group,
+    pub scope: Scope,
     run: fn(&mut App),
 }
 
+impl Command {
+    /// The title with its section, for lists that are not grouped.
+    pub fn full_title(&self) -> String {
+        format!("{}: {}", self.group.name(), self.title)
+    }
+}
+
 macro_rules! commands {
-    ($($id:literal, $title:literal => $run:expr;)*) => {
-        pub const COMMANDS: &[Command] = &[$(Command { id: $id, title: $title, run: $run }),*];
+    ($($id:literal, $title:literal, $group:ident, $scope:ident => $run:expr;)*) => {
+        pub const COMMANDS: &[Command] = &[$(Command {
+            id: $id,
+            title: $title,
+            group: Group::$group,
+            scope: Scope::$scope,
+            run: $run,
+        }),*];
     };
 }
 
+const TREE_RESIZE_STEP: i32 = 4;
+
+const GO_TO_MENU: MenuSpec = MenuSpec {
+    title: "Go to",
+    items: &[
+        ("Line…", "goto.line"),
+        ("Definition or file under the cursor", "goto.definition"),
+    ],
+};
+
+const BOOKMARK_MENU: MenuSpec = MenuSpec {
+    title: "Bookmarks",
+    items: &[
+        ("Toggle on this line", "bookmark.toggle"),
+        ("Next", "bookmark.next"),
+        ("Previous", "bookmark.previous"),
+        ("List", "picker.bookmarks"),
+        ("Clear in this file", "bookmark.clear"),
+    ],
+};
+
+const SPLIT_MENU: MenuSpec = MenuSpec {
+    title: "Split",
+    items: &[
+        ("Vertical: side by side", "view.splitVertical"),
+        ("Horizontal: one above the other", "view.splitHorizontal"),
+        ("Resize this pane…", "view.resizePane"),
+        ("Equal sizes", "view.equalPanes"),
+        ("Close this pane", "view.closePane"),
+        ("Close the other panes", "view.closeOtherPanes"),
+    ],
+};
+
 commands! {
-    "app.quit", "Quit" => quit;
-    "help.keys", "Help: key bindings" => open_keys_picker;
-    "file.save", "Save file" => save;
-    "file.new", "New file…" => |app| new_file_prompt(app, None);
-    "file.reload", "Reload file from disk" => reload;
-    "file.rename", "Rename file or folder…" => rename_prompt;
-    "file.delete", "Delete file or folder…" => delete_prompt;
-    "file.copyPath", "Copy relative path" => copy_path;
-    "file.compare", "Compare: mark for compare, or compare with the marked file or folder" => compare_marked;
-    "file.compareWith", "Compare current file with…" => open_compare_picker;
-    "picker.files", "Find file" => |app| open_files_picker(app, None);
-    "picker.grep", "Live grep" => |app| open_grep_picker(app, false, None);
-    "picker.grepGlob", "Live grep in files matching a glob" => |app| open_grep_picker(app, true, None);
-    "picker.filesInFolder", "Find file in the folder selected in the tree" => |app| {
+    "file.save", "Save", File, Editor => save;
+    "file.new", "New file…", File, Anywhere => |app| new_file_prompt(app, None);
+    "file.rename", "Rename…", File, File => rename_prompt;
+    "file.delete", "Delete…", File, File => delete_prompt;
+    "file.copyPath", "Copy relative path", File, File => copy_path;
+    "file.reload", "Reload from disk", File, Editor => reload;
+    "edit.undo", "Undo", Edit, Editor => |app| edit(app, |doc, _| { doc.undo(); });
+    "edit.redo", "Redo", Edit, Editor => |app| edit(app, |doc, _| { doc.redo(); });
+    "edit.copy", "Copy", Edit, Editor => |app| copy(app, false);
+    "edit.cut", "Cut", Edit, Editor => |app| copy(app, true);
+    "edit.paste", "Paste", Edit, Editor => paste;
+    "edit.selectAll", "Select all", Edit, Editor => |app| {
+        let doc = app.doc_mut();
+        doc.selection = Selection::new(0, doc.rope.len_chars());
+    };
+    "edit.selectNext", "Select word / next occurrence", Edit, Editor => |app| edit(app, |doc, _| ops::select_next_occurrence(doc));
+    "edit.toggleComment", "Toggle line comment", Edit, Editor => |app| edit(app, |doc, _| ops::toggle_comment(doc));
+    "edit.moveLineUp", "Move line up", Edit, Editor => |app| edit(app, |doc, _| ops::move_lines(doc, false));
+    "edit.moveLineDown", "Move line down", Edit, Editor => |app| edit(app, |doc, _| ops::move_lines(doc, true));
+    "edit.duplicateLine", "Duplicate line", Edit, Editor => |app| edit(app, |doc, _| ops::duplicate_lines(doc));
+    "edit.deleteLine", "Delete line", Edit, Editor => |app| edit(app, |doc, _| ops::delete_lines(doc));
+    "edit.indent", "Indent lines", Edit, Editor => |app| edit(app, |doc, options| {
+        let (first, last) = ops::selected_lines(doc);
+        ops::indent_lines(doc, first, last, options);
+    });
+    "edit.outdent", "Outdent lines", Edit, Editor => |app| edit(app, ops::outdent);
+    "find.open", "Find in file", Search, Editor => |app| open_find(app, false);
+    "find.replace", "Replace in file", Search, Editor => |app| open_find(app, true);
+    "find.next", "Find next", Search, Editor => |app| find_step(app, true);
+    "find.previous", "Find previous", Search, Editor => |app| find_step(app, false);
+    "picker.files", "Find file", Search, Anywhere => |app| open_files_picker(app, None);
+    "picker.filesInFolder", "Find file in the selected folder", Search, Tree => |app| {
         let folder = scope_folder(app);
         open_files_picker(app, folder);
     };
-    "picker.grepInFolder", "Live grep in the folder selected in the tree" => |app| {
+    "picker.grep", "Live grep", Search, Anywhere => |app| open_grep_picker(app, false, None);
+    "picker.grepInFolder", "Live grep in the selected folder", Search, Tree => |app| {
         let folder = scope_folder(app);
         open_grep_picker(app, false, folder);
     };
-    "picker.buffers", "Open buffers" => open_buffers_picker;
-    "picker.commands", "Command palette" => open_commands_picker;
-    "picker.bookmarks", "Bookmarks" => open_bookmarks_picker;
-    "picker.resume", "Resume last picker" => resume_picker;
-    "tree.toggle", "File tree: toggle" => toggle_tree;
-    "tree.reveal", "File tree: reveal current file" => reveal_in_tree;
-    "tree.lock", "File tree: lock / unlock following the current file" => toggle_tree_lock;
-    "tree.toggleIgnored", "File tree: show / hide git-ignored files" => |app| {
+    "picker.grepGlob", "Live grep in files matching a glob", Search, Anywhere => |app| open_grep_picker(app, true, None);
+    "picker.resume", "Resume last picker", Search, Anywhere => resume_picker;
+    "goto.menu", "Line or definition…", GoTo, Editor => |app| open_menu(app, &GO_TO_MENU);
+    "goto.line", "Line…", GoTo, Editor => goto_line_prompt;
+    "goto.definition", "Definition or file under the cursor", GoTo, Editor => super::goto::goto_definition;
+    "jump.back", "Jump back", GoTo, Anywhere => |app| app.jump(true);
+    "jump.forward", "Jump forward", GoTo, Anywhere => |app| app.jump(false);
+    "bookmark.menu", "Toggle, next, previous, list…", Bookmarks, Editor => |app| open_menu(app, &BOOKMARK_MENU);
+    "bookmark.toggle", "Toggle on this line", Bookmarks, Editor => toggle_bookmark;
+    "bookmark.next", "Next", Bookmarks, Editor => |app| bookmark_step(app, true);
+    "bookmark.previous", "Previous", Bookmarks, Editor => |app| bookmark_step(app, false);
+    "picker.bookmarks", "List", Bookmarks, Anywhere => open_bookmarks_picker;
+    "bookmark.clear", "Clear in this file", Bookmarks, Editor => clear_bookmarks;
+    "view.splitMenu", "Split, resize or close panes…", View, Editor => |app| open_menu(app, &SPLIT_MENU);
+    "view.splitVertical", "Split vertically (side by side)", View, Editor => |app| app.split_pane(Direction::SideBySide);
+    "view.splitHorizontal", "Split horizontally (one above the other)", View, Editor => |app| app.split_pane(Direction::Stacked);
+    "view.resizePane", "Resize this pane…", View, Editor => App::resize_pane_prompt;
+    "view.equalPanes", "Make the panes equal in size", View, Editor => App::equalize_panes;
+    "view.closePane", "Close this pane", View, Editor => App::close_pane;
+    "view.closeOtherPanes", "Close the other panes", View, Editor => App::close_other_panes;
+    "view.focusNextPane", "Focus the next pane", View, Editor => App::focus_next_pane;
+    "view.focusPaneLeft", "Focus the pane on the left", View, Editor => |app| app.focus_pane_on(Side::Left);
+    "view.focusPaneRight", "Focus the pane on the right", View, Editor => |app| app.focus_pane_on(Side::Right);
+    "view.focusPaneAbove", "Focus the pane above", View, Editor => |app| app.focus_pane_on(Side::Above);
+    "view.focusPaneBelow", "Focus the pane below", View, Editor => |app| app.focus_pane_on(Side::Below);
+    "view.toggleScrollSync", "Scroll all panes together (sync on / off)", View, Editor => App::toggle_scroll_sync;
+    "switch.next", "Switch to the tree (1) or a recent file (2-9); again: next recent file", View, Anywhere => |app| {
+        if app.switcher.is_some() {
+            app.cycle_recent(1);
+        } else {
+            app.start_switcher();
+        }
+    };
+    "switch.previous", "Switch to the tree or a recent file; again: previous recent file", View, Anywhere => |app| {
+        if app.switcher.is_some() {
+            app.cycle_recent(-1);
+        } else {
+            app.start_switcher();
+        }
+    };
+    "view.toggleLineNumbers", "Toggle line numbers", View, Editor => |app| app.options.line_numbers = !app.options.line_numbers;
+    "view.toggleIndentGuides", "Toggle indent guides", View, Editor => |app| app.options.indent_guides = !app.options.indent_guides;
+    "language.choose", "Set language of the file…", View, Editor => open_language_picker;
+    "tree.toggle", "Toggle", Tree, Anywhere => toggle_tree;
+    "tree.reveal", "Reveal current file", Tree, Anywhere => reveal_in_tree;
+    "tree.lock", "Lock / unlock following the current file", Tree, Anywhere => toggle_tree_lock;
+    "tree.toggleIgnored", "Show / hide git-ignored files", Tree, Tree => |app| {
         app.tree.show_ignored = !app.tree.show_ignored;
         app.tree.rebuild(&app.git);
     };
-    "tree.toggleChanged", "File tree: show only changed files" => |app| {
+    "tree.toggleChanged", "Show only changed files", Tree, Tree => |app| {
         app.tree.changed_only = !app.tree.changed_only;
         app.tree.rebuild(&app.git);
     };
-    "tree.refresh", "File tree: refresh" => |app| {
+    "tree.refresh", "Refresh", Tree, Tree => |app| {
         app.tree.rebuild(&app.git);
         app.refresh_git();
         app.refresh_files();
     };
-    "git.review", "Git: review changes" => open_review;
-    "review.nextChange", "Review: next change" => |app| review_step(app, true);
-    "review.previousChange", "Review: previous change" => |app| review_step(app, false);
-    "review.refresh", "Review: refresh" => refresh_review;
-    "switch.next", "Switch: tree (1) or open file (2-9); again: next file" => |app| {
-        if app.switcher.is_some() {
-            app.cycle_buffer(1);
-        } else {
-            app.start_switcher();
-        }
+    "tree.narrow", "Narrower", Tree, Tree => |app| resize_tree(app, -TREE_RESIZE_STEP);
+    "tree.widen", "Wider", Tree, Tree => |app| resize_tree(app, TREE_RESIZE_STEP);
+    "tree.autoWidth", "Automatic width", Tree, Tree => |app| {
+        app.options.tree_width = 0;
+        app.notify("File tree: automatic width");
     };
-    "switch.previous", "Switch: tree or open file; again: previous file" => |app| {
-        if app.switcher.is_some() {
-            app.cycle_buffer(-1);
-        } else {
-            app.start_switcher();
-        }
-    };
-    "view.split", "Split editor / close split" => App::toggle_split;
-    "view.focusOtherPane", "Focus the other pane of the split" => App::focus_other_pane;
-    "view.toggleScrollSync", "Scroll both panes together (sync on / off)" => App::toggle_scroll_sync;
-    "buffer.close", "Close buffer" => close_buffer;
-    "buffer.next", "Next buffer" => |app| app.cycle_buffer(1);
-    "buffer.previous", "Previous buffer" => |app| app.cycle_buffer(-1);
-    "jump.back", "Jump back" => |app| app.jump(true);
-    "jump.forward", "Jump forward" => |app| app.jump(false);
-    "goto.line", "Go to line…" => goto_line_prompt;
-    "goto.definition", "Go to definition or file under the cursor" => super::goto::goto_definition;
-    "find.open", "Find in file" => |app| open_find(app, false);
-    "find.replace", "Replace in file" => |app| open_find(app, true);
-    "find.next", "Find next" => |app| find_step(app, true);
-    "find.previous", "Find previous" => |app| find_step(app, false);
-    "bookmark.toggle", "Bookmark: toggle line" => toggle_bookmark;
-    "bookmark.next", "Bookmark: next" => |app| bookmark_step(app, true);
-    "bookmark.previous", "Bookmark: previous" => |app| bookmark_step(app, false);
-    "bookmark.clear", "Bookmark: clear in file" => clear_bookmarks;
-    "edit.undo", "Undo" => |app| edit(app, |doc, _| { doc.undo(); });
-    "edit.redo", "Redo" => |app| edit(app, |doc, _| { doc.redo(); });
-    "edit.copy", "Copy" => |app| copy(app, false);
-    "edit.cut", "Cut" => |app| copy(app, true);
-    "edit.paste", "Paste" => paste;
-    "edit.selectAll", "Select all" => |app| {
-        let doc = app.doc_mut();
-        doc.selection = Selection::new(0, doc.rope.len_chars());
-    };
-    "edit.selectNext", "Select word / next occurrence" => |app| edit(app, |doc, _| ops::select_next_occurrence(doc));
-    "edit.toggleComment", "Toggle line comment" => |app| edit(app, |doc, _| ops::toggle_comment(doc));
-    "edit.moveLineUp", "Move line up" => |app| edit(app, |doc, _| ops::move_lines(doc, false));
-    "edit.moveLineDown", "Move line down" => |app| edit(app, |doc, _| ops::move_lines(doc, true));
-    "edit.duplicateLine", "Duplicate line" => |app| edit(app, |doc, _| ops::duplicate_lines(doc));
-    "edit.deleteLine", "Delete line" => |app| edit(app, |doc, _| ops::delete_lines(doc));
-    "edit.indent", "Indent lines" => |app| edit(app, |doc, options| {
-        let (first, last) = ops::selected_lines(doc);
-        ops::indent_lines(doc, first, last, options);
-    });
-    "edit.outdent", "Outdent lines" => |app| edit(app, ops::outdent);
-    "view.toggleIndentGuides", "Toggle indent guides" => |app| app.options.indent_guides = !app.options.indent_guides;
-    "view.toggleLineNumbers", "Toggle line numbers" => |app| app.options.line_numbers = !app.options.line_numbers;
-    "language.choose", "Set language of buffer…" => open_language_picker;
-    "config.reload", "Reload yate.json and plugins" => |app| {
+    "help.keys", "Key bindings", App, Anywhere => open_keys_picker;
+    "picker.commands", "Command palette", App, Anywhere => open_commands_picker;
+    "settings.open", "Open yate.json (the closest one, or a new ~/yate.jsonc)", App, Anywhere => open_settings;
+    "config.reload", "Reload yate.json and plugins", App, Anywhere => |app| {
         if app.load_config() {
             app.notify("Reloaded settings and plugins");
         }
     };
-    "settings.open", "Open yate.json (the closest one, or a new ~/yate.jsonc)" => open_settings;
-    "app.log", "Open the yate log" => |app| {
+    "app.log", "Open the log", App, Anywhere => |app| {
         let path = app.paths.state_dir.join("yate.log");
         app.open(&path, None);
     };
+    "app.quit", "Quit", App, Anywhere => quit;
+}
+
+/// Commands the palette leaves out: the ones that only make sense as a
+/// key (the palette itself, the switcher, the menus whose entries it lists
+/// one by one, moving to the pane on a side).
+const NOT_IN_PALETTE: &[&str] = &[
+    "picker.commands",
+    "goto.menu",
+    "bookmark.menu",
+    "view.splitMenu",
+    "view.focusPaneLeft",
+    "view.focusPaneRight",
+    "view.focusPaneAbove",
+    "view.focusPaneBelow",
+    "switch.next",
+    "switch.previous",
+];
+
+type Condition = fn(&App) -> bool;
+
+/// Commands the palette lists only while they have something to work on.
+const LISTED_WHEN: &[(&[&str], Condition)] = &[
+    (&["file.reload", "tree.reveal", "bookmark.toggle"], |app| {
+        app.doc().path.is_some()
+    }),
+    (&["file.rename", "file.delete", "file.copyPath"], |app| {
+        target_path(app).is_some()
+    }),
+    (&["picker.filesInFolder", "picker.grepInFolder"], |app| {
+        app.tree.selected_row().is_some()
+    }),
+    (&["find.next", "find.previous"], |app| {
+        !app.find.input.text.is_empty()
+    }),
+    (&["picker.resume"], |app| app.last_picker.is_some()),
+    (&["jump.back"], |app| app.jump_index > 0),
+    (&["jump.forward"], |app| {
+        app.jump_index + 1 < app.jumps.len()
+    }),
+    (
+        &["bookmark.next", "bookmark.previous", "picker.bookmarks"],
+        |app| !app.bookmarks.items.is_empty(),
+    ),
+    (&["bookmark.clear"], |app| {
+        app.doc()
+            .path
+            .as_ref()
+            .is_some_and(|path| !app.bookmarks.lines_in(path).is_empty())
+    }),
+    (
+        &[
+            "view.resizePane",
+            "view.equalPanes",
+            "view.closePane",
+            "view.closeOtherPanes",
+            "view.focusNextPane",
+            "view.toggleScrollSync",
+        ],
+        |app| app.panes.is_split(),
+    ),
+    (&["tree.lock"], |app| app.tree_visible),
+];
+
+/// Whether the palette of the focused panel lists a command right now.
+fn in_palette(app: &App, command: &Command) -> bool {
+    command.scope.includes(app.context())
+        && !NOT_IN_PALETTE.contains(&command.id)
+        && LISTED_WHEN
+            .iter()
+            .filter(|(ids, _)| ids.contains(&command.id))
+            .all(|(_, listed)| listed(app))
 }
 
 impl App {
@@ -298,9 +498,31 @@ fn goto_line_prompt(app: &mut App) {
     }));
 }
 
-pub fn file_items(files: &[String]) -> Vec<PickerItem> {
-    files
+/// The files of the project for a picker: the recent ones first, the
+/// latest on top, without the file being edited.
+pub fn file_items(app: &App) -> Vec<PickerItem> {
+    let current = app.doc().path.as_ref();
+    let recent: Vec<String> = app
+        .recent
         .iter()
+        .filter(|recent| Some(&recent.path) != current)
+        .filter_map(|recent| recent.path.strip_prefix(&app.root).ok())
+        .map(|path| path.to_string_lossy().into_owned())
+        .collect();
+    let wanted: HashSet<&str> = recent.iter().map(String::as_str).collect();
+    let indexed: HashSet<&str> = app
+        .files
+        .iter()
+        .map(String::as_str)
+        .filter(|file| wanted.contains(file))
+        .collect();
+    let first = recent.iter().filter(|file| indexed.contains(file.as_str()));
+    let rest = app
+        .files
+        .iter()
+        .filter(|file| !indexed.contains(file.as_str()));
+    first
+        .chain(rest)
         .map(|file| PickerItem {
             label: file.clone(),
             ..PickerItem::default()
@@ -343,7 +565,7 @@ fn scope_folder(app: &App) -> Option<String> {
 /// the glob filter used last.
 fn search_picker(app: &App, kind: PickerKind, title: &str, folder: Option<String>) -> Picker {
     let items = if kind == PickerKind::Files {
-        file_items(&app.files)
+        file_items(app)
     } else {
         Vec::new()
     };
@@ -444,7 +666,7 @@ pub fn handle_grep(app: &mut App, event: GrepEvent) {
                     path: Some(m.path),
                     line: Some(m.line),
                     col: m.col,
-                    data: String::new(),
+                    ..PickerItem::default()
                 })
                 .collect();
             picker.append_items(items);
@@ -454,50 +676,60 @@ pub fn handle_grep(app: &mut App, event: GrepEvent) {
     }
 }
 
-fn open_buffers_picker(app: &mut App) {
-    let items = app
-        .docs
-        .iter()
-        .enumerate()
-        .map(|(index, doc)| PickerItem {
-            label: doc
-                .path
-                .as_ref()
-                .map(|p| app.relative(p))
-                .unwrap_or_else(|| "untitled".to_string()),
-            detail: if doc.is_modified() {
-                "●".to_string()
-            } else {
-                String::new()
-            },
-            path: doc.path.clone(),
-            data: index.to_string(),
-            ..PickerItem::default()
-        })
-        .collect();
-    set_picker(app, Picker::new(PickerKind::Buffers, "Open buffers", items));
-}
-
+/// The command palette: what the focused panel can do right now, section
+/// by section, the sections about the panel first. Plugin commands belong
+/// to the editor.
 fn open_commands_picker(app: &mut App) {
-    let mut items: Vec<PickerItem> = COMMANDS
+    let context = app.context();
+    let order = Group::palette_order(context);
+    let rank = |group: Group| order.iter().position(|g| *g == group);
+    let built_in = COMMANDS
         .iter()
-        .map(|c| (c.id.to_string(), c.title.to_string()))
-        .chain(app.plugin_commands.iter().cloned())
-        .map(|(id, title)| PickerItem {
-            detail: app
-                .keymap
-                .keys_for(&id)
-                .into_iter()
-                .take(2)
-                .collect::<Vec<_>>()
-                .join("  "),
+        .filter(|command| in_palette(app, command))
+        .map(|command| {
+            (
+                command.group,
+                command.id.to_string(),
+                command.title.to_string(),
+            )
+        });
+    let from_plugins = app
+        .plugin_commands
+        .iter()
+        .map(|(id, title)| (Group::Plugins, id.clone(), title.clone()));
+    let mut listed: Vec<(usize, Group, String, String)> = built_in
+        .chain(from_plugins)
+        .filter_map(|(group, id, title)| Some((rank(group)?, group, id, title)))
+        .collect();
+    listed.sort_by_key(|(rank, ..)| *rank);
+    let items = listed
+        .into_iter()
+        .map(|(_, group, id, title)| PickerItem {
+            detail: app.keymap.keys_in(context, &id).join("  "),
             label: title,
+            group: group.name().to_string(),
             data: id,
             ..PickerItem::default()
         })
         .collect();
-    items.sort_by(|a, b| a.label.cmp(&b.label));
-    set_picker(app, Picker::new(PickerKind::Commands, "Commands", items));
+    let title = format!("Commands ({})", context.name());
+    set_picker(app, Picker::new(PickerKind::Commands, &title, items));
+}
+
+fn open_menu(app: &mut App, spec: &'static MenuSpec) {
+    app.overlay = Some(Overlay::Menu(Menu { spec, selected: 0 }));
+}
+
+fn resize_tree(app: &mut App, delta: i32) {
+    if !app.tree_visible {
+        app.notify("The file tree is hidden");
+        return;
+    }
+    let screen_width = app.layout.status.w;
+    let current = crate::ui::sidebar::width(app, screen_width) as i32;
+    app.set_tree_width((current + delta).max(0) as u16);
+    let width = app.options.tree_width;
+    app.notify(format!("File tree: {width} columns"));
 }
 
 fn open_language_picker(app: &mut App) {
@@ -553,7 +785,9 @@ pub fn accept_picker(app: &mut App, picker: Box<Picker>) {
         let written = resolve::resolve(&picker.input.text, None, &app.root, home.as_deref(), false);
         app.last_picker = Some(picker);
         match written {
-            Some(found) => open_from_picker(app, &found.path, found.line, found.col.unwrap_or(0)),
+            Some(found) => {
+                app.open_at(&found.path, found.line, found.col.unwrap_or(0));
+            }
             None => app.notify("No such file"),
         }
         return;
@@ -570,23 +804,11 @@ pub fn accept_picker(app: &mut App, picker: Box<Picker>) {
     match kind {
         PickerKind::Files => {
             let path = app.root.join(&item.label);
-            open_from_picker(app, &path, query_line, query_col.unwrap_or(0));
-        }
-        PickerKind::CompareWith => {
-            if let Some(current) = app.doc().path.clone() {
-                start_compare(app, app.root.join(&item.label), current);
-            }
+            app.open_at(&path, query_line, query_col.unwrap_or(0));
         }
         PickerKind::Grep | PickerKind::Bookmarks | PickerKind::Definitions => {
             if let Some(path) = item.path {
-                open_from_picker(app, &path, item.line, item.col);
-            }
-        }
-        PickerKind::Buffers => {
-            if let Ok(index) = item.data.parse::<usize>()
-                && index < app.docs.len()
-            {
-                app.show_doc(index);
+                app.open_at(&path, item.line, item.col);
             }
         }
         PickerKind::Commands => {
@@ -603,33 +825,13 @@ pub fn accept_picker(app: &mut App, picker: Box<Picker>) {
     }
 }
 
-fn open_from_picker(app: &mut App, path: &std::path::Path, line: Option<usize>, col: usize) {
-    if !app.open(path, line) {
-        return;
-    }
-    if let Some(line) = line {
-        let doc = app.doc_mut();
-        let pos = doc.pos(line, col);
-        doc.selection = Selection::point(pos);
-    }
-    app.scroll_to_cursor();
-    if app.tree_visible
-        && app.layout.status.w <= app.options.tree_auto_close_width
-        && app.focus == Focus::Tree
-    {
-        app.tree_visible = false;
-    }
-}
-
 /// Keeps the preview of the selected picker item up to date.
 pub fn update_preview(app: &mut App) {
     let Some(Overlay::Picker(picker)) = &app.overlay else {
         return;
     };
     let path = match picker.selected_item() {
-        Some(item) if matches!(picker.kind, PickerKind::Files | PickerKind::CompareWith) => {
-            Some(app.root.join(&item.label))
-        }
+        Some(item) if picker.kind == PickerKind::Files => Some(app.root.join(&item.label)),
         Some(item) => item.path.clone(),
         None => None,
     };
@@ -662,9 +864,6 @@ pub fn update_preview(app: &mut App) {
 }
 
 fn toggle_tree(app: &mut App) {
-    if app.review.is_some() {
-        app.review = None;
-    }
     app.tree_visible = !app.tree_visible;
     if app.tree_visible {
         app.tree.rebuild(&app.git);
@@ -676,7 +875,6 @@ fn toggle_tree(app: &mut App) {
 }
 
 fn reveal_in_tree(app: &mut App) {
-    app.review = None;
     app.tree_visible = true;
     match app.doc().path.clone() {
         Some(path) => {
@@ -699,58 +897,6 @@ fn toggle_tree_lock(app: &mut App) {
     }
 }
 
-fn open_review(app: &mut App) {
-    if app.git.root.is_none() {
-        app.error("Not a git repository");
-        return;
-    }
-    let reviewing_git = app
-        .review
-        .as_ref()
-        .is_some_and(|r| r.source == super::ReviewSource::Git);
-    if reviewing_git && app.focus == Focus::Review {
-        app.review = None;
-        app.focus = Focus::Editor;
-        return;
-    }
-    let mut review = Review::git(&app.git);
-    if let Some(path) = app.doc().path.clone()
-        && let Some(index) = review.files.iter().position(|(p, _)| *p == path)
-    {
-        review.selected = index;
-    }
-    app.review = Some(review);
-    load_review_diff(app);
-    app.focus = Focus::Review;
-    app.refresh_git();
-    if app.git.files.is_empty() {
-        app.notify("No changes against HEAD");
-    }
-}
-
-fn review_step(app: &mut App, forward: bool) {
-    let height = app.layout.editor.h as usize;
-    if let Some(review) = &mut app.review {
-        review.next_change(forward);
-        review.diff_focused = true;
-        review.ensure_visible(height, 0);
-        app.focus = Focus::Review;
-    }
-}
-
-fn refresh_review(app: &mut App) {
-    match app.review.as_ref().map(|r| r.source.clone()) {
-        Some(super::ReviewSource::Git) => app.refresh_git(),
-        Some(super::ReviewSource::Compare { .. }) => {
-            if let Some(review) = &mut app.review {
-                review.refresh_compare();
-            }
-            load_review_diff(app);
-        }
-        None => {}
-    }
-}
-
 /// The file or folder a file command works on: the selected tree row while
 /// the tree has focus, otherwise the current file.
 fn target_path(app: &App) -> Option<std::path::PathBuf> {
@@ -762,7 +908,7 @@ fn target_path(app: &App) -> Option<std::path::PathBuf> {
 
 fn rename_prompt(app: &mut App) {
     let Some(path) = target_path(app) else {
-        app.notify("Nothing to rename: the buffer has no file");
+        app.notify("Nothing to rename: save the file first");
         return;
     };
     let relative = app.relative(&path);
@@ -776,7 +922,7 @@ fn rename_prompt(app: &mut App) {
 
 fn delete_prompt(app: &mut App) {
     let Some(path) = target_path(app) else {
-        app.notify("Nothing to delete: the buffer has no file");
+        app.notify("Nothing to delete: save the file first");
         return;
     };
     app.overlay = Some(Overlay::Prompt(Prompt {
@@ -798,74 +944,15 @@ fn copy_path(app: &mut App) {
     app.notify(format!("Copied {relative}"));
 }
 
-fn compare_marked(app: &mut App) {
-    let Some(path) = target_path(app) else {
-        app.notify("Nothing to compare: the buffer has no file");
-        return;
-    };
-    let compare_key = app.keymap.hint("file.compare").unwrap_or_default();
-    match app.compare_mark.take() {
-        Some(marked) if marked == path => app.notify("Compare mark removed"),
-        Some(marked) => start_compare(app, marked, path),
-        None => {
-            let shown = app.relative(&path);
-            app.notify(format!(
-                "Marked {shown}; {compare_key} on another file or folder compares them"
-            ));
-            app.compare_mark = Some(path);
-        }
-    }
-}
-
-fn open_compare_picker(app: &mut App) {
-    if app.doc().path.is_none() {
-        app.notify("Save the buffer before comparing it");
-        return;
-    }
-    let items = file_items(&app.files);
-    let picker = Picker::new(PickerKind::CompareWith, "Compare with", items);
-    set_picker(app, picker);
-    if app.files.is_empty() {
-        app.refresh_files();
-    }
-}
-
-/// Opens the review view on the differences between two files or two
-/// folders; `left` is the old side.
-pub fn start_compare(app: &mut App, left: std::path::PathBuf, right: std::path::PathBuf) {
-    if left.is_dir() != right.is_dir() {
-        app.error("Compare two files or two folders, not a file with a folder");
-        return;
-    }
-    let folders = right.is_dir();
-    let review = Review::compare(left.clone(), right.clone());
-    app.message = None;
-    if folders && review.files.is_empty() {
-        let (left, right) = (app.relative(&left), app.relative(&right));
-        app.notify(format!("{left} and {right} have the same files"));
-    }
-    app.split = None;
-    app.review = Some(review);
-    load_review_diff(app);
-    if let Some(review) = &mut app.review {
-        review.diff_focused = !folders;
-    }
-    app.focus = Focus::Review;
-}
-
 /// Help: every key binding, the bindings of the focused panel first, then
 /// the keys that are not commands. Enter runs the selected command.
 fn open_keys_picker(app: &mut App) {
-    let context = match app.focus {
-        Focus::Editor | Focus::Find => crate::keymap::Context::Editor,
-        Focus::Tree => crate::keymap::Context::Tree,
-        Focus::Review => crate::keymap::Context::Review,
-    };
+    let context = app.context();
     let title_of = |id: &str| {
         COMMANDS
             .iter()
             .find(|c| c.id == id)
-            .map(|c| c.title.to_string())
+            .map(Command::full_title)
             .or_else(|| {
                 app.plugin_commands
                     .iter()
@@ -901,11 +988,7 @@ fn open_keys_picker(app: &mut App) {
     let mut items: Vec<PickerItem> = grouped
         .into_iter()
         .map(|(bound_context, command, keys)| PickerItem {
-            label: format!(
-                "{:<20} {}",
-                keys.into_iter().take(2).collect::<Vec<_>>().join(" "),
-                title_of(&command)
-            ),
+            label: format!("{:<20} {}", keys.join(" "), title_of(&command)),
             detail: bound_context.name().to_string(),
             data: command,
             ..PickerItem::default()
@@ -925,8 +1008,15 @@ fn open_keys_picker(app: &mut App) {
 /// Keys handled by the panels themselves, not bound to commands.
 const BUILT_IN_KEYS: &[(&str, &str, &str)] = &[
     ("alt+w 1", "Focus the file tree", "switcher"),
-    ("alt+w 2-9", "Focus open file 1-8", "switcher"),
-    ("alt+w alt+w", "Next open file", "switcher"),
+    ("alt+w 2-9", "Show recent file 1-8", "switcher"),
+    ("alt+w alt+w", "Next recent file", "switcher"),
+    ("ctrl+g 1-2", "Go to a line / the definition", "menu"),
+    (
+        "alt+m 1-5",
+        "Bookmark toggle, next, previous, list, clear",
+        "menu",
+    ),
+    ("up down enter", "Choose from a menu", "menu"),
     ("shift+arrows", "Select", "editor"),
     (
         "ctrl+left ctrl+right",
@@ -948,62 +1038,20 @@ const BUILT_IN_KEYS: &[(&str, &str, &str)] = &[
     ("enter space", "Open file / fold folder", "tree"),
     ("left right", "Fold / unfold", "tree"),
     ("esc tab", "Back to the editor", "tree"),
-    ("up down", "Changed files / diff lines", "review"),
-    ("tab", "Switch list / diff", "review"),
-    ("enter", "Open the file at the line", "review"),
-    ("esc", "Close", "review"),
+    ("drag the right edge", "Resize the file tree", "tree"),
 ];
 
-pub fn load_review_diff(app: &mut App) {
-    let git_root = app.git.root.clone();
-    let Some(review) = &app.review else {
-        return;
-    };
-    let current = review.selected_path().and_then(|path| {
-        app.docs
-            .iter()
-            .find(|d| d.path.as_deref() == Some(path))
-            .map(|d| d.text())
-    });
-    if let Some(review) = &mut app.review {
-        review.load(git_root.as_deref(), current, &app.theme);
-    }
-}
-
-pub fn close_buffer(app: &mut App) {
-    let doc = app.doc();
-    if doc.is_modified() && doc.path.is_some() {
-        let id = doc.id;
-        app.overlay = Some(Overlay::Prompt(Prompt {
-            title: format!("{} has unsaved changes. Close anyway? (y/n)", doc.name()),
-            input: LineInput::default(),
-            kind: PromptKind::CloseUnsaved(id),
-            confirm: true,
-        }));
-        return;
-    }
-    let id = doc.id;
-    close_buffer_now(app, id);
-}
-
-pub fn close_buffer_now(app: &mut App, id: usize) {
+/// Saves document `id`, also when a pane without the focus shows it.
+fn save_doc(app: &mut App, id: usize) {
+    let focused = app.doc().id;
     let Some(index) = app.docs.iter().position(|d| d.id == id) else {
         return;
     };
-    let remaining_pane = app.close_pane_of(id);
-    app.docs.remove(index);
-    if app.docs.is_empty() {
-        app.docs.push(crate::editor::document::Document::scratch(0));
+    app.active = index;
+    save(app);
+    if let Some(index) = app.docs.iter().position(|d| d.id == focused) {
+        app.active = index;
     }
-    if app.active >= index && app.active > 0 {
-        app.active -= 1;
-    }
-    app.active = app.active.min(app.docs.len() - 1);
-    if let Some(remaining) = remaining_pane.and_then(|id| app.docs.iter().position(|d| d.id == id))
-    {
-        app.active = remaining;
-    }
-    app.follow_in_tree();
 }
 
 fn open_find(app: &mut App, replace: bool) {
@@ -1151,7 +1199,7 @@ pub fn replace_all(app: &mut App) {
 
 fn toggle_bookmark(app: &mut App) {
     let Some(path) = app.doc().path.clone() else {
-        app.error("Save the buffer before bookmarking it");
+        app.error("Save the file before bookmarking it");
         return;
     };
     let line = app.doc().cursor_line();
@@ -1285,13 +1333,13 @@ pub fn answer_prompt(app: &mut App, prompt: Prompt, answer: Option<String>) {
                 app.error(format!("{} already exists", app.relative(&path)));
                 return;
             }
-            let Some(index) = app.docs.iter().position(|d| d.id == id) else {
+            let Some(doc) = app.docs.iter_mut().find(|d| d.id == id) else {
                 return;
             };
-            app.active = index;
-            app.doc_mut().path = Some(path);
-            app.doc_mut().detect_language();
-            save(app);
+            doc.path = Some(path);
+            doc.detect_language();
+            save_doc(app, id);
+            app.touch_recent();
             app.refresh_files();
         }
         PromptKind::Rename(from) => {
@@ -1315,6 +1363,15 @@ pub fn answer_prompt(app: &mut App, prompt: Prompt, answer: Option<String>) {
                             } else {
                                 to.join(rest)
                             });
+                        }
+                    }
+                    for recent in &mut app.recent {
+                        if let Ok(rest) = recent.path.strip_prefix(&from) {
+                            recent.path = if rest.as_os_str().is_empty() {
+                                to.clone()
+                            } else {
+                                to.join(rest)
+                            };
                         }
                     }
                     app.notify(format!("Renamed to {}", app.relative(&to)));
@@ -1344,8 +1401,9 @@ pub fn answer_prompt(app: &mut App, prompt: Prompt, answer: Option<String>) {
                         .map(|d| d.id)
                         .collect();
                     for id in ids {
-                        close_buffer_now(app, id);
+                        app.forget_doc(id);
                     }
+                    app.recent.retain(|recent| !recent.path.starts_with(&path));
                     app.notify(format!("Deleted {}", app.relative(&path)));
                     app.tree.rebuild(&app.git);
                     app.refresh_files();
@@ -1354,15 +1412,65 @@ pub fn answer_prompt(app: &mut App, prompt: Prompt, answer: Option<String>) {
                 Err(err) => app.error(err.to_string()),
             }
         }
+        PromptKind::ResizePane => {
+            if let Some(answer) = answer {
+                app.resize_pane(&answer);
+            }
+        }
         PromptKind::QuitUnsaved => {
             if answer.as_deref() == Some("y") {
                 app.quit = true;
             }
         }
-        PromptKind::CloseUnsaved(id) => {
-            if answer.as_deref() == Some("y") {
-                close_buffer_now(app, id);
+        PromptKind::LeaveUnsaved { doc_id, then } => match answer.as_deref() {
+            Some("s") => {
+                save_doc(app, doc_id);
+                let saved = app
+                    .docs
+                    .iter()
+                    .find(|d| d.id == doc_id)
+                    .is_none_or(|d| !d.is_modified());
+                if saved {
+                    then(app);
+                }
             }
+            Some("d") => {
+                app.leave_confirmed = true;
+                then(app);
+                app.leave_confirmed = false;
+            }
+            _ => {}
+        },
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn palette_rules_name_real_commands() {
+        let ruled = LISTED_WHEN
+            .iter()
+            .flat_map(|(ids, _)| ids.iter())
+            .chain(NOT_IN_PALETTE);
+        for id in ruled {
+            assert!(COMMANDS.iter().any(|c| c.id == *id), "{id} is no command");
+        }
+    }
+
+    #[test]
+    fn every_section_shows_in_the_editor_palette() {
+        let order = Group::palette_order(Context::Editor);
+        for command in COMMANDS {
+            assert!(
+                order.contains(&command.group),
+                "{} is in a section the editor palette lacks",
+                command.id
+            );
+        }
+        for group in Group::palette_order(Context::Tree) {
+            assert!(order.contains(group));
         }
     }
 }

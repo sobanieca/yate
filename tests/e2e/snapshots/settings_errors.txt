@@ -1,9 +1,9 @@
 # settings_errors
 # start: yate a.txt
-# 120x4, cursor at column 5, row 1
+# 120x4, cursor at column 5, row 0
 ┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ a.txt                                                                                                                  │
 │  1                                                                                                                     │
+│                                                                                                                        │
 │                                                                                                                        │
 │ EDIT  yate.json: theme.preset: unknown preset "solarized" (known: tokyonight-storm, tokyon  text  utf-8  LF  100%  1:1 │
 └────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘

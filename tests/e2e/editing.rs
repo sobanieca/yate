@@ -26,7 +26,7 @@ fn typing_closes_brackets_and_indents_blocks() {
     e.keys("ctrl+end")
         .type_text("function add(a, b) {\nreturn a + b");
     assert!(
-        e.buffer_text()
+        e.editor_text()
             .ends_with("function add(a, b) {\n  return a + b\n}")
     );
     e.snapshot("editing_auto_pairs_and_indent");
@@ -43,11 +43,11 @@ fn selection_and_syntax_colors() {
 fn comment_toggle_then_undo_and_redo() {
     let mut e = app_js();
     e.keys("ctrl+home shift+down shift+down ctrl+/");
-    assert!(e.buffer_text().starts_with("// const colors = {\n//   bg:"));
+    assert!(e.editor_text().starts_with("// const colors = {\n//   bg:"));
     e.keys("ctrl+z");
-    assert_eq!(e.buffer_text(), APP_JS);
+    assert_eq!(e.editor_text(), APP_JS);
     e.keys("ctrl+y");
-    assert!(e.buffer_text().starts_with("// const colors"));
+    assert!(e.editor_text().starts_with("// const colors"));
 }
 
 #[test]
@@ -57,11 +57,11 @@ fn cut_line_without_selection_and_paste_it_above() {
     assert_eq!(e.clipboard(), "const colors = {\n");
     e.keys("down ctrl+v");
     assert!(
-        e.buffer_text()
+        e.editor_text()
             .starts_with("  bg: \"#24283b\",\nconst colors = {\n};")
     );
     e.keys("up alt+up");
-    assert!(e.buffer_text().starts_with("const colors = {\n  bg:"));
+    assert!(e.editor_text().starts_with("const colors = {\n  bg:"));
 }
 
 #[test]
@@ -86,7 +86,7 @@ fn quitting_with_unsaved_changes_asks_first() {
 }
 
 #[test]
-fn an_untitled_buffer_is_saved_as_a_new_file() {
+fn untitled_text_is_saved_as_a_new_file() {
     let mut e = Harness::builder().size(60, 10).start();
     e.keys("esc").type_text("notes").keys("ctrl+s");
     e.assert_screen_contains("Save as");
@@ -100,19 +100,19 @@ fn files_changed_on_disk_are_reloaded() {
     let mut e = app_js();
     e.write_file("app.js", "const changed = true;\n")
         .focus_gained();
-    assert_eq!(e.buffer_text(), "const changed = true;\n");
+    assert_eq!(e.editor_text(), "const changed = true;\n");
     e.snapshot("editing_reloaded_from_disk");
 }
 
 #[test]
 fn mouse_click_moves_the_cursor_and_drag_selects() {
     let mut e = app_js();
-    e.click(10, 6);
+    e.click(10, 5);
     let cursor = e.screen().cursor;
-    assert_eq!(cursor, Some((10, 6)));
-    e.drag((5, 1), (10, 1));
+    assert_eq!(cursor, Some((10, 5)));
+    e.drag((5, 0), (10, 0));
     assert_eq!(e.app().doc().selected_text(), "const");
-    e.double_click(17, 5);
+    e.double_click(17, 4);
     assert_eq!(e.app().doc().selected_text(), "greet");
 }
 
@@ -178,5 +178,47 @@ fn ctrl_arrows_jump_by_characters_and_lines() {
 fn ctrl_backspace_deletes_one_character() {
     let mut e = app_js();
     e.keys("end ctrl+backspace");
-    assert!(e.buffer_text().starts_with("const colors = \n"));
+    assert!(e.editor_text().starts_with("const colors = \n"));
+}
+
+#[test]
+fn opening_another_file_with_unsaved_changes_asks_to_save_or_discard() {
+    let mut e = Harness::builder()
+        .size(70, 10)
+        .file("a.js", "let a = 1;\n")
+        .file("b.js", "let b = 2;\n")
+        .open("a.js")
+        .start();
+    e.type_text("x");
+    e.keys("ctrl+p").type_text("b.js").keys("enter");
+    e.snapshot("editing_leave_unsaved_prompt");
+    e.keys("esc");
+    assert_eq!(e.app().doc().name(), "a.js");
+    assert_eq!(e.editor_text(), "xlet a = 1;\n");
+
+    e.keys("ctrl+p").type_text("b.js").keys("enter s");
+    assert_eq!(e.app().doc().name(), "b.js");
+    assert_eq!(e.read_file("a.js"), "xlet a = 1;\n");
+
+    e.type_text("y");
+    e.keys("alt+left d");
+    assert_eq!(e.app().doc().name(), "a.js");
+    assert_eq!(e.read_file("b.js"), "let b = 2;\n");
+    assert_eq!(e.app().docs.len(), 1);
+}
+
+#[test]
+fn a_file_opens_again_where_the_cursor_was() {
+    let mut e = Harness::builder()
+        .size(70, 10)
+        .file("a.js", "one\ntwo\nthree\n")
+        .file("b.js", "let b = 2;\n")
+        .open("a.js")
+        .start();
+    e.keys("down down right");
+    e.keys("ctrl+p").type_text("b.js").keys("enter");
+    e.keys("ctrl+p").type_text("a.js").keys("enter");
+    assert_eq!(e.app().doc().cursor_line(), 2);
+    e.type_text("x");
+    assert_eq!(e.editor_text(), "one\ntwo\ntxhree\n");
 }

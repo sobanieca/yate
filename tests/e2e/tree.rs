@@ -53,7 +53,7 @@ fn enter_on_a_file_opens_it_and_closes_the_tree_on_narrow_terminals() {
 #[test]
 fn new_rename_and_delete() {
     let mut e = project();
-    e.keys("a");
+    e.keys("ctrl+n");
     e.snapshot("tree_new_file_prompt");
     e.type_text("routes/home.ts").keys("enter");
     assert!(e.file_exists("src/routes/home.ts"));
@@ -122,4 +122,41 @@ fn deep_names_scroll_the_tree_sideways_to_fit() {
     e.snapshot("tree_deep_name_scrolled");
     e.keys("home");
     e.snapshot("tree_deep_name_scrolled_back");
+}
+
+fn tree_width(e: &mut Harness) -> u16 {
+    e.screen();
+    e.app().layout.sidebar.map(|area| area.w).unwrap_or(0)
+}
+
+#[test]
+fn brackets_and_dragging_the_edge_resize_the_tree() {
+    let mut e = project();
+    let automatic = tree_width(&mut e);
+    e.keys("]");
+    assert_eq!(tree_width(&mut e), automatic + 4);
+    e.keys("[ [");
+    assert_eq!(tree_width(&mut e), automatic - 4);
+    e.drag((automatic - 5, 3), (33, 3));
+    e.snapshot("tree_resized");
+    assert_eq!(tree_width(&mut e), 34);
+    e.drag((34, 3), (2, 3));
+    assert_eq!(tree_width(&mut e), 12);
+    e.drag((11, 3), (69, 3));
+    assert_eq!(tree_width(&mut e), 50);
+    e.command("tree.autoWidth");
+    assert_eq!(tree_width(&mut e), automatic);
+    e.click(automatic - 1, 3);
+    assert_eq!(e.app().focus, yate::app::Focus::Tree);
+    assert_eq!(e.app().doc().name(), "untitled");
+}
+
+#[test]
+fn tree_width_is_an_option() {
+    let mut e = Harness::builder()
+        .size(70, 6)
+        .file("a.txt", "a\n")
+        .home_file("yate.json", r#"{ "options": { "treeWidth": 30 } }"#)
+        .start();
+    assert_eq!(tree_width(&mut e), 30);
 }

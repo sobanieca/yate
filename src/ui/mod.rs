@@ -1,7 +1,6 @@
 //! Drawing: the cell surface, the theme and one module per view. `render`
 //! draws a whole frame and returns where the terminal cursor goes.
 
-pub mod diff_view;
 pub mod editor_view;
 pub mod icons;
 pub mod input;
@@ -10,44 +9,36 @@ pub mod sidebar;
 pub mod surface;
 pub mod theme;
 
-use crate::app::{App, Focus, Layout, Overlay};
+use crate::app::{App, Focus, Layout, MenuSpec, Overlay, PaneArea};
 use crate::text;
 use surface::{Rect, Style, Surface};
 
 pub fn layout(app: &App, width: u16, height: u16) -> Layout {
     let area = Rect::new(0, 0, width, height);
     let (main, status) = area.split_bottom(1);
-    let (sidebar, rest) = if app.review.is_some() || app.tree_visible {
+    let (sidebar, rest) = if app.tree_visible {
         let (sidebar, rest) = main.split_left(sidebar::width(app, width));
         (Some(sidebar), rest)
     } else {
         (None, main)
     };
-    let (tabs, body) = rest.split_top(1);
-    let (editor, find) = if app.find_open && app.review.is_none() {
-        let (editor, find) = body.split_bottom(1);
-        (editor, Some(find))
+    let (editor_area, find) = if app.find_open {
+        let (editor_area, find) = rest.split_bottom(1);
+        (editor_area, Some(find))
     } else {
-        (body, None)
+        (rest, None)
     };
-    let (editor, other, separator) = match &app.split {
-        Some(split) if app.review.is_none() && app.other_pane_doc().is_some() && editor.w > 20 => {
-            let (left, rest) = editor.split_left((editor.w - 1) / 2);
-            let (separator, right) = rest.split_left(1);
-            if split.focus_right {
-                (right, Some(left), Some(separator))
-            } else {
-                (left, Some(right), Some(separator))
-            }
-        }
-        _ => (editor, None, None),
-    };
+    let placement = app.panes.place(editor_area);
+    let focused = placement
+        .panes
+        .iter()
+        .find(|pane| pane.id == app.panes.focused);
     Layout {
         sidebar,
-        tabs,
-        editor,
-        other,
-        separator,
+        editor: focused.map_or(editor_area, |pane| pane.body),
+        editor_area,
+        panes: placement.panes,
+        separators: placement.separators,
         find,
         status,
     }
@@ -55,29 +46,20 @@ pub fn layout(app: &App, width: u16, height: u16) -> Layout {
 
 pub fn render(app: &mut App, surface: &mut Surface) -> Option<(u16, u16)> {
     let t = app.theme.clone();
-    let layout = app.layout;
+    let layout = app.layout.clone();
     let background = t.background(app.terminal_focused);
     surface.fill(surface.area(), Style::new().fg(t.fg).bg(background));
     if let Some(area) = layout.sidebar {
         sidebar::render(app, surface, area);
     }
-    let mut cursor = if app.review.is_some() {
-        diff_view::render_header(app, surface, layout.tabs);
-        diff_view::render(app, surface, layout.editor);
-        None
-    } else {
-        render_tabs(app, surface, layout.tabs);
-        if let Some(area) = layout.other {
-            editor_view::render_other(app, surface, area);
+    for pane in &layout.panes {
+        render_pane_title(app, surface, pane);
+        if pane.id != app.panes.focused {
+            editor_view::render_unfocused(app, surface, pane.id, pane.body);
         }
-        if let Some(area) = layout.separator {
-            let style = Style::new().fg(t.fg_gutter).bg(background);
-            for y in area.y..area.bottom() {
-                surface.set_symbol(area.x, y, "│", style);
-            }
-        }
-        editor_view::render(app, surface, layout.editor)
-    };
+    }
+    render_separators(surface, &t, &layout, background);
+    let mut cursor = editor_view::render(app, surface, layout.editor);
     if app.focus != Focus::Editor {
         cursor = None;
     }
@@ -89,68 +71,84 @@ pub fn render(app: &mut App, surface: &mut Surface) -> Option<(u16, u16)> {
     }
     render_status(app, surface, layout.status);
     if app.overlay.is_none() && app.switcher_visible() {
-        render_switcher(app, surface, layout);
+        render_switcher(app, surface, &layout);
     }
     match &app.overlay {
         Some(Overlay::Picker(_)) => picker_view::render(app, surface),
         Some(Overlay::Prompt(prompt)) => render_prompt(prompt, surface, &app.theme),
+        Some(Overlay::Menu(menu)) => {
+            let rows: Vec<String> = menu
+                .spec
+                .items
+                .iter()
+                .map(|(label, _)| label.to_string())
+                .collect();
+            let area = menu_area(menu.spec, &layout);
+            render_numbered_popup(
+                surface,
+                &app.theme,
+                area,
+                menu.spec.title,
+                &rows,
+                menu.selected,
+            );
+            None
+        }
         None => cursor,
     }
 }
 
-/// Tab titles with the screen columns they occupy.
-fn tab_spans(app: &App, area: Rect) -> Vec<(usize, u16, u16, String)> {
-    let mut spans = Vec::new();
-    let mut x = area.x;
-    for (index, doc) in app.docs.iter().enumerate() {
-        let marker = if doc.is_modified() { " ●" } else { "" };
-        let title = format!(" {}{marker} ", doc.name());
-        let width = text::str_width(&title) as u16;
-        spans.push((index, x, width, title));
-        x += width + 1;
-    }
-    let active_end = spans.get(app.active).map(|(_, x, w, _)| x + w).unwrap_or(0);
-    if active_end > area.right() {
-        let shift = active_end - area.right();
-        spans.retain_mut(|(_, x, _, _)| {
-            if *x < area.x + shift {
-                return false;
-            }
-            *x -= shift;
-            true
-        });
-    }
-    spans
-}
-
-pub fn tab_at(app: &App, column: u16) -> Option<usize> {
-    tab_spans(app, app.layout.tabs)
-        .into_iter()
-        .find(|(_, x, w, _)| column >= *x && column < x + w)
-        .map(|(index, ..)| index)
-}
-
-fn render_tabs(app: &App, surface: &mut Surface, area: Rect) {
+/// The file of a pane of a split, above the pane.
+fn render_pane_title(app: &App, surface: &mut Surface, pane: &PaneArea) {
     let t = &app.theme;
+    let area = pane.title;
+    if area.h == 0 {
+        return;
+    }
+    let focused = pane.id == app.panes.focused;
+    let doc_id = match app.panes.pane(pane.id) {
+        Some(_) if focused => app.doc().id,
+        Some(shown) => shown.doc_id,
+        None => return,
+    };
+    let Some(doc) = app.docs.iter().find(|doc| doc.id == doc_id) else {
+        return;
+    };
     surface.fill(area, Style::new().bg(t.bg_dark));
-    let other = app.other_pane_doc();
-    for (index, x, _, title) in tab_spans(app, area) {
-        let style = if index == app.active {
-            Style::new()
-                .fg(t.blue)
-                .bg(t.background(app.terminal_focused))
-                .bold()
-        } else if Some(index) == other {
-            Style::new()
-                .fg(t.fg_dark)
-                .bg(t.background(app.terminal_focused))
-        } else {
-            Style::new().fg(t.dark5).bg(t.bg_dark)
-        };
-        let end = surface.put_str(x, area.y, &title, style, area.right());
-        if app.docs[index].is_modified() {
-            let dot_x = end.saturating_sub(2);
-            surface.put_str(dot_x, area.y, "●", Style::new().fg(t.orange), area.right());
+    let name = match &doc.path {
+        Some(path) => app.relative(path),
+        None => doc.name(),
+    };
+    let marker = if doc.is_modified() { " ●" } else { "" };
+    let width = (area.w as usize).saturating_sub(text::str_width(marker) + 1);
+    let title = text::truncate_left(&format!(" {name}"), width);
+    let style = if focused {
+        Style::new().fg(t.blue).bg(t.bg_dark).bold()
+    } else {
+        Style::new().fg(t.dark5).bg(t.bg_dark)
+    };
+    let end = surface.put_str(area.x, area.y, &title, style, area.right());
+    let marker_style = Style::new().fg(t.orange).bg(t.bg_dark);
+    surface.put_str(end, area.y, marker, marker_style, area.right());
+}
+
+/// The columns between side by side panes: a line, or a part of the title
+/// bar where two titles meet.
+fn render_separators(
+    surface: &mut Surface,
+    t: &theme::Theme,
+    layout: &Layout,
+    background: surface::Rgb,
+) {
+    let in_title = |x: u16, y: u16| layout.panes.iter().any(|pane| pane.title.contains(x, y));
+    for area in &layout.separators {
+        for y in area.y..area.bottom() {
+            if in_title(area.x.saturating_sub(1), y) && in_title(area.x + 1, y) {
+                surface.fill(Rect::new(area.x, y, 1, 1), Style::new().bg(t.bg_dark));
+            } else {
+                let style = Style::new().fg(t.fg_gutter).bg(background);
+                surface.set_symbol(area.x, y, "│", style);
+            }
         }
     }
 }
@@ -161,7 +159,6 @@ pub fn focus_color(t: &theme::Theme, focus: Focus) -> surface::Rgb {
         Focus::Editor => t.blue,
         Focus::Find => t.yellow,
         Focus::Tree => t.green,
-        Focus::Review => t.magenta,
     }
 }
 
@@ -171,10 +168,10 @@ fn status_label(app: &App) -> (&'static str, surface::Rgb) {
         (Some(Overlay::Picker(_)), _) => (" PICK ", t.cyan),
         (None, _) if app.switcher.is_some() => (" SWITCH ", t.cyan),
         (Some(Overlay::Prompt(_)), _) => (" INPUT ", t.orange),
+        (Some(Overlay::Menu(_)), _) => (" MENU ", t.cyan),
         (_, Focus::Editor) => (" EDIT ", focus_color(t, Focus::Editor)),
         (_, Focus::Find) => (" FIND ", focus_color(t, Focus::Find)),
         (_, Focus::Tree) => (" TREE ", focus_color(t, Focus::Tree)),
-        (_, Focus::Review) => (" REVIEW ", focus_color(t, Focus::Review)),
     }
 }
 
@@ -217,7 +214,7 @@ fn render_status(app: &App, surface: &mut Surface, area: Rect) {
         let count = doc.selection.end() - doc.selection.start();
         format!("({count} selected) ")
     };
-    let sync = if app.split.as_ref().is_some_and(|s| s.sync_scroll) {
+    let sync = if app.panes.sync_scroll {
         "scroll sync  "
     } else {
         ""
@@ -310,37 +307,38 @@ fn status_hints(app: &App) -> Vec<String> {
     let key = |command: &str| app.keymap.hint(command);
     let hint = |command: &str, what: &str| key(command).map(|k| format!("{k} {what}"));
     let mut hints: Vec<Option<String>> = Vec::new();
+    if let Some(Overlay::Menu(menu)) = &app.overlay {
+        return vec![
+            "esc cancel".to_string(),
+            format!("1-{} choose", menu.spec.items.len()),
+        ];
+    }
     if app.overlay.is_some() {
         return Vec::new();
     }
     if app.switcher.is_some() {
         hints.push(Some("esc cancel".to_string()));
         hints.push(hint("switch.next", "next file"));
-        hints.push(Some("1 tree · 2-9 open file".to_string()));
+        hints.push(Some("1 tree · 2-9 recent file".to_string()));
         return hints.into_iter().flatten().collect();
     }
     match app.focus {
         Focus::Editor => {
-            if app.split.is_some() {
+            if app.panes.is_split() {
                 hints.push(hint("view.toggleScrollSync", "sync scroll"));
-                hints.push(hint("view.focusOtherPane", "other pane"));
-            } else {
-                hints.push(hint("view.split", "split"));
+                hints.push(hint("view.focusNextPane", "next pane"));
             }
+            hints.push(hint("view.splitMenu", "split"));
             hints.push(hint("picker.commands", "commands"));
             hints.push(hint("picker.files", "files"));
             hints.push(hint("switch.next", "switch"));
         }
         Focus::Tree => {
-            hints.push(hint("file.compare", "compare"));
             hints.push(hint("file.delete", "delete"));
             hints.push(hint("picker.grepInFolder", "grep here"));
             hints.push(hint("picker.filesInFolder", "files here"));
             hints.push(hint("file.rename", "rename"));
             hints.push(hint("file.new", "new"));
-            hints.push(hint("switch.next", "switch"));
-        }
-        Focus::Review => {
             hints.push(hint("switch.next", "switch"));
         }
         Focus::Find => {}
@@ -360,35 +358,53 @@ fn fit_hint(hints: &[String], width: usize) -> String {
 }
 
 /// The numbered targets of Alt+W, after `keyHintDelay`.
-fn render_switcher(app: &App, surface: &mut Surface, layout: Layout) {
-    let t = &app.theme;
+fn render_switcher(app: &App, surface: &mut Surface, layout: &Layout) {
     let targets = app.switch_targets();
-    let screen = surface.area();
-    let width = targets
+    let current = app.switch_target_focused().unwrap_or(usize::MAX);
+    let area = numbered_popup_area(layout, &targets);
+    render_numbered_popup(surface, &app.theme, area, "Switch to", &targets, current);
+}
+
+/// Where the popup of a menu is drawn, for drawing and for mouse clicks.
+pub fn menu_area(spec: &MenuSpec, layout: &Layout) -> Rect {
+    let rows: Vec<String> = spec
+        .items
         .iter()
-        .map(|target| text::str_width(target) + 8)
+        .map(|(label, _)| label.to_string())
+        .collect();
+    numbered_popup_area(layout, &rows)
+}
+
+fn numbered_popup_area(layout: &Layout, rows: &[String]) -> Rect {
+    let screen = Rect::new(0, 0, layout.status.w, layout.status.y + 1);
+    let width = rows
+        .iter()
+        .map(|row| text::str_width(row) + 8)
         .max()
         .unwrap_or(20)
         .max(24)
         .min(screen.w.saturating_sub(2) as usize) as u16;
-    let height = (targets.len() as u16 + 2).min(screen.h.saturating_sub(2));
-    let area = Rect::new(
+    let height = (rows.len() as u16 + 2).min(screen.h.saturating_sub(2));
+    Rect::new(
         screen.x + screen.w.saturating_sub(width) / 2,
-        layout.tabs.y + 1,
+        screen.y + 1,
         width,
         height,
-    );
+    )
+}
+
+/// A bordered popup of rows chosen with the digits from 1.
+fn render_numbered_popup(
+    surface: &mut Surface,
+    t: &theme::Theme,
+    area: Rect,
+    title: &str,
+    rows: &[String],
+    current: usize,
+) {
     surface.fill(area, Style::new().fg(t.fg).bg(t.bg_dark));
-    surface.border(
-        area,
-        Style::new().fg(t.blue).bg(t.bg_dark),
-        Some("Switch to"),
-    );
-    let current = match app.focus {
-        Focus::Tree | Focus::Review => 0,
-        _ => app.active + 1,
-    };
-    for (i, target) in targets.iter().enumerate() {
+    surface.border(area, Style::new().fg(t.blue).bg(t.bg_dark), Some(title));
+    for (i, label) in rows.iter().enumerate() {
         let y = area.y + 1 + i as u16;
         if y + 1 >= area.bottom() {
             break;
@@ -407,7 +423,7 @@ fn render_switcher(app: &App, surface: &mut Surface, layout: Layout) {
             Style::new().fg(t.orange).bg(bg).bold(),
             row.right(),
         );
-        surface.put_str(x + 2, y, target, Style::new().fg(t.fg).bg(bg), row.right());
+        surface.put_str(x + 2, y, label, Style::new().fg(t.fg).bg(bg), row.right());
     }
 }
 
@@ -526,10 +542,15 @@ fn render_prompt(
         Some(&prompt.title),
     );
     if prompt.confirm {
+        let keys = if prompt.saves_or_discards() {
+            "s save · d discard · esc cancel"
+        } else {
+            "y / n"
+        };
         surface.put_str(
             area.x + 2,
             area.y + 1,
-            "y / n",
+            keys,
             Style::new().fg(t.dark5).bg(t.bg_dark),
             area.right() - 1,
         );

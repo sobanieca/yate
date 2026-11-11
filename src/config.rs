@@ -24,6 +24,8 @@ pub struct Options {
     pub tree_follow: bool,
     /// Closes the tree after opening a file when the terminal is narrow.
     pub tree_auto_close_width: u16,
+    /// Columns of the file tree; 0 fits the names.
+    pub tree_width: u16,
     pub mouse_scroll_lines: usize,
     /// Characters moved by Ctrl+Left and Ctrl+Right.
     pub jump_chars: usize,
@@ -50,6 +52,7 @@ impl Default for Options {
             show_ignored: false,
             tree_follow: true,
             tree_auto_close_width: 200,
+            tree_width: 0,
             mouse_scroll_lines: 3,
             jump_chars: 10,
             jump_lines: 5,
@@ -101,6 +104,7 @@ pub const OPTION_NAMES: &[&str] = &[
     "showIgnored",
     "treeFollow",
     "treeAutoCloseWidth",
+    "treeWidth",
     "mouseScrollLines",
     "jumpChars",
     "jumpLines",
@@ -123,6 +127,7 @@ impl Options {
             "showIgnored" => self.show_ignored = value.as_bool(name)?,
             "treeFollow" => self.tree_follow = value.as_bool(name)?,
             "treeAutoCloseWidth" => self.tree_auto_close_width = value.as_usize(name)? as u16,
+            "treeWidth" => self.tree_width = value.as_usize(name)?.min(u16::MAX as usize) as u16,
             "mouseScrollLines" => self.mouse_scroll_lines = value.as_usize(name)?.max(1),
             "jumpChars" => self.jump_chars = value.as_usize(name)?.max(1),
             "jumpLines" => self.jump_lines = value.as_usize(name)?.max(1),

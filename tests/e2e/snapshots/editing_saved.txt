@@ -3,9 +3,8 @@
 # keys: ctrl+end
 # type: "export default greet;"
 # keys: ctrl+s
-# 60x12, cursor at column 26, row 8
+# 60x12, cursor at column 26, row 7
 ┌────────────────────────────────────────────────────────────┐
-│ app.js                                                     │
 │  1  const colors = {                                       │
 │  2  ▏ bg: "#24283b",                                       │
 │  3  };                                                     │
@@ -14,6 +13,7 @@
 │  6  ▏ return `hello ${name}`;                              │
 │  7  }                                                      │
 │  8  export default greet;                                  │
+│                                                            │
 │                                                            │
 │                                                            │
 │ EDIT  Saved app.js       javascript  utf-8  LF  100%  8:22 │

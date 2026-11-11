@@ -1,7 +1,6 @@
 //! The project around the open files: git, the file index, the file tree,
-//! live grep, path resolution, definition search, diffs and folder comparison.
+//! live grep, path resolution, definition search and gutter diffs.
 
-pub mod compare;
 pub mod definitions;
 pub mod diff;
 pub mod files;

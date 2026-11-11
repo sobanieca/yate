@@ -6,23 +6,30 @@ terminal or a tmux pane.
 
 Website and manual: https://sobanieca.github.io/yate/
 
-> **Status:** version 0.1.1, an early release. Keys, options and the plugin API may still
+> **Status:** version 0.3.0, an early release. Keys, options and the plugin API may still
 > change between versions.
 
 ## Features
 
 - **One binary, no runtime dependencies.** Syntax grammars and the JavaScript engine are
   compiled in. yate uses git when it is installed.
-- **Project tools:** a file tree with git status, filters for ignored and changed files and
-  sideways scrolling for deep names, a fuzzy file finder (Ctrl+P), live grep with glob
-  filters, a review of git changes against HEAD, diffs between two files or two folders (also
-  `yate diff <a> <b>` from the shell), bookmarks and a jump list.
-- **Split view** (Ctrl+\\): two panes side by side, showing the same file or two files. Scroll
-  sync (Ctrl+J) scrolls both together.
+- **Project tools:** a file tree with git status, filters for ignored and changed files,
+  sideways scrolling for deep names and a width you set (`[` / `]` or drag its edge), a fuzzy file finder (Ctrl+P), live grep with glob
+  filters, git signs in the gutter, bookmarks and a jump list.
+- **No tabs and no buffers.** The editor shows one file. Opening another one takes its
+  place, and unsaved changes ask first (save, discard or stay). A file opens again where the
+  cursor was, Ctrl+P lists the files you had last on top, and Alt+W numbers them.
+- **Split view** (Alt+S): as many panes as you need, side by side or one above the other,
+  showing the same file or different files. Panes share the space evenly; resize one by
+  typing the columns and rows to add. Scroll sync (Ctrl+J) scrolls all of them together.
 - **Ctrl keys with hints on screen:** the status line shows the keys for what you are doing,
-  and Ctrl+H lists every binding. Alt+W followed by a digit focuses the file tree (1) or an
-  open file (2-9); the numbers pop up when you wait. No function keys are needed.
-- **Go to definition** (Alt+D, Ctrl+click) without a language server. tree-sitter finds the
+  and Ctrl+H lists every binding. Every command has one key, and related commands share
+  one: Ctrl+G pops up "Go to" (1 line, 2 definition), Alt+M the bookmark commands, Alt+S
+  the split commands. The
+  command palette (Alt+P) lists only what the focused panel can do right now, by section. Alt+W
+  followed by a digit focuses the file tree (1) or shows a recent file (2-9); the numbers pop
+  up when you wait. No function keys and no Ctrl+Shift keys are needed.
+- **Go to definition** (Ctrl+G 2, Ctrl+click) without a language server. tree-sitter finds the
   definition in the file, follows ES imports and re-exports to the module that defines a
   name, or searches the project. On a path, an import or `file:line:col` it opens that file.
   Imports resolve like Node and TypeScript (`tsconfig.json` paths, `package.json` exports,
@@ -39,7 +46,7 @@ Website and manual: https://sobanieca.github.io/yate/
 - **Themes:** Tokyo Night by default (storm, night, moon and day presets), plus gruvbox (dark,
   light), nord and solarized-light presets. Every color can be changed in `yate.json`. The
   status line label and the focused panel title take the color of the focus area: blue for
-  the editor, green for the tree, yellow for find, magenta for review.
+  the editor, green for the tree, yellow for find.
 - **UTF-8 only.** LF and CRLF line endings are kept. Files that are not valid UTF-8 open
   read-only.
 
@@ -75,7 +82,6 @@ available, also after you quit. Turn the check off with `"updateCheck": false` i
 yate                  open the current folder (file tree)
 yate <folder>         open a folder
 yate <file>[:line]    open a file; the project is its git repository
-yate diff <a> <b>     compare two files or two folders (a is the old side)
 yate update           install the latest release
 yate --help           list the keys
 yate --version        show the version
@@ -86,17 +92,18 @@ Ctrl+H inside yate lists every binding and runs the one you pick. The important 
 | Keys                            | Action                                                     |
 | ------------------------------- | ---------------------------------------------------------- |
 | Ctrl+H                          | Key bindings (searchable, Enter runs)                      |
-| Ctrl+P                          | Find file                                                  |
-| Alt+F (Ctrl+Shift+F)            | Live grep                                                  |
+| Ctrl+P                          | Find file (recent files first)                             |
+| Alt+F                           | Live grep                                                  |
 | Ctrl+F in Ctrl+P / Alt+F        | Glob filter: `*.ts, src/**, !*.test.ts` (`!` excludes)     |
 | `f` / `g` in the tree           | Find file / live grep in the selected folder               |
-| Alt+P (Ctrl+Shift+P)            | Command palette                                            |
-| Alt+W (Alt+Tab), then 1-9       | 1 file tree, 2-9 open files; Alt+W again: next file        |
+| Alt+P                           | Command palette: what the focused panel can do, by section |
+| Alt+W, then 1-9                 | 1 file tree, 2-9 recent files; Alt+W again: next one       |
 | Alt+E / Ctrl+T                  | Toggle file tree / reveal current file                     |
-| Ctrl+\\ / Ctrl+O / Ctrl+J       | Split / other pane / scroll sync                           |
-| Alt+G                           | Review git changes                                         |
-| `c` in the tree                 | Compare: mark a file or folder, then `c` on another        |
-| Ctrl+S, Ctrl+W, Ctrl+Q          | Save, close buffer, quit                                   |
+| `[` / `]` in the tree           | Narrower / wider file tree (or drag its right edge)        |
+| Alt+S, then 1-6                 | Split: 1 side by side, 2 stacked, 3 resize, 5 close pane   |
+| Alt+H / J / K / L               | Focus the pane on the left / below / above / on the right  |
+| Ctrl+O / Ctrl+J                 | Next pane / scroll sync                                    |
+| Ctrl+S, Ctrl+Q                  | Save, quit                                                 |
 | Ctrl+F / Ctrl+R                 | Find / replace in file                                     |
 | Ctrl+C / X / V                  | Copy / cut / paste (whole line without a selection)        |
 | Ctrl+Z / Ctrl+Y                 | Undo / redo                                                |
@@ -105,14 +112,24 @@ Ctrl+H inside yate lists every binding and runs the one you pick. The important 
 | Ctrl+Left/Right, Ctrl+Up/Down   | 10 characters / 5 lines (`jumpChars`, `jumpLines`)         |
 | Tab / Shift+Tab (Alt+I / Alt+O) | Indent / outdent                                           |
 | Alt+Left / Alt+Right            | Jump back / forward                                        |
-| Alt+D, Ctrl+click               | Go to definition, or to the file under the cursor          |
-| Alt+M, Alt+N, Ctrl+L            | Bookmark toggle, next, list                                |
+| Ctrl+G, then 1 or 2             | Go to: 1 a line, 2 the definition or file under the cursor |
+| Ctrl+click                      | Go to definition, or to the file under the cursor          |
+| Alt+M, then 1-5                 | Bookmark: 1 toggle, 2 next, 3 previous, 4 list, 5 clear    |
+
+Every command has one key. A key that groups commands (Ctrl+G, Alt+M, Alt+S) pops up a numbered
+menu: press the digit, or move with the arrows and press Enter; Esc closes it. Commands
+without a key are in the command palette (Alt+P). It lists what the focused panel can do
+right now, in sections: with the editor focused File, Edit, Search, Go to, Bookmarks, View,
+File tree, Plugins and yate; with the file tree focused the commands for the selected file
+or folder, the tree, search and yate. Commands with nothing to work on are left out (the
+split commands without a split, "Find next" without a search, bookmark navigation without
+bookmarks). Typing filters by section and name ("tree toggle").
 
 Terminals send Ctrl+Shift combinations only with the kitty keyboard protocol (kitty, WezTerm,
-foot, Ghostty), and not through tmux, so every Ctrl+Shift binding also has an Alt binding:
-Alt+P for the palette, Alt+G for review. Keys avoid Ctrl+B (the tmux prefix), Ctrl+Tab and
-Shift+Tab, which many terminals (Termux, terminals over SSH) do not send: Alt+W switches
-files, Alt+E toggles the tree and Alt+I / Alt+O indent and outdent.
+foot, Ghostty), and not through tmux, so no default binding uses Ctrl+Shift: Alt+P opens the
+palette, Alt+F live grep. Keys avoid Ctrl+B (the tmux prefix), Ctrl+Tab and Shift+Tab,
+which many terminals (Termux, terminals over SSH) do not send: Alt+W switches files, Alt+E
+toggles the tree and Alt+I / Alt+O indent and outdent.
 
 ## Configuration
 

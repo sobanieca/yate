@@ -1,0 +1,19 @@
+# editing_leave_unsaved_prompt
+# start: yate a.js
+# type: "x"
+# keys: ctrl+p
+# type: "b.js"
+# keys: enter
+# 70x10, cursor hidden
+┌──────────────────────────────────────────────────────────────────────┐
+│  1  xlet a = 1;                                                      │
+│  2                                                                   │
+│          ╭─ a.js has unsaved changes ─────────────────────╮          │
+│          │ s save · d discard · esc cancel                │          │
+│          ╰────────────────────────────────────────────────╯          │
+│                                                                      │
+│                                                                      │
+│                                                                      │
+│                                                                      │
+│ INPUT  a.js ●                         javascript  utf-8  LF  0%  1:2 │
+└──────────────────────────────────────────────────────────────────────┘

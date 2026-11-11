@@ -39,7 +39,7 @@ fn a_closer_yate_json_overrides_farther_ones() {
         .open("app/main.js")
         .start();
     e.type_text("if (x) {\ny();");
-    assert_eq!(e.buffer_text(), "if (x) {\n    y();\n}");
+    assert_eq!(e.editor_text(), "if (x) {\n    y();\n}");
     assert!(e.app().options.line_numbers);
     assert_eq!(e.app().settings_files.len(), 3);
 }

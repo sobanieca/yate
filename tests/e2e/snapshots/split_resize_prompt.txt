@@ -1,0 +1,26 @@
+# split_resize_prompt
+# start: yate one.txt
+# keys: alt+s 1
+# keys: ctrl+p
+# type: "two.txt"
+# keys: enter
+# keys: alt+s 2 alt+s 3
+# 80x16, cursor at column 13, row 5
+┌────────────────────────────────────────────────────────────────────────────────┐
+│ one.txt                                 two.txt                                │
+│  1  one 1                             │  1  two 1                              │
+│  2  one 2                             │  2  two 2                              │
+│  3  one 3                             │  3  two 3                              │
+│  4  one 4 ╭─ Add columns,rows to this pane (40,8 now), e.g. 10,-2 ─╮           │
+│  5  one 5 │                                                        │           │
+│  6  one 6 ╰────────────────────────────────────────────────────────╯           │
+│  7  one 7                             │ two.txt                                │
+│  8  one 8                             │  1  two 1                              │
+│  9  one 9                             │  2  two 2                              │
+│ 10  one 10                            │  3  two 3                              │
+│ 11  one 11                            │  4  two 4                              │
+│ 12  one 12                            │  5  two 5                              │
+│ 13  one 13                            │  6  two 6                              │
+│ 14  one 14                            │  7  two 7                              │
+│ INPUT  two.txt                                        text  utf-8  LF  0%  1:1 │
+└────────────────────────────────────────────────────────────────────────────────┘

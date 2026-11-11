@@ -1,4 +1,4 @@
-//! Key bindings: key names like `ctrl+shift+p`, bound to command ids per
+//! Key bindings: key names like `alt+shift+down`, bound to command ids per
 //! context. Plugins rebind keys with `yate.bindKey`.
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
@@ -10,23 +10,16 @@ pub enum Context {
     Global,
     Editor,
     Tree,
-    Review,
 }
 
 impl Context {
-    pub const ALL: [Context; 4] = [
-        Context::Global,
-        Context::Editor,
-        Context::Tree,
-        Context::Review,
-    ];
+    pub const ALL: [Context; 3] = [Context::Global, Context::Editor, Context::Tree];
 
     pub fn name(self) -> &'static str {
         match self {
             Context::Global => "global",
             Context::Editor => "editor",
             Context::Tree => "tree",
-            Context::Review => "review",
         }
     }
 
@@ -35,7 +28,6 @@ impl Context {
             "global" => Some(Context::Global),
             "editor" => Some(Context::Editor),
             "tree" => Some(Context::Tree),
-            "review" => Some(Context::Review),
             _ => None,
         }
     }
@@ -207,80 +199,59 @@ pub struct Keymap {
     bindings: HashMap<(Context, String), String>,
 }
 
+/// The default bindings: one key for each command, and no Ctrl+Shift keys,
+/// which terminals send only with the kitty keyboard protocol and never
+/// through tmux.
 pub const DEFAULTS: &[(Context, &str, &str)] = &[
     (Context::Global, "ctrl+q", "app.quit"),
     (Context::Global, "ctrl+h", "help.keys"),
     (Context::Global, "ctrl+s", "file.save"),
     (Context::Global, "ctrl+n", "file.new"),
     (Context::Global, "ctrl+p", "picker.files"),
-    (Context::Global, "ctrl+e", "picker.buffers"),
     (Context::Global, "alt+f", "picker.grep"),
-    (Context::Global, "ctrl+shift+f", "picker.grep"),
-    (Context::Global, "alt+shift+f", "picker.grepGlob"),
     (Context::Global, "alt+p", "picker.commands"),
-    (Context::Global, "ctrl+shift+p", "picker.commands"),
-    (Context::Global, "ctrl+l", "picker.bookmarks"),
     (Context::Global, "alt+r", "picker.resume"),
-    (Context::Global, "alt+tab", "switch.next"),
     (Context::Global, "alt+w", "switch.next"),
     (Context::Global, "alt+shift+w", "switch.previous"),
     (Context::Global, "alt+e", "tree.toggle"),
-    (Context::Global, "ctrl+shift+e", "tree.toggle"),
     (Context::Global, "ctrl+t", "tree.reveal"),
-    (Context::Global, "alt+g", "git.review"),
-    (Context::Global, "ctrl+shift+g", "git.review"),
-    (Context::Global, "ctrl+\\", "view.split"),
-    (Context::Global, "ctrl+o", "view.focusOtherPane"),
+    (Context::Global, "alt+s", "view.splitMenu"),
+    (Context::Global, "ctrl+o", "view.focusNextPane"),
+    (Context::Global, "alt+h", "view.focusPaneLeft"),
+    (Context::Global, "alt+j", "view.focusPaneBelow"),
+    (Context::Global, "alt+k", "view.focusPaneAbove"),
+    (Context::Global, "alt+l", "view.focusPaneRight"),
     (Context::Global, "ctrl+j", "view.toggleScrollSync"),
-    (Context::Global, "ctrl+w", "buffer.close"),
-    (Context::Global, "ctrl+pageup", "buffer.previous"),
-    (Context::Global, "ctrl+pagedown", "buffer.next"),
-    (Context::Global, "alt+,", "buffer.previous"),
-    (Context::Global, "alt+.", "buffer.next"),
     (Context::Global, "alt+left", "jump.back"),
     (Context::Global, "alt+right", "jump.forward"),
-    (Context::Global, "ctrl+g", "goto.line"),
+    (Context::Global, "ctrl+g", "goto.menu"),
     (Context::Global, "ctrl+f", "find.open"),
     (Context::Global, "ctrl+r", "find.replace"),
-    (Context::Global, "alt+m", "bookmark.toggle"),
-    (Context::Global, "alt+n", "bookmark.next"),
-    (Context::Global, "alt+b", "bookmark.previous"),
-    (Context::Editor, "alt+d", "goto.definition"),
+    (Context::Global, "alt+m", "bookmark.menu"),
     (Context::Editor, "ctrl+z", "edit.undo"),
     (Context::Editor, "ctrl+y", "edit.redo"),
-    (Context::Editor, "ctrl+shift+z", "edit.redo"),
     (Context::Editor, "ctrl+c", "edit.copy"),
     (Context::Editor, "ctrl+x", "edit.cut"),
     (Context::Editor, "ctrl+v", "edit.paste"),
     (Context::Editor, "ctrl+a", "edit.selectAll"),
     (Context::Editor, "ctrl+d", "edit.selectNext"),
     (Context::Editor, "ctrl+/", "edit.toggleComment"),
-    (Context::Editor, "alt+/", "edit.toggleComment"),
     (Context::Editor, "alt+up", "edit.moveLineUp"),
     (Context::Editor, "alt+down", "edit.moveLineDown"),
     (Context::Editor, "alt+shift+down", "edit.duplicateLine"),
-    (Context::Editor, "alt+shift+up", "edit.duplicateLine"),
     (Context::Editor, "ctrl+k", "edit.deleteLine"),
-    (Context::Editor, "ctrl+shift+k", "edit.deleteLine"),
     (Context::Editor, "alt+i", "edit.indent"),
-    (Context::Editor, "ctrl+]", "edit.indent"),
     (Context::Editor, "alt+o", "edit.outdent"),
-    (Context::Tree, "a", "file.new"),
     (Context::Tree, "r", "file.rename"),
     (Context::Tree, "d", "file.delete"),
-    (Context::Tree, "delete", "file.delete"),
     (Context::Tree, "y", "file.copyPath"),
-    (Context::Tree, "c", "file.compare"),
     (Context::Tree, "i", "tree.toggleIgnored"),
     (Context::Tree, "m", "tree.toggleChanged"),
     (Context::Tree, "shift+r", "tree.refresh"),
     (Context::Tree, "f", "picker.filesInFolder"),
     (Context::Tree, "g", "picker.grepInFolder"),
-    (Context::Review, "n", "review.nextChange"),
-    (Context::Review, "]", "review.nextChange"),
-    (Context::Review, "p", "review.previousChange"),
-    (Context::Review, "[", "review.previousChange"),
-    (Context::Review, "r", "review.refresh"),
+    (Context::Tree, "[", "tree.narrow"),
+    (Context::Tree, "]", "tree.widen"),
 ];
 
 impl Keymap {
@@ -310,13 +281,25 @@ impl Keymap {
             .map(String::as_str)
     }
 
-    /// Keys bound to `command`, for the command palette: plain Ctrl keys
-    /// first, then Alt keys, which work everywhere, then the rest.
+    /// Keys bound to `command`, for the command palette: one by default,
+    /// more when `yate.json` adds some. Plain Ctrl keys come first, then
+    /// Alt keys, which work everywhere, then the rest.
     pub fn keys_for(&self, command: &str) -> Vec<String> {
+        self.keys_where(command, |_| true)
+    }
+
+    /// Keys that run `command` while the panel of `context` has the focus.
+    pub fn keys_in(&self, context: Context, command: &str) -> Vec<String> {
+        self.keys_where(command, |bound| {
+            bound == context || bound == Context::Global
+        })
+    }
+
+    fn keys_where(&self, command: &str, in_context: impl Fn(Context) -> bool) -> Vec<String> {
         let mut keys: Vec<String> = self
             .bindings
             .iter()
-            .filter(|(_, bound)| bound.as_str() == command)
+            .filter(|((context, _), bound)| bound.as_str() == command && in_context(*context))
             .map(|((_, key), _)| key.clone())
             .collect();
         keys.sort_by_key(|key| (key_rank(key), key.len(), key.clone()));
@@ -393,12 +376,24 @@ mod tests {
     }
 
     #[test]
-    fn hints_prefer_ctrl_keys_then_alt_keys() {
+    fn hints_name_the_key_of_a_command() {
         let keymap = Keymap::defaults();
         assert_eq!(keymap.hint("switch.next").as_deref(), Some("alt+w"));
         assert_eq!(keymap.hint("tree.toggle").as_deref(), Some("alt+e"));
         assert_eq!(keymap.hint("picker.commands").as_deref(), Some("alt+p"));
         assert_eq!(keymap.hint("file.rename").as_deref(), Some("r"));
+        assert_eq!(keymap.keys_in(Context::Tree, "file.rename"), ["r"]);
+        assert!(keymap.keys_in(Context::Editor, "file.rename").is_empty());
+        assert_eq!(keymap.keys_in(Context::Tree, "picker.files"), ["ctrl+p"]);
+    }
+
+    #[test]
+    fn every_command_has_one_default_key_and_none_needs_ctrl_shift() {
+        let mut bound = std::collections::HashSet::new();
+        for (_, key, command) in DEFAULTS {
+            assert!(!key.contains("ctrl+shift+"), "{key} needs Ctrl+Shift");
+            assert!(bound.insert(*command), "{command} has more than one key");
+        }
     }
 
     #[test]

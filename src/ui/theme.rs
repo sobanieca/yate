@@ -68,10 +68,6 @@ palette!(
     git_add,
     git_change,
     git_delete,
-    diff_add_bg,
-    diff_add_emphasis,
-    diff_delete_bg,
-    diff_delete_emphasis,
 );
 
 pub const PRESETS: &[&str] = &[
@@ -192,10 +188,6 @@ fn storm() -> Theme {
         git_add: rgb(0x449dab),
         git_change: rgb(0x6183bb),
         git_delete: rgb(0x914c54),
-        diff_add_bg: rgb(0x273849),
-        diff_add_emphasis: rgb(0x2e5059),
-        diff_delete_bg: rgb(0x3f2d3d),
-        diff_delete_emphasis: rgb(0x5c3242),
         syntax: HashMap::new(),
     };
     for (scopes, color, flags) in DEFAULT_SYNTAX {
@@ -236,8 +228,6 @@ pub fn preset(name: &str) -> Option<Theme> {
                 ("bg_dark", 0x16161e),
                 ("bg_inactive", 0x111118),
                 ("bg_visual", 0x283457),
-                ("diff_add_bg", 0x20303b),
-                ("diff_delete_bg", 0x37222c),
             ],
         ),
         "tokyonight-moon" => with_colors(
@@ -301,10 +291,6 @@ pub fn preset(name: &str) -> Option<Theme> {
                 ("git_add", 0x4197a4),
                 ("git_change", 0x506d9c),
                 ("git_delete", 0xc47981),
-                ("diff_add_bg", 0xc8dbe6),
-                ("diff_add_emphasis", 0xa8cbd8),
-                ("diff_delete_bg", 0xecd2d8),
-                ("diff_delete_emphasis", 0xe0b5bf),
             ],
         ),
         "gruvbox-dark" => with_colors(
@@ -339,10 +325,6 @@ pub fn preset(name: &str) -> Option<Theme> {
                 ("git_add", 0x98971a),
                 ("git_change", 0x458588),
                 ("git_delete", 0xcc241d),
-                ("diff_add_bg", 0x32361a),
-                ("diff_add_emphasis", 0x434a1d),
-                ("diff_delete_bg", 0x3c1f1e),
-                ("diff_delete_emphasis", 0x5a2624),
             ],
         ),
         "gruvbox-light" => with_colors(
@@ -377,10 +359,6 @@ pub fn preset(name: &str) -> Option<Theme> {
                 ("git_add", 0x79740e),
                 ("git_change", 0x076678),
                 ("git_delete", 0xcc241d),
-                ("diff_add_bg", 0xe6e8c0),
-                ("diff_add_emphasis", 0xd5da9c),
-                ("diff_delete_bg", 0xf6d8cc),
-                ("diff_delete_emphasis", 0xefbcab),
             ],
         ),
         "nord" => with_colors(
@@ -415,10 +393,6 @@ pub fn preset(name: &str) -> Option<Theme> {
                 ("git_add", 0xa3be8c),
                 ("git_change", 0x81a1c1),
                 ("git_delete", 0xbf616a),
-                ("diff_add_bg", 0x344038),
-                ("diff_add_emphasis", 0x3f5145),
-                ("diff_delete_bg", 0x41343c),
-                ("diff_delete_emphasis", 0x573c46),
             ],
         ),
         "solarized-light" => with_colors(
@@ -453,10 +427,6 @@ pub fn preset(name: &str) -> Option<Theme> {
                 ("git_add", 0x859900),
                 ("git_change", 0x268bd2),
                 ("git_delete", 0xdc322f),
-                ("diff_add_bg", 0xe8edc8),
-                ("diff_add_emphasis", 0xd8e0a5),
-                ("diff_delete_bg", 0xf8dfd5),
-                ("diff_delete_emphasis", 0xf2c4b5),
             ],
         ),
         _ => return None,

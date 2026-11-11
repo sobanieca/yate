@@ -14,7 +14,7 @@ try {
 <title>yate</title>
 <meta name="theme-color" content="#191c2b" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#eceef5" media="(prefers-color-scheme: light)">
-<meta name="description" content="yate is a modeless terminal text editor that works like a basic VS Code: file tree, Ctrl+P, live grep, git review and JavaScript plugins, in one binary.">
+<meta name="description" content="yate is a modeless terminal text editor that works like a basic VS Code: file tree, Ctrl+P, live grep, go to definition and JavaScript plugins, in one binary.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%237aa2f7'/%3E%3Ctext x='16' y='22' font-family='monospace' font-size='16' font-weight='700' fill='%231a1d2e' text-anchor='middle'%3Ey_%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -45,7 +45,6 @@ try {
   --t-comment: #565f89; --t-blue: #7aa2f7; --t-blue1: #2ac3de; --t-blue5: #89ddff; --t-cyan: #7dcfff;
   --t-magenta: #bb9af7; --t-purple: #9d7cd8; --t-orange: #ff9e64; --t-yellow: #e0af68; --t-green: #9ece6a;
   --t-green1: #73daca; --t-red: #f7768e; --t-red1: #db4b4b; --t-git-add: #449dab; --t-git-change: #6183bb;
-  --t-add-bg: #273849; --t-add-em: #2e5059; --t-del-bg: #3f2d3d; --t-del-em: #5c3242;
   --t-frame: #13151f; --t-tmux: #16161e;
 
   --font-display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
@@ -70,7 +69,6 @@ try {
     --t-comment: #848cb5; --t-blue: #2e7de9; --t-blue1: #188092; --t-blue5: #006a83; --t-cyan: #007197;
     --t-magenta: #9854f1; --t-purple: #7847bd; --t-orange: #b15c00; --t-yellow: #8c6c3e; --t-green: #587539;
     --t-green1: #387068; --t-red: #f52a65; --t-red1: #c64343; --t-git-add: #4197a4; --t-git-change: #506d9c;
-    --t-add-bg: #c8dbe6; --t-add-em: #a8cbd8; --t-del-bg: #ecd2d8; --t-del-em: #e0b5bf;
     --t-frame: #b4bad2; --t-tmux: #c6cbe0;
   }
 }
@@ -84,7 +82,6 @@ try {
   --t-comment: #848cb5; --t-blue: #2e7de9; --t-blue1: #188092; --t-blue5: #006a83; --t-cyan: #007197;
   --t-magenta: #9854f1; --t-purple: #7847bd; --t-orange: #b15c00; --t-yellow: #8c6c3e; --t-green: #587539;
   --t-green1: #387068; --t-red: #f52a65; --t-red1: #c64343; --t-git-add: #4197a4; --t-git-change: #506d9c;
-  --t-add-bg: #c8dbe6; --t-add-em: #a8cbd8; --t-del-bg: #ecd2d8; --t-del-em: #e0b5bf;
   --t-frame: #b4bad2; --t-tmux: #c6cbe0;
 }
 
@@ -179,8 +176,7 @@ code { font-family: var(--font-mono); font-size: 0.88em; background: var(--surfa
 .tmux .on { color: var(--t-blue); font-weight: 700; }
 .shot-caption { margin-top: 12px; color: var(--muted); font-size: 0.92rem; max-width: 80ch; min-height: 3em; }
 .bg { background: var(--t-bg); } .dk { background: var(--t-bg-dark); } .hl { background: var(--t-hl); }
-.ad { background: var(--t-add-bg); } .ade { background: var(--t-add-em); } .de { background: var(--t-del-bg); } .dee { background: var(--t-del-em); }
-.gb { background: var(--t-gutter); } .bb { background: var(--t-blue); } .grb { background: var(--t-green); } .mgb { background: var(--t-magenta); } .cyb { background: var(--t-cyan); } .sr { background: var(--t-search); }
+.gb { background: var(--t-gutter); } .bb { background: var(--t-blue); } .grb { background: var(--t-green); } .cyb { background: var(--t-cyan); } .sr { background: var(--t-search); }
 .cur { background: var(--t-fg); color: var(--t-bg) !important; }
 .fg { color: var(--t-fg); } .fd { color: var(--t-fg-dark); } .gu { color: var(--t-gutter); } .d3 { color: var(--t-dark3); } .d5 { color: var(--t-dark5); }
 .cm { color: var(--t-comment); } .blue { color: var(--t-blue); } .b1 { color: var(--t-blue1); } .b5 { color: var(--t-blue5); } .cy { color: var(--t-cyan); }
@@ -234,7 +230,6 @@ section { padding-block: clamp(48px, 7vw, 88px) 0; }
 .mode-chip.edit { background: var(--t-blue); color: var(--t-bg-dark); }
 .mode-chip.tree { background: var(--t-green); color: var(--t-bg-dark); }
 .mode-chip.find { background: var(--t-yellow); color: var(--t-bg-dark); }
-.mode-chip.review { background: var(--t-magenta); color: var(--t-bg-dark); }
 .mode-chip.pick { background: var(--t-cyan); color: var(--t-bg-dark); }
 .note { border-left: 3px solid var(--violet); background: var(--surface); padding: 12px 16px; border-radius: 0 8px 8px 0; font-size: 0.95rem; }
 ul.plain { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; }
@@ -332,9 +327,9 @@ img { max-width: 100%; }
 <main id="top">
   <div class="wrap hero">
     <div class="hero-grid">
-      <div class="eyebrow"><span>yate · yet another text editor</span><span class="pill">v0.1.2 · early</span></div>
+      <div class="eyebrow"><span>yate · yet another text editor</span><span class="pill">v0.3.0 · early</span></div>
       <h1>A terminal editor that works like <em>VS Code</em>, not like vim.</h1>
-      <p class="lede">yate is a modeless text editor for quick, comfortable edits in a terminal or a tmux pane. You get a file tree, Ctrl+P, live grep, a git review view and JavaScript plugins, in one binary with no runtime dependencies.</p>
+      <p class="lede">yate is a modeless text editor for quick, comfortable edits in a terminal or a tmux pane. You get a file tree, Ctrl+P, live grep, go to definition and JavaScript plugins, in one binary with no runtime dependencies.</p>
       <div class="install">
         <div class="cmd"><span class="sh">$</span><code id="install-cmd">curl -fsSL sobanieca.github.io/yate/install.sh | bash</code><button class="copy" type="button" data-copy="install-cmd">Copy</button></div>
       </div>
@@ -351,7 +346,7 @@ img { max-width: 100%; }
         <button class="shot-tab" role="tab" type="button" data-screen="editor" aria-selected="true"><span class="k" data-k="alt+e"></span>Editor and tree</button>
         <button class="shot-tab" role="tab" type="button" data-screen="files" aria-selected="false"><span class="k" data-k="ctrl+p"></span>Find file</button>
         <button class="shot-tab" role="tab" type="button" data-screen="grep" aria-selected="false"><span class="k" data-k="alt+f"></span>Live grep</button>
-        <button class="shot-tab" role="tab" type="button" data-screen="review" aria-selected="false"><span class="k" data-k="alt+g"></span>Git review</button>
+        <button class="shot-tab" role="tab" type="button" data-screen="palette" aria-selected="false"><span class="k" data-k="alt+p"></span>Command palette</button>
       </div>
       <div class="term-frame">
         <div class="term-scroll"><pre class="term" id="term" aria-live="polite"></pre></div>
@@ -371,16 +366,14 @@ img { max-width: 100%; }
         <article class="feature"><h3>Fuzzy file finder <span class="k" data-k="ctrl+p"></span></h3><p>Type a few letters of a path and open the file. The index respects <code>.gitignore</code> and fills in the background.</p></article>
         <article class="feature"><h3>Live grep <span class="k" data-k="alt+f"></span></h3><p>Results update as you type across the whole project. Press Ctrl+F to narrow the search with globs like <code>src/**/*.rs, !*.test.rs</code>, or press <kbd>g</kbd> on a folder in the tree to search only there.</p></article>
         <article class="feature"><h3>File tree <span class="k" data-k="alt+e"></span></h3><p>Git status colors, a filter for changed files only, a toggle for ignored files, new, rename, delete and copy-path keys, find file or live grep in the selected folder, and sideways scrolling so deep names stay readable in a narrow tree.</p></article>
-        <article class="feature"><h3>Go to definition <span class="k" data-k="alt+d"></span></h3><p>Jump to a function, class or variable in the file, through ES imports and re-exports, or across the project. On a path or an import it opens the file. No language server needed.</p></article>
-        <article class="feature"><h3>Git review <span class="k" data-k="alt+g"></span></h3><p>Every changed and untracked file against HEAD, with a side diff, word-level highlights and n / p to walk through changes.</p></article>
+        <article class="feature"><h3>Go to definition <span class="k" data-k="ctrl+g"></span> <kbd>2</kbd></h3><p>Jump to a function, class or variable in the file, through ES imports and re-exports, or across the project. On a path or an import it opens the file. No language server needed.</p></article>
         <article class="feature"><h3>Syntax highlighting</h3><p>Tree-sitter grammars for 36 languages are compiled in and parsed incrementally, so highlighting stays exact while you type.</p></article>
-        <article class="feature"><h3>Command palette <span class="k" data-k="alt+p"></span></h3><p>Every action is a command with an id. Search them by name, bind them to keys, or run them from a plugin.</p></article>
+        <article class="feature"><h3>Command palette <span class="k" data-k="alt+p"></span></h3><p>Lists only what the focused panel can do right now, grouped in sections: File, Edit, Search, Go to and so on. Search by section or name, bind any command to a key, or run it from a plugin.</p></article>
         <article class="feature"><h3>Keys on screen <span class="k" data-k="ctrl+h"></span></h3><p>Ctrl keys, no function keys. The status line hints at the keys for what you are doing, and Ctrl+H lists every binding: search it, press Enter to run one.</p></article>
-        <article class="feature"><h3>Switch with Alt+W <span class="k" data-k="alt+w"></span></h3><p>Alt+W (or Alt+Tab) then 1 focuses the file tree, 2-9 an open file; wait and the numbers pop up. Press Alt+W again to walk through the open files.</p></article>
-        <article class="feature"><h3>Split view <span class="k" data-k="ctrl+\"></span></h3><p>Two panes side by side: two files, or two places in one file with their own cursors. Scroll sync moves both panes together.</p></article>
-        <article class="feature"><h3>Compare files and folders</h3><p>Press <kbd>c</kbd> on two files or two folders in the tree, compare the current file with any other, or run <code>yate diff a b</code> from the shell: a diff, or the list of files that differ.</p></article>
+        <article class="feature"><h3>Switch with Alt+W <span class="k" data-k="alt+w"></span></h3><p>Alt+W then 1 focuses the file tree, 2-9 show a recent file; wait and the numbers pop up. Press Alt+W again to walk through the recent files.</p></article>
+        <article class="feature"><h3>Split view <span class="k" data-k="alt+s"></span></h3><p>As many panes as you need, side by side or one above the other: several files, or several places in one file with their own cursors. Panes share the space evenly until you resize one. Scroll sync moves all panes together.</p></article>
         <article class="feature"><h3>JavaScript plugins</h3><p>An embedded QuickJS engine runs the plugins you switch on in <code>yate.json</code>: register commands, bind keys, react to saves, run programs.</p></article>
-        <article class="feature"><h3>Made for tmux</h3><p>Copies go to the tmux paste buffer, paste reads it, and the editor dims when the pane loses focus. Every Ctrl+Shift key has an Alt twin.</p></article>
+        <article class="feature"><h3>Made for tmux</h3><p>Copies go to the tmux paste buffer, paste reads it, and the editor dims when the pane loses focus. No key needs Ctrl+Shift.</p></article>
         <article class="feature"><h3>Themes in yate.json</h3><p>Tokyo Night (storm, night, moon, day), gruvbox (dark, light), nord and solarized-light presets. Override any palette color or syntax scope, per user or per project.</p></article>
       </div>
     </div>
@@ -390,7 +383,7 @@ img { max-width: 100%; }
     <div class="wrap">
       <div class="sec-head">
         <h2>Manual</h2>
-        <p>How to open projects, move around, edit, search, review changes and make yate your own.</p>
+        <p>How to open projects, move around, edit, search and make yate your own.</p>
       </div>
       <div class="manual">
         <nav class="toc" aria-label="Manual contents">
@@ -402,8 +395,7 @@ img { max-width: 100%; }
             <li><a href="#editing">Editing</a></li>
             <li><a href="#finding">Finding things</a></li>
             <li><a href="#tree">File tree</a></li>
-            <li><a href="#review">Git review</a></li>
-            <li><a href="#navigation">Buffers, jumps, bookmarks</a></li>
+            <li><a href="#navigation">Files, jumps, bookmarks</a></li>
             <li><a href="#tmux">tmux and the clipboard</a></li>
             <li><a href="#keys">Key reference</a></li>
             <li><a href="#config">Configuration</a></li>
@@ -438,27 +430,25 @@ cargo dist              <span class="c"># static binary in dist/yate</span></pre
                 <tr><td class="id">yate</td><td>The current folder, with the file tree and a welcome screen of the main keys.</td></tr>
                 <tr><td class="id">yate &lt;folder&gt;</td><td>That folder as the project.</td></tr>
                 <tr><td class="id">yate &lt;file&gt;[:line]</td><td>The file, at a line if you give one. The project is the file's git repository.</td></tr>
-                <tr><td class="id">yate diff &lt;a&gt; &lt;b&gt;</td><td>Compares two files or two folders (see <a href="#compare">Comparing files and folders</a>); <code>a</code> is the old side. Paths are relative to the current folder or absolute; the project is the git repository (or folder) that holds both. Use <code>./diff</code> to open a file named diff.</td></tr>
                 <tr><td class="id">yate update</td><td>Installs the latest release. Use <code>./update</code> to open a file named update.</td></tr>
                 <tr><td class="id">yate --help / -v</td><td>The key list, or the version.</td></tr>
               </tbody>
             </table></div>
-            <p>Paths everywhere in yate are shown relative to the project root. git is optional: without it you lose the git status colors, gutter signs and review view, and everything else works.</p>
-            <p>yate edits UTF-8 only and keeps LF or CRLF line endings as they are. A file that is not valid UTF-8 opens read-only. When a file changes on disk, yate reloads it, or warns you when the buffer has unsaved changes.</p>
+            <p>Paths everywhere in yate are shown relative to the project root. git is optional: without it you lose the git status colors and gutter signs, and everything else works.</p>
+            <p>yate edits UTF-8 only and keeps LF or CRLF line endings as they are. A file that is not valid UTF-8 opens read-only. When a file changes on disk, yate reloads it, or warns you when the file has unsaved changes.</p>
           </article>
 
           <article class="chapter" id="screen">
             <h2>The screen</h2>
-            <p>From left to right and top to bottom: the file tree (toggle it with <span class="k" data-k="alt+e"></span>), the tab bar with your open buffers, the editor with line numbers, git signs and indent guides, and the status line.</p>
+            <p>From left to right and top to bottom: the file tree (toggle it with <span class="k" data-k="alt+e"></span>), the editor with line numbers, git signs and indent guides, and the status line with the path of the file. There are no tabs: the editor shows one file, or several in a split, each with its path above it.</p>
             <p>The status line starts with a label that tells you where your keys go. It is the closest thing yate has to a mode, and it changes only when focus moves. Each focus area has its own color, and the title of the focused panel takes it too:</p>
             <div class="tbl wide"><table>
               <thead><tr><th>Label</th><th>Focus</th><th>Leave with</th></tr></thead>
               <tbody>
                 <tr><td><span class="mode-chip edit">EDIT</span></td><td>The editor. Typing inserts text.</td><td>—</td></tr>
                 <tr><td><span class="mode-chip tree">TREE</span></td><td>The file tree. Letters are tree commands.</td><td><span class="k" data-k="esc|tab"></span></td></tr>
-                <tr><td><span class="mode-chip pick">PICK</span></td><td>A picker: files, grep, buffers, palette, bookmarks.</td><td><span class="k" data-k="esc"></span></td></tr>
+                <tr><td><span class="mode-chip pick">PICK</span></td><td>A picker: files, grep, palette, bookmarks.</td><td><span class="k" data-k="esc"></span></td></tr>
                 <tr><td><span class="mode-chip find">FIND</span></td><td>The find and replace bar.</td><td><span class="k" data-k="esc"></span></td></tr>
-                <tr><td><span class="mode-chip review">REVIEW</span></td><td>The git review view.</td><td><span class="k" data-k="esc"></span></td></tr>
               </tbody>
             </table></div>
             <p>After the label: the git branch, the file with a <code>●</code> when it has unsaved changes, messages, and on the right the language, encoding, line ending, scroll position and <code>line:column</code>.</p>
@@ -478,8 +468,8 @@ cargo dist              <span class="c"># static binary in dist/yate</span></pre
                 <tr><td class="keys"><span class="k" data-k="pageup|pagedown"></span></td><td>One screen</td></tr>
                 <tr><td class="keys"><span class="k" data-k="home|end"></span></td><td>Start of the text on the line (then column 1), end of line</td></tr>
                 <tr><td class="keys"><span class="k" data-k="ctrl+home|ctrl+end"></span></td><td>Start, end of the file</td></tr>
-                <tr><td class="keys"><span class="k" data-k="ctrl+g"></span></td><td>Go to a line number</td></tr>
-                <tr><td class="keys"><span class="k" data-k="alt+d"></span></td><td>Go to the definition of the name, or to the file of the path or import under the cursor (see <a href="#navigation">Go to definition</a>)</td></tr>
+                <tr><td class="keys"><span class="k" data-k="ctrl+g"></span></td><td><b>Go to</b> pops up: <kbd>1</kbd> a line number, <kbd>2</kbd> the definition</td></tr>
+                <tr><td class="keys"><span class="k" data-k="ctrl+g"></span> <kbd>2</kbd></td><td>Go to the definition of the name, or to the file of the path or import under the cursor (see <a href="#navigation">Go to definition</a>)</td></tr>
                 <tr><td class="keys"><span class="k" data-k="esc"></span></td><td>Drop the selection</td></tr>
               </tbody>
             </table></div>
@@ -490,21 +480,20 @@ cargo dist              <span class="c"># static binary in dist/yate</span></pre
               <tbody>
                 <tr><td class="keys"><span class="k" data-k="ctrl+c|ctrl+x"></span></td><td>Copy, cut. Without a selection, the whole line.</td></tr>
                 <tr><td class="keys"><span class="k" data-k="ctrl+v"></span></td><td>Paste</td></tr>
-                <tr><td class="keys"><span class="k" data-k="ctrl+z"></span> <span class="k" data-k="ctrl+y|ctrl+shift+z"></span></td><td>Undo, redo</td></tr>
+                <tr><td class="keys"><span class="k" data-k="ctrl+z"></span> <span class="k" data-k="ctrl+y"></span></td><td>Undo, redo</td></tr>
                 <tr><td class="keys"><span class="k" data-k="ctrl+a"></span></td><td>Select all</td></tr>
                 <tr><td class="keys"><span class="k" data-k="ctrl+d"></span></td><td>Select the word, then its next occurrence</td></tr>
-                <tr><td class="keys"><span class="k" data-k="ctrl+/|alt+/"></span></td><td>Toggle line comment (Ctrl+7 in some terminals)</td></tr>
+                <tr><td class="keys"><span class="k" data-k="ctrl+/"></span></td><td>Toggle line comment (Ctrl+7 in some terminals)</td></tr>
                 <tr><td class="keys"><span class="k" data-k="alt+up|alt+down"></span></td><td>Move the line or the selected lines</td></tr>
-                <tr><td class="keys"><span class="k" data-k="alt+shift+down|alt+shift+up"></span></td><td>Duplicate the line</td></tr>
+                <tr><td class="keys"><span class="k" data-k="alt+shift+down"></span></td><td>Duplicate the line</td></tr>
                 <tr><td class="keys"><span class="k" data-k="ctrl+k"></span></td><td>Delete the line</td></tr>
                 <tr><td class="keys"><span class="k" data-k="tab|shift+tab"></span></td><td>Indent, outdent the selected lines</td></tr>
                 <tr><td class="keys"><span class="k" data-k="alt+i|alt+o"></span></td><td>Indent, outdent, for terminals without Shift+Tab (Ctrl+] indents too)</td></tr>
-                <tr><td class="keys"><span class="k" data-k="ctrl+u"></span></td><td>Insert a UUID (bundled plugin)</td></tr>
-                <tr><td class="keys"><span class="k" data-k="ctrl+s|ctrl+n|ctrl+w|ctrl+q"></span></td><td>Save, new file, close buffer, quit. Closing or quitting with unsaved changes asks first.</td></tr>
+                <tr><td class="keys"><span class="k" data-k="ctrl+s|ctrl+n|ctrl+q"></span></td><td>Save, new file, quit. Quitting with unsaved changes asks first.</td></tr>
               </tbody>
             </table></div>
             <h3>Mouse</h3>
-            <p>Click to place the cursor, Shift+click to extend, drag to select (the view scrolls at the edges), double-click to select a word, Ctrl+click to go to a definition or a file. Click a tab to switch buffers, a tree row to open it, a picker row to pick it. The wheel scrolls three lines per step (<code>mouseScrollLines</code>).</p>
+            <p>Click to place the cursor, Shift+click to extend, drag to select (the view scrolls at the edges), double-click to select a word, Ctrl+click to go to a definition or a file. Click a tree row to open it, a picker row to pick it, another pane of a split to focus it. The wheel scrolls three lines per step (<code>mouseScrollLines</code>).</p>
           </article>
 
           <article class="chapter" id="finding">
@@ -513,14 +502,12 @@ cargo dist              <span class="c"># static binary in dist/yate</span></pre
             <div class="tbl wide"><table>
               <thead><tr><th>Keys</th><th>Picker</th></tr></thead>
               <tbody>
-                <tr><td class="keys"><span class="k" data-k="ctrl+p"></span></td><td><b>Find file.</b> Fuzzy match on the path; matched letters are highlighted. Add <code>:line</code> or <code>:line:col</code> to open the file there; a path outside the project opens too.</td></tr>
-                <tr><td class="keys"><span class="k" data-k="alt+f|ctrl+shift+f"></span></td><td><b>Live grep.</b> Searches file contents as you type; Enter opens the file at the match.</td></tr>
-                <tr><td class="keys"><span class="k" data-k="alt+shift+f"></span></td><td><b>Live grep with a glob.</b> Starts in the glob field, so you can limit the search to <code>*.ts</code> or <code>src/**</code>.</td></tr>
+                <tr><td class="keys"><span class="k" data-k="ctrl+p"></span></td><td><b>Find file.</b> Fuzzy match on the path; matched letters are highlighted. Add <code>:line</code> or <code>:line:col</code> to open the file there; a path outside the project opens too. Before you type, the files you had last are on top.</td></tr>
+                <tr><td class="keys"><span class="k" data-k="alt+f"></span></td><td><b>Live grep.</b> Searches file contents as you type; Enter opens the file at the match.</td></tr>
                 <tr><td class="keys"><kbd>f</kbd> <kbd>g</kbd></td><td><b>In a folder.</b> In the file tree, <kbd>f</kbd> finds a file and <kbd>g</kbd> greps in the selected folder (a file's own folder). Globs then match paths inside that folder.</td></tr>
-                <tr><td class="keys"><span class="k" data-k="ctrl+e"></span></td><td><b>Open buffers.</b></td></tr>
-                <tr><td class="keys"><span class="k" data-k="alt+p|ctrl+shift+p"></span></td><td><b>Command palette.</b> Every built-in and plugin command.</td></tr>
+                <tr><td class="keys"><span class="k" data-k="alt+p"></span></td><td><b>Command palette.</b> What the focused panel can do right now, in sections. In the editor: File, Edit, Search, Go to, Bookmarks, View, File tree, Plugins and yate. In the file tree: the commands for the selected file or folder, the tree, search and yate. Commands with nothing to work on are left out (the split commands without a split, Find next without a search, bookmark navigation without bookmarks). Typing matches the section and the name, so <code>tree toggle</code> finds File tree → Toggle. Only keys that work in the focused panel are shown.</td></tr>
                 <tr><td class="keys"><span class="k" data-k="ctrl+h"></span></td><td><b>Key bindings.</b> Every binding of the focused panel and the global ones, then the rest. Type to search, Enter runs the command.</td></tr>
-                <tr><td class="keys"><span class="k" data-k="ctrl+l"></span></td><td><b>Bookmarks.</b></td></tr>
+                <tr><td class="keys"><span class="k" data-k="alt+m"></span> <kbd>4</kbd></td><td><b>Bookmarks.</b></td></tr>
                 <tr><td class="keys"><span class="k" data-k="alt+r"></span></td><td><b>Resume</b> the last picker with its query.</td></tr>
               </tbody>
             </table></div>
@@ -545,57 +532,40 @@ cargo dist              <span class="c"># static binary in dist/yate</span></pre
 
           <article class="chapter" id="tree">
             <h2><span class="mode-chip tree">TREE</span> File tree</h2>
-            <p><span class="k" data-k="alt+e|ctrl+shift+e"></span> shows or hides the tree, <span class="k" data-k="ctrl+t"></span> focuses it on the current file. The tree follows the file you are editing; lock it from the palette with <b>File tree: lock</b>. On narrow terminals (below 200 columns) opening a file closes the tree. When a deep name does not fit, the tree scrolls sideways, hiding indentation on the left, so the selected name stays readable.</p>
+            <p><span class="k" data-k="alt+e"></span> shows or hides the tree, <span class="k" data-k="ctrl+t"></span> focuses it on the current file. The tree follows the file you are editing; lock it from the palette with <b>File tree: lock</b>. On narrow terminals (below 200 columns) opening a file closes the tree. When a deep name does not fit, the tree scrolls sideways, hiding indentation on the left, so the selected name stays readable. <kbd>[</kbd> and <kbd>]</kbd> make the tree narrower or wider, and so does dragging its right edge with the mouse; <code>treeWidth</code> in <code>options</code> keeps a width, and <b>File tree: automatic width</b> in the palette fits the names again.</p>
             <div class="tbl wide"><table>
               <thead><tr><th>Key</th><th>Action</th></tr></thead>
               <tbody>
                 <tr><td class="keys"><span class="k" data-k="up|down|pageup|pagedown|home|end"></span></td><td>Move</td></tr>
                 <tr><td class="keys"><span class="k" data-k="left|right"></span></td><td>Fold, unfold a folder</td></tr>
                 <tr><td class="keys"><span class="k" data-k="enter|space"></span></td><td>Open a file, toggle a folder</td></tr>
-                <tr><td class="keys"><span class="k" data-k="a"></span></td><td>New file or folder (end the name with <code>/</code> for a folder)</td></tr>
+                <tr><td class="keys"><span class="k" data-k="ctrl+n"></span></td><td>New file or folder (end the name with <code>/</code> for a folder)</td></tr>
                 <tr><td class="keys"><span class="k" data-k="r"></span></td><td>Rename</td></tr>
-                <tr><td class="keys"><span class="k" data-k="d|delete"></span></td><td>Delete (asks first)</td></tr>
+                <tr><td class="keys"><span class="k" data-k="d"></span></td><td>Delete (asks first)</td></tr>
                 <tr><td class="keys"><span class="k" data-k="y"></span></td><td>Copy the relative path</td></tr>
                 <tr><td class="keys"><span class="k" data-k="f"></span></td><td>Find file in the selected folder</td></tr>
                 <tr><td class="keys"><span class="k" data-k="g"></span></td><td>Live grep in the selected folder</td></tr>
-                <tr><td class="keys"><span class="k" data-k="c"></span></td><td>Compare: mark a file or folder (⇄), then <kbd>c</kbd> on another one compares them</td></tr>
                 <tr><td class="keys"><span class="k" data-k="i"></span></td><td>Show or hide git-ignored files</td></tr>
                 <tr><td class="keys"><span class="k" data-k="m"></span></td><td>Show only changed files</td></tr>
                 <tr><td class="keys"><span class="k" data-k="shift+r"></span></td><td>Refresh from disk</td></tr>
+                <tr><td class="keys"><span class="k" data-k="[|]"></span></td><td>Narrower, wider tree (or drag its right edge)</td></tr>
                 <tr><td class="keys"><span class="k" data-k="esc|tab"></span></td><td>Back to the editor</td></tr>
               </tbody>
             </table></div>
             <p>File names take their git status color: modified, added, untracked, deleted. Set <code>nerdIcons</code> to <code>true</code> for Nerd Font file icons.</p>
-          </article>
-
-          <article class="chapter" id="review">
-            <h2><span class="mode-chip review">REVIEW</span> Git review</h2>
-            <p><span class="k" data-k="alt+g"></span> (or Ctrl+Shift+G) replaces the editor with every change against HEAD: a list of changed and untracked files on the left, a diff on the right with the changed words highlighted. Use it to read your work before a commit.</p>
-            <div class="tbl wide"><table>
-              <thead><tr><th>Key</th><th>Action</th></tr></thead>
-              <tbody>
-                <tr><td class="keys"><span class="k" data-k="up|down"></span></td><td>In the list: pick a file. In the diff: move the cursor.</td></tr>
-                <tr><td class="keys"><span class="k" data-k="tab|left|right"></span></td><td>Move between the list and the diff</td></tr>
-                <tr><td class="keys"><span class="k" data-k="n|p"></span></td><td>Next, previous change (also <kbd>]</kbd> and <kbd>[</kbd>)</td></tr>
-                <tr><td class="keys"><span class="k" data-k="enter"></span></td><td>From the list: go to the diff. In the diff: open the file at that line.</td></tr>
-                <tr><td class="keys"><span class="k" data-k="r"></span></td><td>Refresh</td></tr>
-                <tr><td class="keys"><span class="k" data-k="esc"></span></td><td>Close the review</td></tr>
-              </tbody>
-            </table></div>
-            <p>The bundled <b>Git: Blame current line</b> command (palette) shows the commit, author and age of the cursor line in the status line.</p>
-            <h3 id="compare"><span class="mode-chip review">COMPARE</span> Comparing files and folders</h3>
-            <p>The same view compares two files or two folders. In the file tree press <kbd>c</kbd> on the first one (it gets a ⇄ mark), then <kbd>c</kbd> on the second: the first is the old side. Two folders list the files that are added, deleted or changed between them (git-ignored files and <code>.git</code> are left out), with the diff of the selected one. <b>Compare current file with…</b> in the palette picks the other file with the file finder and diffs it against the buffer, unsaved edits included. From the shell, <code>yate diff old new</code> opens the same view on two files or two folders, for example <code>yate diff ../v1/src src</code> or <code>yate diff /etc/app.conf app.conf</code>. The keys are the review keys.</p>
+            <p>yate has no diff or review view: use <code>git diff</code>, your git tool or a coding agent for that. The bundled <b>Git: Blame current line</b> command (palette) shows the commit, author and age of the cursor line in the status line.</p>
           </article>
 
           <article class="chapter" id="navigation">
-            <h2>Buffers, jumps and bookmarks</h2>
+            <h2>Files, jumps and bookmarks</h2>
             <ul class="plain">
-              <li><b>Buffers.</b> Every opened file gets a tab. <span class="k" data-k="alt+,|alt+."></span> or <span class="k" data-k="ctrl+pageup|ctrl+pagedown"></span> switch tabs; <span class="k" data-k="ctrl+e"></span> lists them; <span class="k" data-k="ctrl+w"></span> closes one.</li>
-              <li><b>Alt+W.</b> <span class="k" data-k="alt+w|alt+tab"></span> waits for a digit: <kbd>1</kbd> focuses the file tree (the changed files while reviewing), <kbd>2</kbd>-<kbd>9</kbd> the open files in tab order. Wait a moment (<code>keyHintDelay</code>, 500 ms) and the numbered targets pop up. Pressing <span class="k" data-k="alt+w"></span> again moves to the next open file, <span class="k" data-k="alt+shift+w"></span> to the previous one. Esc cancels; any other key leaves the switcher and does its usual job.</li>
-              <li><b>Split view.</b> <span class="k" data-k="ctrl+\"></span> splits the editor into two panes (and closes the split). Each pane has its own file, cursor and scroll, so one file can show two places at once. <span class="k" data-k="ctrl+o"></span> or a click moves to the other pane. <span class="k" data-k="ctrl+j"></span> turns scroll sync on: scrolling one pane scrolls the other by the same number of lines, handy to compare two versions side by side.</li>
-              <li><b>Go to definition.</b> <span class="k" data-k="alt+d"></span> or Ctrl+click. On a name, yate finds its definition with tree-sitter: in the same file (the innermost scope wins), in the module an ES <code>import</code> points to (following re-exports and <code>export *</code>), or anywhere in the project; several matches open a picker. On a definition it lists the other definitions with that name. On a string, an import or a <code>path:line:col</code> it opens the file. Imports resolve like Node and TypeScript: extensions, <code>index</code> files, <code>tsconfig.json</code>/<code>jsconfig.json</code> <code>paths</code> and <code>baseUrl</code>, <code>package.json</code> <code>imports</code> and <code>exports</code>, <code>node_modules</code> and <code>@types</code>. Definitions are found in JavaScript, TypeScript, Rust, Go, Python, C, C++, Java, C#, Lua, Ruby, PHP, Elixir, Dart, Gleam and Swift; in other languages the name opens live grep.</li>
+              <li><b>One file per pane.</b> yate has no tabs, no buffers and nothing to close. Opening a file shows it in place of the current one. When the current one has unsaved changes yate asks first: <kbd>s</kbd> saves, <kbd>d</kbd> discards, Esc stays. A file opens again where the cursor was. To get back to a file use <span class="k" data-k="alt+left"></span>, <span class="k" data-k="ctrl+p"></span> (the files you had last are on top) or <span class="k" data-k="alt+w"></span>.</li>
+              <li><b>Alt+W.</b> <span class="k" data-k="alt+w"></span> waits for a digit: <kbd>1</kbd> focuses the file tree, <kbd>2</kbd>-<kbd>9</kbd> show the recent files, the latest first (<kbd>2</kbd> is the current file, <kbd>3</kbd> the one before). Wait a moment (<code>keyHintDelay</code>, 500 ms) and the numbered targets pop up. Pressing <span class="k" data-k="alt+w"></span> again shows the next recent file, <span class="k" data-k="alt+shift+w"></span> the previous one. Esc cancels; any other key leaves the switcher and does its usual job.</li>
+              <li><b>Split view.</b> <span class="k" data-k="alt+s"></span> pops up the split menu: <kbd>1</kbd> splits the focused pane vertically (two panes side by side), <kbd>2</kbd> horizontally (one above the other). Split again for more panes, in any mix. Panes split the same way share the space evenly. <kbd>3</kbd> resizes the focused pane: type the columns to add, like <code>10</code> or <code>-10</code>, the rows for stacked panes, or both as <code>columns,rows</code> (<code>10,-2</code>); the pane next to it gives or takes them. <kbd>4</kbd> makes all panes equal again, <kbd>5</kbd> closes the focused pane and <kbd>6</kbd> closes all the others. Each pane has its own file, cursor and scroll, so one file can show several places at once. <span class="k" data-k="alt+h|alt+j|alt+k|alt+l"></span> move to the pane on the left, below, above and on the right (the one level with the cursor), <span class="k" data-k="ctrl+o"></span> to the next pane, a click to any pane. <span class="k" data-k="ctrl+j"></span> turns scroll sync on: scrolling one pane scrolls the others by the same number of lines, handy to read two versions side by side. When the terminal gets too small for the panes, only the focused one is shown.</li>
+              <li><b>Go to.</b> <span class="k" data-k="ctrl+g"></span> pops up a menu: <kbd>1</kbd> asks for a line number, <kbd>2</kbd> goes to the definition. Arrows and Enter choose too; Esc closes the menu.</li>
+              <li><b>Go to definition.</b> <span class="k" data-k="ctrl+g"></span> <kbd>2</kbd> or Ctrl+click. On a name, yate finds its definition with tree-sitter: in the same file (the innermost scope wins), in the module an ES <code>import</code> points to (following re-exports and <code>export *</code>), or anywhere in the project; several matches open a picker. On a definition it lists the other definitions with that name. On a string, an import or a <code>path:line:col</code> it opens the file. Imports resolve like Node and TypeScript: extensions, <code>index</code> files, <code>tsconfig.json</code>/<code>jsconfig.json</code> <code>paths</code> and <code>baseUrl</code>, <code>package.json</code> <code>imports</code> and <code>exports</code>, <code>node_modules</code> and <code>@types</code>. Definitions are found in JavaScript, TypeScript, Rust, Go, Python, C, C++, Java, C#, Lua, Ruby, PHP, Elixir, Dart, Gleam and Swift; in other languages the name opens live grep.</li>
               <li><b>Jump list.</b> Opening a file, going to a definition, picking a grep result or going to a line records where you were. <span class="k" data-k="alt+left"></span> goes back, <span class="k" data-k="alt+right"></span> forward.</li>
-              <li><b>Bookmarks.</b> <span class="k" data-k="alt+m"></span> toggles a bookmark on the line, <span class="k" data-k="alt+n|alt+b"></span> go to the next or previous one, <span class="k" data-k="ctrl+l"></span> lists them across files. <b>Bookmark: clear in file</b> is in the palette.</li>
+              <li><b>Bookmarks.</b> <span class="k" data-k="alt+m"></span> pops up the bookmark menu: <kbd>1</kbd> toggles a bookmark on the line, <kbd>2</kbd> and <kbd>3</kbd> go to the next or previous one, <kbd>4</kbd> lists them across files, <kbd>5</kbd> clears the ones in the file.</li>
             </ul>
           </article>
 
@@ -603,7 +573,8 @@ cargo dist              <span class="c"># static binary in dist/yate</span></pre
             <h2>tmux and the clipboard</h2>
             <p>Copy and cut write to the tmux paste buffer, and paste reads the newest one, so text moves freely between yate, the shell and other panes. With <code>set-clipboard on</code> in tmux the copy reaches the system clipboard too. Outside tmux yate uses OSC 52.</p>
             <p>When the terminal or the tmux pane loses focus, the editor background dims, like an inactive tmux pane.</p>
-            <div class="note">Terminals send Ctrl+Shift keys only with the kitty keyboard protocol (kitty, WezTerm, foot, Ghostty) and never through tmux. That is why every Ctrl+Shift binding also has an Alt binding: <span class="k" data-k="alt+f"></span> for live grep, <span class="k" data-k="alt+p"></span> for the palette, <span class="k" data-k="alt+g"></span> for review. Keys also avoid Ctrl+B (the tmux prefix), Ctrl+Tab and Shift+Tab, which Termux and many terminals over SSH do not send: <span class="k" data-k="alt+w"></span> switches files, <span class="k" data-k="alt+e"></span> toggles the tree, <span class="k" data-k="alt+i|alt+o"></span> indent and outdent.</div>
+            <div class="note">Every command has one key. Related commands share a key that pops up a numbered menu (<span class="k" data-k="ctrl+g"></span> go to, <span class="k" data-k="alt+m"></span> bookmarks, <span class="k" data-k="alt+s"></span> split); to skip a menu, bind its command in <code>yate.json</code>, for example <code>"alt+d": "goto.definition"</code>.</div>
+            <div class="note">Terminals send Ctrl+Shift keys only with the kitty keyboard protocol (kitty, WezTerm, foot, Ghostty) and never through tmux. That is why no default binding uses Ctrl+Shift: <span class="k" data-k="alt+f"></span> for live grep, <span class="k" data-k="alt+p"></span> for the palette. Keys also avoid Ctrl+B (the tmux prefix), Ctrl+Tab and Shift+Tab, which Termux and many terminals over SSH do not send: <span class="k" data-k="alt+w"></span> switches files, <span class="k" data-k="alt+e"></span> toggles the tree, <span class="k" data-k="alt+i|alt+o"></span> indent and outdent.</div>
           </article>
 
           <article class="chapter" id="keys">
@@ -658,6 +629,7 @@ cargo dist              <span class="c"># static binary in dist/yate</span></pre
                 <tr><td class="id">showIgnored</td><td class="num">false</td><td>Git-ignored files in the tree</td></tr>
                 <tr><td class="id">treeFollow</td><td class="num">true</td><td>The tree follows the current file</td></tr>
                 <tr><td class="id">treeAutoCloseWidth</td><td class="num">200</td><td>Opening a file from the tree closes it below this width</td></tr>
+                <tr><td class="id">treeWidth</td><td class="num">0</td><td>Columns of the file tree; 0 fits the names</td></tr>
                 <tr><td class="id">mouseScrollLines</td><td class="num">3</td><td>Lines per mouse wheel step</td></tr>
                 <tr><td class="id">jumpChars</td><td class="num">10</td><td>Characters moved by Ctrl+Left / Ctrl+Right</td></tr>
                 <tr><td class="id">jumpLines</td><td class="num">5</td><td>Lines moved by Ctrl+Up / Ctrl+Down</td></tr>
@@ -665,9 +637,9 @@ cargo dist              <span class="c"># static binary in dist/yate</span></pre
               </tbody>
             </table></div>
             <h3>Keys</h3>
-            <p>Bindings are grouped by context: <code>global</code>, <code>editor</code>, <code>tree</code> and <code>review</code>. A context binding wins over a global one. Key names look like <code>ctrl+p</code>, <code>alt+shift+down</code>, <code>f5</code> or <code>ctrl+/</code>; values are command ids from the <a href="#keys">key reference</a> or from plugins.</p>
+            <p>Bindings are grouped by context: <code>global</code>, <code>editor</code> and <code>tree</code>. A context binding wins over a global one. Key names look like <code>ctrl+p</code>, <code>alt+shift+down</code>, <code>f5</code> or <code>ctrl+/</code>; values are command ids from the <a href="#keys">key reference</a> or from plugins.</p>
             <h3>Plugins</h3>
-            <p><code>"date": true</code> loads <code>~/.config/yate/plugins/date.js</code>; a plugin file that no <code>yate.json</code> switches on is not loaded. The bundled <code>uuid</code>, <code>git</code> and <code>format</code> load unless set to <code>false</code>. See <a href="#plugins">Plugins</a>.</p>
+            <p><code>"date": true</code> loads <code>~/.config/yate/plugins/date.js</code>; a plugin file that no <code>yate.json</code> switches on is not loaded. The bundled <code>git</code> and <code>format</code> load unless set to <code>false</code>. See <a href="#plugins">Plugins</a>.</p>
             <p>The full reference, with every palette color, is <a href="https://github.com/sobanieca/yate/blob/main/docs/configuration.md">docs/configuration.md</a>.</p>
           </article>
 
@@ -688,14 +660,14 @@ yate.<span class="fn">on</span>(<span class="s">"beforeSave"</span>, () <span cl
   <span class="kw">if</span> (yate.editor.<span class="fn">language</span>() === <span class="s">"typescript"</span>) yate.<span class="fn">runCommand</span>(<span class="s">"format.prettier"</span>);
 });</pre>
             <h3>How a call works</h3>
-            <p>Before a plugin function runs, yate takes a snapshot of the buffer. <code>yate.editor</code> reads that snapshot, and changes are queued and applied in order when the function returns. Lines and columns are 0-based. <code>async</code> functions work, and a call longer than 10 seconds is stopped.</p>
+            <p>Before a plugin function runs, yate takes a snapshot of the text in the editor. <code>yate.editor</code> reads that snapshot, and changes are queued and applied in order when the function returns. Lines and columns are 0-based. <code>async</code> functions work, and a call longer than 10 seconds is stopped.</p>
             <h3>API</h3>
             <div class="tbl wide"><table>
               <thead><tr><th>Call</th><th>Does</th></tr></thead>
               <tbody>
                 <tr><td class="id">registerCommand(id, title, fn)</td><td>Adds a command to the palette</td></tr>
                 <tr><td class="id">runCommand(id)</td><td>Runs a built-in or plugin command</td></tr>
-                <tr><td class="id">bindKey(key, id, context)</td><td>Binds a key in <code>editor</code> (default), <code>tree</code>, <code>review</code> or <code>global</code>; an empty id removes it</td></tr>
+                <tr><td class="id">bindKey(key, id, context)</td><td>Binds a key in <code>editor</code> (default), <code>tree</code> or <code>global</code>; an empty id removes it</td></tr>
                 <tr><td class="id">on(event, fn)</td><td><code>open</code>, <code>beforeSave</code>, <code>save</code>; edits in <code>beforeSave</code> are saved</td></tr>
                 <tr><td class="id">setOption(name, value)</td><td>Sets an option from the table above</td></tr>
                 <tr><td class="id">notify(msg) · error(msg)</td><td>Shows a message in the status line</td></tr>
@@ -703,19 +675,19 @@ yate.<span class="fn">on</span>(<span class="s">"beforeSave"</span>, () <span cl
                 <tr><td class="id">openFile(path, line) · root()</td><td>Opens a file relative to the project root; returns the root</td></tr>
                 <tr><td class="id">exec(cmd, args, { input, cwd })</td><td>Runs a program without a shell and returns <code>{ code, stdout, stderr }</code></td></tr>
                 <tr><td class="id">editor.path() · language()</td><td>Absolute path (or null), language name</td></tr>
-                <tr><td class="id">editor.text() · lineCount() · line(i)</td><td>Read the buffer</td></tr>
+                <tr><td class="id">editor.text() · lineCount() · line(i)</td><td>Read the text</td></tr>
                 <tr><td class="id">editor.cursor() · selection()</td><td><code>{ line, col }</code>; <code>{ start, end, text }</code></td></tr>
-                <tr><td class="id">editor.insert · replaceSelection · setText</td><td>Change the buffer; <code>setText</code> is one undo step</td></tr>
+                <tr><td class="id">editor.insert · replaceSelection · setText</td><td>Change the text; <code>setText</code> is one undo step</td></tr>
                 <tr><td class="id">editor.setCursor · select</td><td>Move the cursor, select a range</td></tr>
                 <tr><td class="id">console.log(...)</td><td>Prints to the status line</td></tr>
               </tbody>
             </table></div>
-            <p>Bundled plugins use the same API: <b>Insert UUID v4</b> (<span class="k" data-k="ctrl+u"></span>), <b>Git: Blame current line</b>, <b>Format document with Prettier</b> and <b>TypeScript: Add // @ts-nocheck</b>. Read their source in <a href="https://github.com/sobanieca/yate/tree/main/src/plugins/builtin">src/plugins/builtin</a>, the API in <a href="https://github.com/sobanieca/yate/blob/main/docs/plugins.md">docs/plugins.md</a>, and a complete example in <a href="https://github.com/sobanieca/yate/tree/main/examples">examples/</a>.</p>
+            <p>Bundled plugins use the same API: <b>Git: Blame current line</b>, <b>Format document with Prettier</b> and <b>TypeScript: Add // @ts-nocheck</b>. Read their source in <a href="https://github.com/sobanieca/yate/tree/main/src/plugins/builtin">src/plugins/builtin</a>, the API in <a href="https://github.com/sobanieca/yate/blob/main/docs/plugins.md">docs/plugins.md</a>, and a complete example in <a href="https://github.com/sobanieca/yate/tree/main/examples">examples/</a>.</p>
           </article>
 
           <article class="chapter" id="languages">
             <h2>Languages</h2>
-            <p>Highlighting comes from tree-sitter grammars compiled into the binary. The language follows the file name; change it for a buffer with <b>Set language of buffer</b> in the palette.</p>
+            <p>Highlighting comes from tree-sitter grammars compiled into the binary. The language follows the file name; change it for the file in the editor with <b>Set language of file</b> in the palette.</p>
             <div class="langs wide" id="langs"></div>
           </article>
 
@@ -816,7 +788,7 @@ yate.<span class="fn">on</span>(<span class="s">"beforeSave"</span>, () <span cl
   const CURRENT = 6;
   function editorRows(width, showCursor) {
     const rows = [];
-    for (let i = 0; i < 14; i++) {
+    for (let i = 0; i < 15; i++) {
       const n = i + 1;
       if (n > code.length) { rows.push([["bg", rep(" ", width)]]); continue; }
       const current = n === CURRENT;
@@ -828,10 +800,7 @@ yate.<span class="fn">on</span>(<span class="s">"beforeSave"</span>, () <span cl
     }
     return rows;
   }
-  function tabRow(width) {
-    return fit([["dk fg b", " main.rs "], ["dk or", "●"], ["dk d5", "  input.rs   lib.rs "]], width, "dk");
-  }
-  const ACCENT = { EDIT: ["bb", "blue"], TREE: ["grb", "gr"], PICK: ["cyb", "cy"], REVIEW: ["mgb", "mg"] };
+  const ACCENT = { EDIT: ["bb", "blue"], TREE: ["grb", "gr"], PICK: ["cyb", "cy"] };
   function status(mode, msg, right, pos) {
     const [bg, fg] = ACCENT[mode];
     const left = [[bg + " ink b", " " + mode + " "], ["gb " + fg, " main "], ["dk fd", " "]].concat(msg);
@@ -856,7 +825,7 @@ yate.<span class="fn">on</span>(<span class="s">"beforeSave"</span>, () <span cl
   ];
   function editorScreen() {
     const SW = 24, EW = W - SW;
-    const right = [tabRow(EW)].concat(editorRows(EW, true));
+    const right = editorRows(EW, true);
     const rows = right.map((r, i) => fit(tree[i] || [], SW, tree[i] && tree[i][0][0].startsWith("hl") ? "hl" : "dk").concat(r));
     rows.push(status("EDIT", [["dk fd", "src/main.rs "], ["dk or", "●"]], "rust  utf-8  LF  46%", "6:20"));
     return rows;
@@ -871,7 +840,7 @@ yate.<span class="fn">on</span>(<span class="s">"beforeSave"</span>, () <span cl
   const bSep = () => [["dk blue", "│" + rep("─", IW) + "│"]];
   const bBot = () => [["dk blue", "╰" + rep("─", IW) + "╯"]];
   function pickerScreen(title, count, query, hint, items) {
-    const base = [tabRow(W)].concat(editorRows(W, false));
+    const base = editorRows(W, false);
     const box = [bTop(title, count), bRow([["dk mg b", " ❯ "], ["dk fg", query]].concat(hint ? [] : []), "dk"), bSep()];
     if (hint) box[1] = bRow(split([["dk mg b", " ❯ "], ["dk fg", query], ["cur", " "]], [["dk d3", hint + " "]], IW, "dk"));
     else box[1] = bRow([["dk mg b", " ❯ "], ["dk fg", query], ["cur", " "]]);
@@ -906,48 +875,27 @@ yate.<span class="fn">on</span>(<span class="s">"beforeSave"</span>, () <span cl
       grepItem("src/editor/document.rs", 77, "selection: ", "Selection::", "point(0),"),
     ]);
   }
-  function reviewScreen() {
-    const SW = 24, EW = W - SW;
-    const list = [
-      [["dk mg b", " CHANGES (3)"]],
-      [["dk ", " "], ["dk gr b", "U"], ["dk fd", " NOTES.md"]],
-      [["dk ", " "], ["dk ye b", "M"], ["dk d5", " src/app/"], ["dk fd", "input.rs"]],
-      [["hl ", " "], ["hl ye b", "M"], ["hl d5", " src/"], ["hl fg", "main.rs"]],
-    ];
-    const ln = (o, n) => String(o).padStart(3) + " " + String(n).padStart(3) + " ";
-    const ctx = (o, n, segs) => [["bg gu", ln(o, n) + "  "]].concat(withBg(segs, "bg"));
-    const del = (o, segs) => [["de gu", ln(o, "") ], ["de r1 b", "- "]].concat(segs);
-    const add = (n, segs) => [["ad gu", ln("", n)], ["ad ga b", "+ "]].concat(segs);
-    const diff = [
-      split([["mgb ink b", " REVIEW "], ["dk fg b", "  src/main.rs  "], ["dk gr", "+5"], ["dk", " "], ["dk rd", "-1"]], [["dk d3", "n/p next change "]], EW, "dk"),
-      [["bg blue", "            @@ -2,8 +2,12 @@"]],
-      ctx(3, 3, [["pu i", "fn"], ["fg", " "], ["blue", "main"], ["b5", "() {"]]),
-      del(4, [["de pu i", "    let"], ["de fg", " "], ["dee fg", "args: Vec<String>"], ["de fg", " = std::env::args()"], ["dee fg", ".collect()"], ["de b5", ";"]]),
-      add(4, [["ad pu i", "    let"], ["ad fg", " "], ["ade fg", "path"], ["ad fg", " = std::env::args()"], ["ade fg", ".nth(1)"], ["ad b5", ";"]]),
-      ctx(5, 5, [["pu i", "    if let"], ["fg", " "], ["or", "Err"], ["b5", "("], ["fg", "error"], ["b5", ") = "], ["fg", "yate::run(path) {"]]),
-      ctx(6, 6, [["b1", "        eprintln!"], ["b5", "("], ["gr", "\"yate: {error}\""], ["b5", ");"]]),
-      ctx(9, 9, [["b5", "}"]]),
-      add(10, []),
-      add(11, [["ad pu i", "fn"], ["ad fg", " version() -> &'static str {"]]),
-      add(12, [["ad b1", "    env!"], ["ad b5", "("], ["ad gr", "\"CARGO_PKG_VERSION\""], ["ad b5", ")"]]),
-      add(13, [["ad b5", "}"]]),
-    ];
-    const fills = ["dk", "bg", "bg", "de", "ad", "bg", "bg", "bg", "ad", "ad", "ad", "ad"];
-    const rows = [];
-    for (let i = 0; i < 15; i++) {
-      const left = fit(list[i] || [], SW, i === 3 ? "hl" : "dk");
-      const right = diff[i] ? fit(diff[i], EW, fills[i]) : [["bg", rep(" ", EW)]];
-      rows.push(left.concat(right));
-    }
-    rows.push(status("REVIEW", [["dk g1", "Saved src/main.rs"]], "rust  utf-8  LF  25%", "4:1"));
-    return rows;
+  function paletteItem(group, label, key) {
+    return split([["blue", group.padEnd(11)], ["fg", label]], [["d5", key + " "]], IW - 2, "fd");
+  }
+  function paletteScreen() {
+    return pickerScreen("Commands (editor)", "43/43", "", "", [
+      paletteItem("File", "Save", "ctrl+s"),
+      paletteItem("", "New file…", "ctrl+n"),
+      paletteItem("", "Rename…", ""),
+      paletteItem("", "Delete…", ""),
+      paletteItem("", "Copy relative path", ""),
+      paletteItem("", "Reload from disk", ""),
+      paletteItem("Edit", "Undo", "ctrl+z"),
+      paletteItem("", "Redo", "ctrl+y"),
+    ]);
   }
 
   const SCREENS = {
     editor: { build: editorScreen, caption: "The tree shows git status colors, the gutter marks changed (blue) and added (teal) lines, and the status line shows the focus label in the color of the focus area, the branch, file and cursor position." },
     files: { build: filesScreen, caption: "Ctrl+P matches the letters you type anywhere in the path, in order. Enter opens the file; Esc returns to where you were." },
     grep: { build: grepScreen, caption: "Live grep searches the project as you type. Ctrl+F moves to the glob field to narrow it to some files; Enter jumps to the line." },
-    review: { build: reviewScreen, caption: "Alt+G lists changed and untracked files against HEAD with a diff that highlights the changed words. n and p walk through the changes." },
+    palette: { build: paletteScreen, caption: "Alt+P lists what the focused panel can do right now, grouped in sections. Type to search by section or name; Enter runs the command." },
   };
   const term = document.getElementById("term");
   const caption = document.getElementById("shot-caption");
@@ -965,58 +913,66 @@ yate.<span class="fn">on</span>(<span class="s">"beforeSave"</span>, () <span cl
   const REF = [
     ["ctrl+h", "Key bindings: search them, Enter runs one", "Global", "help.keys"],
     ["ctrl+p", "Find file", "Global", "picker.files"],
-    ["alt+f|ctrl+shift+f", "Live grep", "Global", "picker.grep"],
-    ["alt+shift+f", "Live grep in files matching a glob", "Global", "picker.grepGlob"],
-    ["ctrl+e", "Open buffers", "Global", "picker.buffers"],
-    ["alt+p|ctrl+shift+p", "Command palette", "Global", "picker.commands"],
+    ["alt+f", "Live grep", "Global", "picker.grep"],
+    ["alt+p", "Command palette: the commands of the focused panel", "Global", "picker.commands"],
     ["alt+r", "Resume last picker", "Global", "picker.resume"],
-    ["ctrl+l", "Bookmarks", "Global", "picker.bookmarks"],
-    ["alt+w|alt+tab", "Switch: then 1 file tree, 2-9 open file; again: next file", "Global", "switch.next"],
-    ["alt+shift+w", "Switch; again: previous file", "Global", "switch.previous"],
-    ["alt+e|ctrl+shift+e", "File tree: toggle", "Global", "tree.toggle"],
+    ["alt+w", "Switch: then 1 file tree, 2-9 recent file; again: next recent file", "Global", "switch.next"],
+    ["alt+shift+w", "Switch; again: previous recent file", "Global", "switch.previous"],
+    ["alt+e", "File tree: toggle", "Global", "tree.toggle"],
     ["ctrl+t", "File tree: reveal current file", "Global", "tree.reveal"],
-    ["alt+g|ctrl+shift+g", "Git: review changes", "Global", "git.review"],
-    ["ctrl+\\", "Split editor / close split", "Global", "view.split"],
-    ["ctrl+o", "Focus the other pane of the split", "Global", "view.focusOtherPane"],
-    ["ctrl+j", "Scroll both panes together (sync on / off)", "Global", "view.toggleScrollSync"],
+    ["alt+s", "Split: then 1 vertical, 2 horizontal, 3 resize, 4 equal sizes, 5 close pane, 6 close the others", "Global", "view.splitMenu"],
+    ["ctrl+o", "Focus the next pane", "Global", "view.focusNextPane"],
+    ["alt+h", "Focus the pane on the left", "Global", "view.focusPaneLeft"],
+    ["alt+j", "Focus the pane below", "Global", "view.focusPaneBelow"],
+    ["alt+k", "Focus the pane above", "Global", "view.focusPaneAbove"],
+    ["alt+l", "Focus the pane on the right", "Global", "view.focusPaneRight"],
+    ["ctrl+j", "Scroll all panes together (sync on / off)", "Global", "view.toggleScrollSync"],
     ["ctrl+s", "Save file", "Global", "file.save"],
     ["ctrl+n", "New file", "Global", "file.new"],
-    ["ctrl+w", "Close buffer", "Global", "buffer.close"],
     ["ctrl+q", "Quit", "Global", "app.quit"],
-    ["alt+,|ctrl+pageup", "Previous buffer", "Global", "buffer.previous"],
-    ["alt+.|ctrl+pagedown", "Next buffer", "Global", "buffer.next"],
     ["alt+left", "Jump back", "Global", "jump.back"],
     ["alt+right", "Jump forward", "Global", "jump.forward"],
-    ["ctrl+g", "Go to line", "Global", "goto.line"],
-    ["alt+d", "Go to definition or file under the cursor (Ctrl+click too)", "Editor", "goto.definition"],
+    ["ctrl+g", "Go to: then 1 line, 2 definition", "Global", "goto.menu"],
     ["ctrl+f", "Find in file; again in the find bar: next match", "Global", "find.open"],
     ["ctrl+r", "Replace in file", "Global", "find.replace"],
-    ["alt+m", "Bookmark: toggle line", "Global", "bookmark.toggle"],
-    ["alt+n", "Bookmark: next", "Global", "bookmark.next"],
-    ["alt+b", "Bookmark: previous", "Global", "bookmark.previous"],
+    ["alt+m", "Bookmarks: then 1 toggle, 2 next, 3 previous, 4 list, 5 clear", "Global", "bookmark.menu"],
     ["ctrl+z", "Undo", "Editor", "edit.undo"],
-    ["ctrl+y|ctrl+shift+z", "Redo", "Editor", "edit.redo"],
+    ["ctrl+y", "Redo", "Editor", "edit.redo"],
     ["ctrl+c", "Copy (the line without a selection)", "Editor", "edit.copy"],
     ["ctrl+x", "Cut (the line without a selection)", "Editor", "edit.cut"],
     ["ctrl+v", "Paste", "Editor", "edit.paste"],
     ["ctrl+a", "Select all", "Editor", "edit.selectAll"],
     ["ctrl+d", "Select word / next occurrence", "Editor", "edit.selectNext"],
-    ["ctrl+/|alt+/", "Toggle line comment", "Editor", "edit.toggleComment"],
+    ["ctrl+/", "Toggle line comment", "Editor", "edit.toggleComment"],
     ["alt+up", "Move line up", "Editor", "edit.moveLineUp"],
     ["alt+down", "Move line down", "Editor", "edit.moveLineDown"],
-    ["alt+shift+down|alt+shift+up", "Duplicate line", "Editor", "edit.duplicateLine"],
-    ["ctrl+k|ctrl+shift+k", "Delete line", "Editor", "edit.deleteLine"],
-    ["tab|alt+i|ctrl+]", "Indent lines", "Editor", "edit.indent"],
+    ["alt+shift+down", "Duplicate line", "Editor", "edit.duplicateLine"],
+    ["ctrl+k", "Delete line", "Editor", "edit.deleteLine"],
+    ["tab|alt+i", "Indent lines", "Editor", "edit.indent"],
     ["shift+tab|alt+o", "Outdent lines", "Editor", "edit.outdent"],
-    ["ctrl+u", "Insert UUID v4 (bundled plugin)", "Editor", "uuid.insert"],
     ["ctrl+left|ctrl+right", "Ten characters left / right in the line (jumpChars)", "Editor", ""],
     ["ctrl+up|ctrl+down", "Five lines up / down (jumpLines)", "Editor", ""],
     ["home|end", "Line start (text, then column 1) / end", "Editor", ""],
     ["ctrl+home|ctrl+end", "File start / end", "Editor", ""],
     ["shift+left", "Extend the selection with any motion", "Editor", ""],
-    ["1", "File tree (changed files while reviewing)", "Switch", ""],
-    ["2|3|9", "Open file 1 to 8, in tab order", "Switch", ""],
+    ["1", "File tree", "Switch", ""],
+    ["2|3|9", "Recent file 1 to 8, the latest first", "Switch", ""],
     ["esc", "Cancel", "Switch", ""],
+    ["1", "Go to line (after Ctrl+G)", "Menu", "goto.line"],
+    ["2", "Go to definition or file under the cursor (after Ctrl+G; Ctrl+click too)", "Menu", "goto.definition"],
+    ["1", "Bookmark: toggle line (after Alt+M)", "Menu", "bookmark.toggle"],
+    ["2", "Bookmark: next (after Alt+M)", "Menu", "bookmark.next"],
+    ["3", "Bookmark: previous (after Alt+M)", "Menu", "bookmark.previous"],
+    ["4", "Bookmarks: list (after Alt+M)", "Menu", "picker.bookmarks"],
+    ["5", "Bookmark: clear in file (after Alt+M)", "Menu", "bookmark.clear"],
+    ["1", "Split vertically: side by side (after Alt+S)", "Menu", "view.splitVertical"],
+    ["2", "Split horizontally: one above the other (after Alt+S)", "Menu", "view.splitHorizontal"],
+    ["3", "Resize the pane: type columns,rows to add (after Alt+S)", "Menu", "view.resizePane"],
+    ["4", "Make the panes equal in size (after Alt+S)", "Menu", "view.equalPanes"],
+    ["5", "Close the pane (after Alt+S)", "Menu", "view.closePane"],
+    ["6", "Close the other panes (after Alt+S)", "Menu", "view.closeOtherPanes"],
+    ["up|down|enter", "Choose from the menu", "Menu", ""],
+    ["esc", "Close the menu", "Menu", ""],
     ["up|down|ctrl+n|ctrl+p", "Move in the list (also Ctrl+J / Ctrl+K)", "Picker", ""],
     ["enter", "Open the selected item", "Picker", ""],
     ["ctrl+f|tab", "Find file, live grep: switch search / glob field (*.ts, src/**, !*.test.ts)", "Picker", ""],
@@ -1029,32 +985,26 @@ yate.<span class="fn">on</span>(<span class="s">"beforeSave"</span>, () <span cl
     ["alt+a", "Replace all", "Find", ""],
     ["left|right", "Fold / unfold", "Tree", ""],
     ["enter|space", "Open file, toggle folder", "Tree", ""],
-    ["a", "New file or folder", "Tree", "file.new"],
     ["r", "Rename", "Tree", "file.rename"],
-    ["d|delete", "Delete", "Tree", "file.delete"],
+    ["d", "Delete", "Tree", "file.delete"],
     ["y", "Copy relative path", "Tree", "file.copyPath"],
     ["f", "Find file in the selected folder", "Tree", "picker.filesInFolder"],
     ["g", "Live grep in the selected folder", "Tree", "picker.grepInFolder"],
-    ["c", "Compare: mark, then compare with the next file or folder", "Tree", "file.compare"],
     ["i", "Show / hide git-ignored files", "Tree", "tree.toggleIgnored"],
     ["m", "Show only changed files", "Tree", "tree.toggleChanged"],
     ["shift+r", "Refresh", "Tree", "tree.refresh"],
+    ["[", "Narrower file tree (or drag its right edge)", "Tree", "tree.narrow"],
+    ["]", "Wider file tree (or drag its right edge)", "Tree", "tree.widen"],
     ["esc|tab", "Back to the editor", "Tree", ""],
-    ["tab|left|right", "Switch list / diff", "Review", ""],
-    ["n|]", "Next change", "Review", "review.nextChange"],
-    ["p|[", "Previous change", "Review", "review.previousChange"],
-    ["enter", "Open the file at the line", "Review", ""],
-    ["r", "Refresh", "Review", "review.refresh"],
-    ["esc", "Close the review", "Review", ""],
-    ["", "Compare current file with…", "Palette", "file.compareWith"],
     ["", "Find next", "Palette", "find.next"],
     ["", "Find previous", "Palette", "find.previous"],
     ["", "Reload file from disk", "Palette", "file.reload"],
     ["", "File tree: lock / unlock following the current file", "Palette", "tree.lock"],
-    ["", "Bookmark: clear in file", "Palette", "bookmark.clear"],
+    ["", "Live grep in files matching a glob", "Palette", "picker.grepGlob"],
+    ["", "File tree: automatic width", "Palette", "tree.autoWidth"],
     ["", "Toggle indent guides", "Palette", "view.toggleIndentGuides"],
     ["", "Toggle line numbers", "Palette", "view.toggleLineNumbers"],
-    ["", "Set language of buffer", "Palette", "language.choose"],
+    ["", "Set language of file", "Palette", "language.choose"],
     ["", "Open yate.json (lists every key binding)", "Palette", "settings.open"],
     ["", "Reload yate.json and plugins", "Palette", "config.reload"],
     ["", "Open the yate log", "Palette", "app.log"],
@@ -1062,7 +1012,7 @@ yate.<span class="fn">on</span>(<span class="s">"beforeSave"</span>, () <span cl
     ["", "Format document with Prettier", "Palette", "format.prettier"],
     ["", "TypeScript: Add // @ts-nocheck", "Palette", "ts.noCheck"],
   ];
-  const CONTEXTS = ["All", "Global", "Editor", "Switch", "Picker", "Find", "Tree", "Review", "Palette"];
+  const CONTEXTS = ["All", "Global", "Editor", "Switch", "Menu", "Picker", "Find", "Tree", "Palette"];
   let ctxFilter = "All";
   try { const saved = localStorage.getItem("yate-ref-ctx"); if (saved && CONTEXTS.includes(saved)) ctxFilter = saved; } catch (e) {}
   const chips = document.getElementById("ref-chips");
@@ -1110,7 +1060,7 @@ yate.<span class="fn">on</span>(<span class="s">"beforeSave"</span>, () <span cl
     ];
     const chip = (color, label) => '<b style="background:' + color + ";color:" + c.dk + '">' + label + "</b>";
     return '<div class="preset"><pre style="background:' + c.bg + ";color:" + c.fg + '">' + lines.join("\n") + "</pre>" +
-      '<div class="bar" style="background:' + c.dk + '">' + chip(c.bl, "EDIT") + chip(c.gr, "TREE") + chip(c.ye, "FIND") + chip(c.mg, "REVIEW") + chip(c.cy, "PICK") + "</div>" +
+      '<div class="bar" style="background:' + c.dk + '">' + chip(c.bl, "EDIT") + chip(c.gr, "TREE") + chip(c.ye, "FIND") + chip(c.cy, "PICK") + "</div>" +
       '<div class="lbl">' + escapeHTML(name) + "<span>" + escapeHTML(note) + "</span></div></div>";
   }
   document.getElementById("presets").innerHTML = PRESETS.map(presetCard).join("");

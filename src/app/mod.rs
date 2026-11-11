@@ -1,22 +1,22 @@
-//! The application: open documents, panels, overlays and the event loop.
+//! The application: the files on screen, panels, overlays and the event loop.
 //! Background work (file index, git status, live grep, update check) reports back through
 //! one channel, so all state is changed on the main thread.
 
 mod commands;
 mod goto;
 mod input;
-mod review;
+mod panes;
 mod split;
 
-pub use review::{Review, ReviewSource};
-pub use split::{Pane, Split, Switcher};
+pub use panes::{Direction, Pane, PaneArea, Panes, Side};
+pub use split::Switcher;
 
 use crate::bookmarks::{self, Bookmarks};
 use crate::clipboard::Clipboard;
 use crate::config::{self, Options};
-use crate::editor::document::{Document, Sign};
+use crate::editor::document::{Document, Sign, ViewState};
 use crate::editor::selection::Selection;
-use crate::keymap::Keymap;
+use crate::keymap::{Context, Keymap};
 use crate::picker::Picker;
 use crate::plugins::{Action, PluginHost, Snapshot};
 use crate::terminal::Terminal;
@@ -37,6 +37,7 @@ const DISK_CHECK: Duration = Duration::from_secs(2);
 const GIT_REFRESH: Duration = Duration::from_secs(10);
 const MESSAGE_TIME: Duration = Duration::from_secs(5);
 const MAX_SIGN_BYTES: usize = 4 * 1024 * 1024;
+const MAX_RECENT: usize = 50;
 /// Git signs of files larger than this are recomputed at most every
 /// `SIGN_THROTTLE` while typing.
 const SIGN_THROTTLE_BYTES: usize = 256 * 1024;
@@ -56,7 +57,6 @@ pub enum AppEvent {
 pub enum Focus {
     Editor,
     Tree,
-    Review,
     Find,
 }
 
@@ -67,21 +67,47 @@ pub enum PromptKind {
     Rename(PathBuf),
     Delete(PathBuf),
     Plugin(u32),
+    ResizePane,
     QuitUnsaved,
-    CloseUnsaved(usize),
+    /// Asked before a file with unsaved changes leaves the screen; `then`
+    /// repeats what was asked for once they are saved or discarded.
+    LeaveUnsaved {
+        doc_id: usize,
+        then: Box<dyn FnOnce(&mut App)>,
+    },
 }
 
 pub struct Prompt {
     pub title: String,
     pub input: LineInput,
     pub kind: PromptKind,
-    /// Answered with y/n instead of text.
+    /// Answered with a key instead of text: y/n, or s/d for
+    /// `PromptKind::LeaveUnsaved`.
     pub confirm: bool,
+}
+
+impl Prompt {
+    pub fn saves_or_discards(&self) -> bool {
+        matches!(self.kind, PromptKind::LeaveUnsaved { .. })
+    }
+}
+
+/// A group of commands behind one key: a numbered popup.
+pub struct MenuSpec {
+    pub title: &'static str,
+    /// Label and command id, chosen with the digits from 1.
+    pub items: &'static [(&'static str, &'static str)],
+}
+
+pub struct Menu {
+    pub spec: &'static MenuSpec,
+    pub selected: usize,
 }
 
 pub enum Overlay {
     Picker(Box<Picker>),
     Prompt(Prompt),
+    Menu(Menu),
 }
 
 #[derive(Default)]
@@ -111,15 +137,17 @@ pub struct Preview {
     pub styles: Vec<Vec<Option<Style>>>,
 }
 
-#[derive(Default, Clone, Copy)]
+#[derive(Default, Clone)]
 pub struct Layout {
     pub sidebar: Option<Rect>,
-    pub tabs: Rect,
-    /// The focused editor pane.
+    /// The text of the focused editor pane.
     pub editor: Rect,
-    /// The other editor pane and the column between the panes, when split.
-    pub other: Option<Rect>,
-    pub separator: Option<Rect>,
+    /// Everything the editor panes share.
+    pub editor_area: Rect,
+    /// The panes on screen; in a split each has a title row with its file.
+    pub panes: Vec<PaneArea>,
+    /// The columns between side by side panes.
+    pub separators: Vec<Rect>,
     pub find: Option<Rect>,
     pub status: Rect,
 }
@@ -130,12 +158,25 @@ pub struct Location {
     pub pos: usize,
 }
 
+/// A file that was on screen, with the cursor and scroll it had.
+pub struct Recent {
+    pub path: PathBuf,
+    cursor: usize,
+    view: ViewState,
+}
+
 pub struct App {
     pub root: PathBuf,
     pub options: Options,
+    /// The documents on screen: one per file the panes show.
     pub docs: Vec<Document>,
+    /// The document of the focused pane.
     pub active: usize,
     next_doc_id: usize,
+    /// The files shown lately, the latest first.
+    pub recent: Vec<Recent>,
+    /// Set while an action runs again after its unsaved changes were given up.
+    leave_confirmed: bool,
     pub focus: Focus,
     pub tree: FileTree,
     pub tree_visible: bool,
@@ -145,11 +186,8 @@ pub struct App {
     pub picker_glob: String,
     pub find: FindState,
     pub find_open: bool,
-    pub review: Option<Review>,
-    pub split: Option<Split>,
+    pub panes: Panes,
     pub switcher: Option<Switcher>,
-    /// A file or folder marked to compare with the next one.
-    pub compare_mark: Option<PathBuf>,
     pub files: Vec<String>,
     pub git: GitStatus,
     head: Option<String>,
@@ -184,6 +222,7 @@ pub struct App {
     last_disk_check: Instant,
     pub(crate) last_click: Option<(Instant, u16, u16)>,
     pub dragging: bool,
+    pub(crate) resizing_tree: bool,
     command_depth: usize,
 }
 
@@ -202,6 +241,8 @@ impl App {
             docs: Vec::new(),
             active: 0,
             next_doc_id: 1,
+            recent: Vec::new(),
+            leave_confirmed: false,
             focus: Focus::Editor,
             tree_visible: false,
             overlay: None,
@@ -209,10 +250,8 @@ impl App {
             picker_glob: String::new(),
             find: FindState::default(),
             find_open: false,
-            review: None,
-            split: None,
+            panes: Panes::default(),
             switcher: None,
-            compare_mark: None,
             files: Vec::new(),
             git: GitStatus::default(),
             head: None,
@@ -237,8 +276,23 @@ impl App {
             last_disk_check: Instant::now(),
             last_click: None,
             dragging: false,
+            resizing_tree: false,
             command_depth: 0,
         }
+    }
+
+    /// The key binding context of the focused panel.
+    pub fn context(&self) -> Context {
+        match self.focus {
+            Focus::Editor | Focus::Find => Context::Editor,
+            Focus::Tree => Context::Tree,
+        }
+    }
+
+    /// Sets the width of the file tree, leaving room for the editor.
+    pub fn set_tree_width(&mut self, width: u16) {
+        let screen_width = self.layout.status.w;
+        self.options.tree_width = crate::ui::sidebar::clamp_width(width, screen_width);
     }
 
     pub fn doc(&self) -> &Document {
@@ -282,51 +336,26 @@ impl App {
         normalize(&joined)
     }
 
-    /// Opens `path` (or switches to it when already open).
+    /// Shows `path` in the focused pane, in place of the file shown there.
     pub fn open(&mut self, path: &Path, line: Option<usize>) -> bool {
         let path = normalize(path);
         if path.is_dir() {
             self.error(format!("{} is a folder", self.relative(&path)));
             return false;
         }
-        self.push_jump();
-        if let Some(index) = self
-            .docs
-            .iter()
-            .position(|d| d.path.as_deref() == Some(&path))
-        {
-            self.active = index;
-        } else {
-            let id = self.next_doc_id;
-            self.next_doc_id += 1;
-            match Document::open(id, &path) {
-                Ok(mut doc) => {
-                    if let Some(root) = &self.git.root {
-                        doc.git.base = git::head_content(root, &path);
-                    }
-                    let replace_scratch = self.docs.len() == 1
-                        && self.docs[0].path.is_none()
-                        && !self.docs[0].is_modified()
-                        && self.docs[0].rope.len_chars() == 0;
-                    if replace_scratch {
-                        self.docs[0] = doc;
-                        self.active = 0;
-                    } else {
-                        let at = (self.active + 1).min(self.docs.len());
-                        self.docs.insert(at, doc);
-                        self.active = at;
-                    }
-                    if self.doc().readonly {
-                        self.notify("Opened read-only (not valid UTF-8 or no write permission)");
-                    }
-                    let event_path = path.to_string_lossy().into_owned();
-                    self.emit_event("open", Some(event_path));
-                }
-                Err(err) => {
-                    self.error(format!("{}: {err}", self.relative(&path)));
-                    return false;
-                }
+        let shown = self.doc().path.as_deref() == Some(&path);
+        if !shown {
+            let target = path.clone();
+            let again = move |app: &mut App| {
+                app.open(&target, line);
+            };
+            if !self.may_leave(again) {
+                return false;
             }
+        }
+        self.push_jump();
+        if !shown && !self.show_in_focused_pane(&path) {
+            return false;
         }
         if let Some(line) = line {
             let doc = self.doc_mut();
@@ -337,11 +366,151 @@ impl App {
             doc.selection = Selection::point(pos + indent);
             doc.view.preferred_col = None;
         }
+        self.touch_recent();
+        if self.focus == Focus::Tree && self.layout.status.w <= self.options.tree_auto_close_width {
+            self.tree_visible = false;
+        }
         self.focus = Focus::Editor;
         self.find.key = None;
+        self.relayout();
         self.scroll_to_cursor();
         self.follow_in_tree();
         true
+    }
+
+    /// Like `open`, with the cursor at `col` of the line.
+    pub fn open_at(&mut self, path: &Path, line: Option<usize>, col: usize) -> bool {
+        let target = normalize(path);
+        if self.doc().path.as_deref() != Some(&target) {
+            let again = move |app: &mut App| {
+                app.open_at(&target, line, col);
+            };
+            if !self.may_leave(again) {
+                return false;
+            }
+        }
+        if !self.open(path, line) {
+            return false;
+        }
+        if let Some(line) = line {
+            let doc = self.doc_mut();
+            let pos = doc.pos(line, col);
+            doc.selection = Selection::point(pos);
+        }
+        self.scroll_to_cursor();
+        true
+    }
+
+    /// Puts the document of `path` in the focused pane: the one another
+    /// pane shows, or the file read from disk.
+    fn show_in_focused_pane(&mut self, path: &Path) -> bool {
+        if let Some(index) = self
+            .docs
+            .iter()
+            .position(|d| d.path.as_deref() == Some(path))
+        {
+            self.active = index;
+            self.drop_hidden_docs();
+            return true;
+        }
+        let id = self.next_doc_id;
+        self.next_doc_id += 1;
+        let mut doc = match Document::open(id, path) {
+            Ok(doc) => doc,
+            Err(err) => {
+                self.error(format!("{}: {err}", self.relative(path)));
+                return false;
+            }
+        };
+        if let Some(root) = &self.git.root {
+            doc.git.base = git::head_content(root, path);
+        }
+        if let Some(recent) = self.recent.iter().find(|recent| recent.path == path) {
+            doc.selection = Selection::point(recent.cursor.min(doc.rope.len_chars()));
+            doc.view = recent.view.clone();
+        }
+        let readonly = doc.readonly;
+        self.docs.push(doc);
+        self.active = self.docs.len() - 1;
+        self.drop_hidden_docs();
+        if readonly {
+            self.notify("Opened read-only (not valid UTF-8 or no write permission)");
+        }
+        self.emit_event("open", Some(path.to_string_lossy().into_owned()));
+        true
+    }
+
+    /// Forgets the documents no pane shows; the recent files keep their
+    /// cursor and scroll.
+    pub(crate) fn drop_hidden_docs(&mut self) {
+        let focused = self.doc().id;
+        let others: Vec<usize> = self.panes.others().iter().map(|p| p.doc_id).collect();
+        let (shown, hidden): (Vec<Document>, Vec<Document>) = std::mem::take(&mut self.docs)
+            .into_iter()
+            .partition(|doc| doc.id == focused || others.contains(&doc.id));
+        self.docs = shown;
+        self.active = self
+            .docs
+            .iter()
+            .position(|doc| doc.id == focused)
+            .unwrap_or(0);
+        for doc in hidden {
+            if let Some(recent) = self
+                .recent
+                .iter_mut()
+                .find(|recent| Some(&recent.path) == doc.path.as_ref())
+            {
+                recent.cursor = doc.selection.head;
+                recent.view = doc.view;
+            }
+        }
+    }
+
+    /// Moves the file of the focused pane to the front of the recent files.
+    pub(crate) fn touch_recent(&mut self) {
+        let Some(path) = self.doc().path.clone() else {
+            return;
+        };
+        let recent = match self.recent.iter().position(|recent| recent.path == path) {
+            Some(index) => self.recent.remove(index),
+            None => Recent {
+                path,
+                cursor: 0,
+                view: ViewState::default(),
+            },
+        };
+        self.recent.insert(0, recent);
+        self.recent.truncate(MAX_RECENT);
+    }
+
+    /// True when the file of the focused pane may leave the screen. With
+    /// unsaved changes it asks first, and runs `then` once they are saved or
+    /// discarded.
+    pub fn may_leave(&mut self, then: impl FnOnce(&mut App) + 'static) -> bool {
+        self.in_another_pane(self.active) || self.may_drop(self.active, then)
+    }
+
+    pub(crate) fn may_drop(&mut self, index: usize, then: impl FnOnce(&mut App) + 'static) -> bool {
+        let doc = &self.docs[index];
+        let unsaved = doc.is_modified() && (doc.path.is_some() || doc.rope.len_chars() > 0);
+        if self.leave_confirmed || !unsaved {
+            return true;
+        }
+        let doc_id = doc.id;
+        let name = match &doc.path {
+            Some(path) => self.relative(path),
+            None => doc.name(),
+        };
+        self.overlay = Some(Overlay::Prompt(Prompt {
+            title: format!("{name} has unsaved changes"),
+            input: LineInput::default(),
+            kind: PromptKind::LeaveUnsaved {
+                doc_id,
+                then: Box::new(then),
+            },
+            confirm: true,
+        }));
+        false
     }
 
     pub fn follow_in_tree(&mut self) {
@@ -428,6 +597,7 @@ impl App {
     }
 
     pub fn jump(&mut self, back: bool) {
+        let before = (self.jumps.clone(), self.jump_index);
         if back {
             if self.jump_index == 0 {
                 return;
@@ -444,6 +614,11 @@ impl App {
             self.jump_index += 1;
         }
         let location = self.jumps[self.jump_index].clone();
+        let leaves = self.doc().path.as_ref() != Some(&location.path);
+        if leaves && !self.may_leave(move |app| app.jump(back)) {
+            (self.jumps, self.jump_index) = before;
+            return;
+        }
         let index = self.jump_index;
         let saved = std::mem::take(&mut self.jumps);
         self.open(&location.path, None);
@@ -501,13 +676,10 @@ impl App {
             AppEvent::FileIndex(files) => {
                 self.pending_jobs = self.pending_jobs.saturating_sub(1);
                 self.files = files;
+                let items = commands::file_items(self);
                 if let Some(Overlay::Picker(picker)) = &mut self.overlay
-                    && matches!(
-                        picker.kind,
-                        crate::picker::PickerKind::Files | crate::picker::PickerKind::CompareWith
-                    )
+                    && picker.kind == crate::picker::PickerKind::Files
                 {
-                    let items = commands::file_items(&self.files);
                     picker.set_items(items);
                 }
             }
@@ -527,11 +699,6 @@ impl App {
                 }
                 if self.tree_visible {
                     self.tree.rebuild(&self.git);
-                }
-                if let Some(review) = &mut self.review
-                    && review.source == ReviewSource::Git
-                {
-                    review.update_files(&self.git);
                 }
             }
             AppEvent::Grep(event) => commands::handle_grep(self, event),
@@ -618,14 +785,13 @@ impl App {
 
     /// Work done before each frame: syntax trees, git signs, find matches.
     fn prepare_frame(&mut self) {
-        self.refresh_doc(self.active);
-        if let Some(index) = self.other_pane_doc() {
+        for index in 0..self.docs.len() {
             self.refresh_doc(index);
         }
         if self.find_open || !self.find.input.text.is_empty() {
             commands::update_find_matches(self);
         }
-        self.sync_split_scroll();
+        self.sync_pane_scroll();
         commands::update_preview(self);
     }
 
@@ -917,7 +1083,6 @@ pub struct Start {
     pub root: PathBuf,
     pub file: Option<PathBuf>,
     pub line: Option<usize>,
-    pub compare: Option<(PathBuf, PathBuf)>,
     pub paths: config::Paths,
     pub clipboard: Clipboard,
     pub size: (u16, u16),
@@ -943,9 +1108,6 @@ impl App {
         }
         app.refresh_files();
         app.refresh_git();
-        if let Some((left, right)) = start.compare {
-            commands::start_compare(&mut app, left, right);
-        }
         app
     }
 
@@ -953,7 +1115,7 @@ impl App {
     pub fn draw(&mut self, width: u16, height: u16) -> (Surface, Option<(u16, u16)>) {
         let previous_editor = self.layout.editor;
         self.layout = crate::ui::layout(self, width, height);
-        if self.layout.editor != previous_editor && self.review.is_none() {
+        if self.layout.editor != previous_editor {
             self.scroll_to_cursor();
         }
         self.prepare_frame();
@@ -963,27 +1125,10 @@ impl App {
     }
 }
 
-/// What `yate` opens: a file or folder, or two files or two folders to
-/// compare (`yate diff <left> <right>`).
-pub enum Launch {
-    Open(Option<String>),
-    Diff(String, String),
-}
-
-pub fn run(launch: Launch) -> Result<(), String> {
+/// Runs yate on a file or folder; without a path, on the current folder.
+pub fn run(path: Option<String>) -> Result<(), String> {
     let cwd = std::env::current_dir().map_err(|err| err.to_string())?;
-    let (root, file, line, compare) = match launch {
-        Launch::Open(path) => {
-            let (root, file, line) = open_target(&cwd, path);
-            (root, file, line, None)
-        }
-        Launch::Diff(left, right) => {
-            let (left, right) = compared_paths(&cwd, &left, &right)?;
-            let folder = common_folder(&left, &right);
-            let root = git::repository_root(&folder).unwrap_or(folder);
-            (root, None, None, Some((left, right)))
-        }
-    };
+    let (root, file, line) = open_target(&cwd, path);
 
     let (tx, rx) = mpsc::channel();
     let size = crossterm::terminal::size().unwrap_or((80, 24));
@@ -992,7 +1137,6 @@ pub fn run(launch: Launch) -> Result<(), String> {
             root: root.clone(),
             file,
             line,
-            compare,
             paths: config::Paths::from_env(),
             clipboard: Clipboard::default(),
             size,
@@ -1034,40 +1178,6 @@ fn open_target(cwd: &Path, path: Option<String>) -> (PathBuf, Option<PathBuf>, O
         .unwrap_or(cwd.to_path_buf());
     let root = git::repository_root(&dir).unwrap_or(dir);
     (root, Some(target), line)
-}
-
-/// Resolves the two paths of `yate diff`: both must exist and both be files
-/// or both be folders.
-pub fn compared_paths(cwd: &Path, left: &str, right: &str) -> Result<(PathBuf, PathBuf), String> {
-    let resolve = |arg: &str| {
-        let path = normalize(&cwd.join(arg));
-        if path.exists() {
-            Ok(path)
-        } else {
-            Err(format!("no such file or folder: {arg}"))
-        }
-    };
-    let (left, right) = (resolve(left)?, resolve(right)?);
-    if left.is_dir() != right.is_dir() {
-        return Err("compare two files or two folders, not a file with a folder".to_string());
-    }
-    Ok((left, right))
-}
-
-/// The deepest folder that holds both compared paths.
-pub fn common_folder(left: &Path, right: &Path) -> PathBuf {
-    let folder = |path: &Path| {
-        if path.is_dir() {
-            path.to_path_buf()
-        } else {
-            path.parent().map(Path::to_path_buf).unwrap_or_default()
-        }
-    };
-    let (left, right) = (folder(left), folder(right));
-    left.ancestors()
-        .find(|ancestor| right.starts_with(ancestor))
-        .map(Path::to_path_buf)
-        .unwrap_or(left)
 }
 
 fn spawn_input(tx: Sender<AppEvent>) {

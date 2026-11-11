@@ -1,0 +1,29 @@
+# split_nested
+# start: yate one.txt
+# keys: alt+s 1
+# keys: ctrl+p
+# type: "two.txt"
+# keys: enter
+# keys: alt+s 2
+# keys: ctrl+p
+# type: "three.txt"
+# keys: enter
+# 80x16, cursor at column 45, row 8
+┌────────────────────────────────────────────────────────────────────────────────┐
+│ one.txt                                 two.txt                                │
+│  1  one 1                             │  1  two 1                              │
+│  2  one 2                             │  2  two 2                              │
+│  3  one 3                             │  3  two 3                              │
+│  4  one 4                             │  4  two 4                              │
+│  5  one 5                             │  5  two 5                              │
+│  6  one 6                             │  6  two 6                              │
+│  7  one 7                             │ three.txt                              │
+│  8  one 8                             │  1  three 1                            │
+│  9  one 9                             │  2  three 2                            │
+│ 10  one 10                            │  3  three 3                            │
+│ 11  one 11                            │  4  three 4                            │
+│ 12  one 12                            │  5  three 5                            │
+│ 13  one 13                            │  6  three 6                            │
+│ 14  one 14                            │  7  three 7                            │
+│ EDIT  three.txt          alt+w switch · ctrl+h keys   text  utf-8  LF  0%  1:1 │
+└────────────────────────────────────────────────────────────────────────────────┘

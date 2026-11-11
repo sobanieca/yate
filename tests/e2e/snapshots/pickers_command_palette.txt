@@ -4,13 +4,13 @@
 # type: "toggle tree"
 # 80x16, cursor at column 18, row 3
 ┌────────────────────────────────────────────────────────────────────────────────┐
-│ README.md                                                                      │
 │  1  Call render() to draw.                                                     │
-│  2╭─ Commands ────────────────────────────────────────────────────── 2/73 ─╮   │
+│  2                                                                             │
+│   ╭─ Commands (editor) ───────────────────────────────────────────── 1/43 ─╮   │
 │   │ ❯ toggle tree                                                          │   │
 │   │────────────────────────────────────────────────────────────────────────│   │
-│   │▌ File tree: toggle                                 alt+e  ctrl+shift+e │   │
-│   │  File tree: show / hide git-ignored files                            i │   │
+│   │▌ File tree  Toggle                                               alt+e │   │
+│   │                                                                        │   │
 │   │                                                                        │   │
 │   │                                                                        │   │
 │   │                                                                        │   │

@@ -1,4 +1,4 @@
-//! The left panel: the file tree, or the changed files while reviewing.
+//! The left panel: the file tree.
 
 use super::icons;
 use super::surface::{Rect, Rgb, Style, Surface};
@@ -9,28 +9,28 @@ use crate::workspace::git::FileStatus;
 use crate::workspace::tree::{FileTree, INDENT, Row};
 use unicode_segmentation::UnicodeSegmentation;
 
+const MIN_WIDTH: u16 = 12;
+const MIN_EDITOR_WIDTH: u16 = 20;
+
+/// A file tree width set by hand, kept between a readable tree and a
+/// usable editor.
+pub fn clamp_width(width: u16, screen_width: u16) -> u16 {
+    let max = screen_width.saturating_sub(MIN_EDITOR_WIDTH).max(MIN_WIDTH);
+    width.clamp(MIN_WIDTH, max)
+}
+
 pub fn width(app: &App, screen_width: u16) -> u16 {
+    if app.options.tree_width > 0 {
+        return clamp_width(app.options.tree_width, screen_width);
+    }
     let max = (screen_width / 3).clamp(20, 50);
-    let wanted = if let Some(review) = &app.review {
-        review
-            .files
-            .iter()
-            .map(|(path, _)| {
-                let shown = review
-                    .compared_name(path)
-                    .unwrap_or_else(|| app.relative(path));
-                text::str_width(&shown) + 5
-            })
-            .max()
-            .unwrap_or(20)
-    } else {
-        app.tree
-            .rows
-            .iter()
-            .map(|row| row.depth * INDENT + text::str_width(&row.name) + 7)
-            .max()
-            .unwrap_or(20)
-    };
+    let wanted = app
+        .tree
+        .rows
+        .iter()
+        .map(|row| row.depth * INDENT + text::str_width(&row.name) + 7)
+        .max()
+        .unwrap_or(20);
     (wanted as u16).clamp(24.min(max), max)
 }
 
@@ -49,11 +49,7 @@ pub fn render(app: &mut App, surface: &mut Surface, area: Rect) {
     let base = Style::new().fg(t.fg_dark).bg(t.bg_dark);
     surface.fill(area, base);
     let (header, list) = area.split_top(1);
-    if app.review.is_some() {
-        render_changes(app, surface, header, list);
-    } else {
-        render_tree(app, surface, header, list);
-    }
+    render_tree(app, surface, header, list);
 }
 
 fn render_tree(app: &mut App, surface: &mut Surface, header: Rect, list: Rect) {
@@ -89,9 +85,6 @@ fn render_tree(app: &mut App, surface: &mut Surface, header: Rect, list: Rect) {
     if app.tree.locked {
         flags.push("locked");
     }
-    if app.compare_mark.is_some() {
-        flags.push("compare…");
-    }
     if !flags.is_empty() {
         let text = format!(" {}", flags.join(" "));
         surface.put_str(
@@ -114,7 +107,6 @@ fn render_tree(app: &mut App, surface: &mut Surface, header: Rect, list: Rect) {
         );
     }
     let current = app.doc().path.clone();
-    let mark = app.compare_mark.clone();
     let tree = &app.tree;
     for (i, row) in tree
         .rows
@@ -177,15 +169,6 @@ fn render_tree(app: &mut App, surface: &mut Surface, header: Rect, list: Rect) {
             style,
             list.right().saturating_sub(MARKER_SPACE),
         );
-        if mark.as_ref() == Some(&row.path) {
-            surface.put_str(
-                end + 1,
-                y,
-                "⇄",
-                Style::new().fg(t.magenta).bg(bg).bold(),
-                list.right(),
-            );
-        }
         if let Some(status) = status {
             surface.put_str_right(
                 list.right().saturating_sub(1),
@@ -248,91 +231,4 @@ fn clip_left(text: &str, columns: usize) -> (String, usize) {
         }
     }
     (rest, skipped)
-}
-
-fn render_changes(app: &mut App, surface: &mut Surface, header: Rect, list: Rect) {
-    let t = app.theme.clone();
-    let focused =
-        app.focus == Focus::Review && app.review.as_ref().is_some_and(|r| !r.diff_focused);
-    let Some(review) = &mut app.review else {
-        return;
-    };
-    let title = match review.source {
-        crate::app::ReviewSource::Git => format!("CHANGES ({})", review.files.len()),
-        crate::app::ReviewSource::Compare { .. } => format!("DIFFERENT ({})", review.files.len()),
-    };
-    let title_style = Style::new()
-        .fg(if focused {
-            super::focus_color(&t, Focus::Review)
-        } else {
-            t.dark5
-        })
-        .bg(t.bg_dark)
-        .bold();
-    surface.put_str(header.x + 1, header.y, &title, title_style, header.right());
-    review.ensure_visible(0, list.h as usize);
-    for (i, (path, status)) in review
-        .files
-        .iter()
-        .enumerate()
-        .skip(review.list_scroll)
-        .take(list.h as usize)
-    {
-        let y = list.y + (i - review.list_scroll) as u16;
-        let selected = i == review.selected;
-        let bg = match (selected, focused) {
-            (true, true) => t.bg_highlight,
-            (true, false) => t.bg,
-            _ => t.bg_dark,
-        };
-        surface.fill(Rect::new(list.x, y, list.w, 1), Style::new().bg(bg));
-        let color = status_color(&t, *status);
-        surface.put_str(
-            list.x + 1,
-            y,
-            status.letter(),
-            Style::new().fg(color).bg(bg).bold(),
-            list.right(),
-        );
-        let relative = review.compared_name(path).unwrap_or_else(|| {
-            path.strip_prefix(&app.root)
-                .unwrap_or(path)
-                .to_string_lossy()
-                .into_owned()
-        });
-        let shown = text::truncate_left(&relative, list.w.saturating_sub(4) as usize);
-        let (dir, name) = match shown.rfind('/') {
-            Some(slash) => (&shown[..=slash], &shown[slash + 1..]),
-            None => ("", shown.as_str()),
-        };
-        let x = surface.put_str(
-            list.x + 3,
-            y,
-            dir,
-            Style::new().fg(t.dark5).bg(bg),
-            list.right(),
-        );
-        surface.put_str(
-            x,
-            y,
-            name,
-            Style::new()
-                .fg(if selected { t.fg } else { t.fg_dark })
-                .bg(bg),
-            list.right(),
-        );
-    }
-    if review.files.is_empty() {
-        surface.put_str(
-            list.x + 2,
-            list.y,
-            if review.source == crate::app::ReviewSource::Git {
-                "Working tree clean"
-            } else {
-                "No differences"
-            },
-            Style::new().fg(t.dark5).bg(t.bg_dark),
-            list.right(),
-        );
-    }
 }

@@ -2,7 +2,7 @@
 # start: yate (project folder)
 # 70x16, cursor hidden
 ┌──────────────────────────────────────────────────────────────────────┐
-│ PROJECT                untitled                                      │
+│ PROJECT                                                              │
 │ ▸ src                                    Y A T E                     │
 │   README.md                      yet another text editor             │
 │                                                                      │
@@ -10,12 +10,12 @@
 │                          live grep                          alt+f    │
 │                          file tree                          alt+e    │
 │                          switch: tree, files                alt+w    │
-│                          review git changes                 alt+g    │
 │                          command palette                    alt+p    │
 │                          all key bindings                  ctrl+h    │
 │                          quit                              ctrl+q    │
 │                                                                      │
 │                                                                      │
 │                                          project                     │
+│                                                                      │
 │ TREE  untitled              ctrl+h keys   text  utf-8  LF  100%  1:1 │
 └──────────────────────────────────────────────────────────────────────┘

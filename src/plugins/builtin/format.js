@@ -3,7 +3,7 @@
 
 yate.registerCommand("format.prettier", "Format document with Prettier", () => {
   const path = yate.editor.path();
-  if (!path) return yate.error("The buffer has no file");
+  if (!path) return yate.error("Save the file first");
   const result = yate.exec("npx", ["--no-install", "prettier", "--stdin-filepath", path], {
     input: yate.editor.text(),
     cwd: yate.root(),

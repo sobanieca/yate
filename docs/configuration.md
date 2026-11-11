@@ -66,7 +66,7 @@ line and in `~/.local/state/yate/yate.log`, with the file, line and column.
 or `solarized-light` (light).
 
 The status line label shows where keys go in the color of that focus area: `blue` for the
-editor, `green` for the tree, `yellow` for find, `magenta` for review, `cyan` for pickers and
+editor, `green` for the tree, `yellow` for find, `cyan` for pickers and
 `orange` for prompts. Change those palette colors to change the labels.
 
 `colors` overrides palette colors. A value is `#rrggbb`, `#rgb` or the name of another
@@ -75,7 +75,7 @@ palette color. The palette and where the views use it:
 | Color                  | Used for                                                       |
 | ---------------------- | -------------------------------------------------------------- |
 | `bg`                   | editor background                                              |
-| `bg_dark`              | tree, tab bar, status bar, pickers, prompts                    |
+| `bg_dark`              | tree, pane titles, status bar, pickers, prompts                |
 | `bg_inactive`          | editor background while the terminal or tmux pane has no focus |
 | `bg_highlight`         | cursor line, selected rows in lists                            |
 | `bg_visual`            | selection                                                      |
@@ -84,13 +84,12 @@ palette color. The palette and where the views use it:
 | `fg_gutter`            | line numbers, indent guides, separators                        |
 | `dark3`, `dark5`       | hints, ignored files, dim labels                               |
 | `comment`              | comments                                                       |
-| `blue`                 | accents: borders, status bar mode, folders, active tab         |
+| `blue`                 | accents: borders, status bar mode, folders, focused pane title |
 | `orange`               | current line number, current match, modified marker            |
 | `magenta`              | picker prompt, find bar label                                  |
 | `yellow`, `green`, `red`, `cyan`, `green1` | git status of files, messages              |
 | `blue1`, `blue5`, `blue6`, `purple`, `red1` | syntax colors                             |
 | `git_add`, `git_change`, `git_delete` | gutter signs                                    |
-| `diff_add_bg`, `diff_add_emphasis`, `diff_delete_bg`, `diff_delete_emphasis` | review diff |
 
 `syntax` styles tree-sitter captures. A key is a capture scope such as `keyword`,
 `keyword.return`, `string`, `function.method`, `type`, `variable.parameter`, `property`,
@@ -104,10 +103,13 @@ refer to palette colors, so changing `magenta` changes every scope drawn in mage
 The same options as `yate.setOption` in JavaScript (see [plugins.md](plugins.md#options)):
 `tabSize`, `insertSpaces`, `scrollOff`, `indentGuides`, `autoPairs`, `lineNumbers`,
 `cursorLine`, `colorize`, `nerdIcons`, `showIgnored`, `treeFollow`, `treeAutoCloseWidth`,
-`mouseScrollLines`, `jumpChars`, `jumpLines`, `updateCheck`, `keyHintDelay`.
+`treeWidth`, `mouseScrollLines`, `jumpChars`, `jumpLines`, `updateCheck`, `keyHintDelay`.
 
 `jumpChars` (default `10`) is how many characters Ctrl+Left and Ctrl+Right move, within the
 line; `jumpLines` (default `5`) is how many lines Ctrl+Up and Ctrl+Down move.
+
+`treeWidth` (default `0`) is the width of the file tree in columns; `0` fits the names. `[`
+and `]` in the tree, or dragging its right edge, change it until yate closes.
 
 `keyHintDelay` (default `500`) is the time in milliseconds after Alt+W before the numbered
 switch targets pop up; `0` shows them at once.
@@ -118,21 +120,31 @@ message when there is one; `yate update` installs it. The environment variable
 
 ## keys
 
-Bindings per context: `global` (everywhere), `editor`, `tree` and `review`. A context
+Bindings per context: `global` (everywhere), `editor` and `tree`. A context
 binding wins over a global one. Values are command ids: Ctrl+H lists every binding, the
-command palette (Alt+P) shows every command, and the template of **Open yate.json** lists
-all default bindings and the commands without a key. Key names are like `ctrl+p`,
-`alt+shift+down`, `alt+tab`, `ctrl+\\`, `ctrl+/`; a single letter like `"c"` binds a key
-of the tree or the review list. A key can run a plugin command too.
+command palette (Alt+P) shows the commands of the focused panel, and the template of **Open
+yate.json** lists all default bindings and the commands without a key. Key names are like
+`ctrl+p`, `alt+shift+down`, `alt+tab`, `ctrl+\\`, `ctrl+/`; a single letter like `"c"` binds
+a key of the tree. A key can run a plugin command too.
 
-Alt+W or Alt+Tab (`switch.next`) waits for a digit: `1` focuses the file tree, `2`-`9` an open
-file. Pressing it again moves to the next open file instead.
+By default every command has one key and no key uses Ctrl+Shift. Two keys open a numbered
+menu of related commands: Ctrl+G (`goto.menu`: `goto.line`, `goto.definition`) and Alt+M
+(`bookmark.menu`: `bookmark.toggle`, `bookmark.next`, `bookmark.previous`,
+`picker.bookmarks`, `bookmark.clear`). The commands behind a menu have no key of their own;
+bind one to skip the menu:
+
+```jsonc
+{ "keys": { "editor": { "alt+d": "goto.definition" }, "global": { "alt+n": "bookmark.next" } } }
+```
+
+Alt+W (`switch.next`) waits for a digit: `1` focuses the file tree, `2`-`9` show a recent
+file, the latest first. Pressing it again shows the next recent file instead.
 
 ## plugins
 
 Plugins by name, `true` to load and `false` to skip. A name is the file name of a plugin in
 `~/.config/yate/plugins` without `.js`: `"sort-lines": true` loads
 `~/.config/yate/plugins/sort-lines.js`. A plugin file that no `yate.json` switches on is not
-loaded. The bundled plugins `uuid`, `git` and `format` load unless set to `false`. Like
+loaded. The bundled plugins `git` and `format` load unless set to `false`. Like
 every other section, closer files win, so a project can switch a plugin you installed on or
 off. See [plugins.md](plugins.md) for writing one.

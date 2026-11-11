@@ -1,0 +1,68 @@
+# pickers_command_palette_sections
+# start: yate README.md
+# keys: alt+p
+# 80x62, cursor at column 7, row 7
+┌────────────────────────────────────────────────────────────────────────────────┐
+│  1  Call render() to draw.                                                     │
+│  2                                                                             │
+│                                                                                │
+│                                                                                │
+│                                                                                │
+│                                                                                │
+│   ╭─ Commands (editor) ──────────────────────────────────────────── 43/43 ─╮   │
+│   │ ❯                                                                      │   │
+│   │────────────────────────────────────────────────────────────────────────│   │
+│   │▌ File       Save                                                ctrl+s │   │
+│   │             New file…                                           ctrl+n │   │
+│   │             Rename…                                                    │   │
+│   │             Delete…                                                    │   │
+│   │             Copy relative path                                         │   │
+│   │             Reload from disk                                           │   │
+│   │  Edit       Undo                                                ctrl+z │   │
+│   │             Redo                                                ctrl+y │   │
+│   │             Copy                                                ctrl+c │   │
+│   │             Cut                                                 ctrl+x │   │
+│   │             Paste                                               ctrl+v │   │
+│   │             Select all                                          ctrl+a │   │
+│   │             Select word / next occurrence                       ctrl+d │   │
+│   │             Toggle line comment                                 ctrl+/ │   │
+│   │             Move line up                                        alt+up │   │
+│   │             Move line down                                    alt+down │   │
+│   │             Duplicate line                              alt+shift+down │   │
+│   │             Delete line                                         ctrl+k │   │
+│   │             Indent lines                                         alt+i │   │
+│   │             Outdent lines                                        alt+o │   │
+│   │  Search     Find in file                                        ctrl+f │   │
+│   │             Replace in file                                     ctrl+r │   │
+│   │             Find file                                           ctrl+p │   │
+│   │             Live grep                                            alt+f │   │
+│   │             Live grep in files matching a glob                         │   │
+│   │  Go to      Line…                                                      │   │
+│   │             Definition or file under the cursor                        │   │
+│   │  Bookmarks  Toggle on this line                                        │   │
+│   │  View       Split vertically (side by side)                            │   │
+│   │             Split horizontally (one above the other)                   │   │
+│   │             Toggle line numbers                                        │   │
+│   │             Toggle indent guides                                       │   │
+│   │             Set language of the file…                                  │   │
+│   │  File tree  Toggle                                               alt+e │   │
+│   │             Reveal current file                                 ctrl+t │   │
+│   │  Plugins    Git: Blame current line                                    │   │
+│   │             Format document with Prettier                              │   │
+│   │             TypeScript: Add // @ts-nocheck                             │   │
+│   │  yate       Key bindings                                        ctrl+h │   │
+│   │             Open yate.json (the closest one, or a new ~/yate.jsonc)    │   │
+│   │             Reload yate.json and plugins                               │   │
+│   │             Open the log                                               │   │
+│   │             Quit                                                ctrl+q │   │
+│   │                                                                        │   │
+│   │                                                                        │   │
+│   ╰────────────────────────────────────────────────────────────────────────╯   │
+│                                                                                │
+│                                                                                │
+│                                                                                │
+│                                                                                │
+│                                                                                │
+│                                                                                │
+│ PICK  README.md                                   markdown  utf-8  LF  0%  1:1 │
+└────────────────────────────────────────────────────────────────────────────────┘

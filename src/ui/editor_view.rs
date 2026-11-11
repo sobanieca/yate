@@ -20,7 +20,7 @@ pub fn render(app: &App, surface: &mut Surface, area: Rect) -> Option<(u16, u16)
     let welcome = app.docs.len() == 1
         && doc.path.is_none()
         && doc.rope.len_chars() == 0
-        && app.split.is_none();
+        && !app.panes.is_split();
     if welcome {
         let t = &app.theme;
         surface.fill(
@@ -33,14 +33,16 @@ pub fn render(app: &App, surface: &mut Surface, area: Rect) -> Option<(u16, u16)
     render_pane(app, surface, area, doc, doc.selection, &doc.view, true)
 }
 
-/// Draws the other pane of a split with its own cursor and scroll.
-pub fn render_other(app: &App, surface: &mut Surface, area: Rect) {
-    let (Some(split), Some(index)) = (&app.split, app.other_pane_doc()) else {
+/// Draws a pane without the focus, with its own cursor and scroll.
+pub fn render_unfocused(app: &App, surface: &mut Surface, pane: usize, area: Rect) {
+    let Some(pane) = app.panes.pane(pane) else {
         return;
     };
-    let doc = &app.docs[index];
-    let selection = split.other.selection.clamp(doc.rope.len_chars());
-    let mut view = split.other.view.clone();
+    let Some(doc) = app.docs.iter().find(|doc| doc.id == pane.doc_id) else {
+        return;
+    };
+    let selection = pane.selection.clamp(doc.rope.len_chars());
+    let mut view = pane.view.clone();
     view.scroll_line = view.scroll_line.min(doc.line_count().saturating_sub(1));
     render_pane(app, surface, area, doc, selection, &view, false);
 }
@@ -263,7 +265,6 @@ const WELCOME: &[(&str, &str)] = &[
     ("picker.grep", "live grep"),
     ("tree.toggle", "file tree"),
     ("switch.next", "switch: tree, files"),
-    ("git.review", "review git changes"),
     ("picker.commands", "command palette"),
     ("help.keys", "all key bindings"),
     ("app.quit", "quit"),

@@ -3,17 +3,17 @@
 # keys: ctrl+p
 # type: "app.ts"
 # keys: enter
-# keys: down alt+m
+# keys: down alt+m 1
 # keys: ctrl+p
 # type: "model"
 # keys: enter
-# keys: ctrl+e
-# keys: esc ctrl+l
+# keys: ctrl+p
+# keys: esc alt+m 4
 # 80x16, cursor at column 7, row 3
 ┌────────────────────────────────────────────────────────────────────────────────┐
-│ README.md   app.ts   model.ts                                                  │
 │  1  export const lines = [];                                                   │
-│  2╭─ Bookmarks ────────────────────────────────────────────────────── 1/1 ─╮   │
+│  2                                                                             │
+│   ╭─ Bookmarks ────────────────────────────────────────────────────── 1/1 ─╮   │
 │   │ ❯                                                                      │   │
 │   │────────────────────────────────────────────────────────────────────────│   │
 │   │▌ src/app.ts:2  render(app);                                            │   │

@@ -6,15 +6,15 @@
 # keys: ctrl+p
 # type: "c.js"
 # keys: enter
-# keys: alt+tab
-# 70x12, cursor at column 5, row 1
+# keys: alt+w
+# 70x12, cursor at column 5, row 0
 ┌──────────────────────────────────────────────────────────────────────┐
-│ a.js   b.js   c.js                                                   │
-│  1  let c = 3;        ╭─ Switch to ──────────╮                       │
-│  2                    │ 1  File tree         │                       │
-│                       │ 2  a.js              │                       │
+│  1  let c = 3;                                                       │
+│  2                    ╭─ Switch to ──────────╮                       │
+│                       │ 1  File tree         │                       │
+│                       │ 2  c.js              │                       │
 │                       │ 3  b.js              │                       │
-│                       │ 4  c.js              │                       │
+│                       │ 4  a.js              │                       │
 │                       ╰──────────────────────╯                       │
 │                                                                      │
 │                                                                      │

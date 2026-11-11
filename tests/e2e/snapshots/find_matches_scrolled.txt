@@ -4,12 +4,12 @@
 # type: "needle"
 # keys: down down down
 # keys: up
-# keys: esc ctrl+g
+# keys: esc ctrl+g 1
 # type: "30"
 # keys: enter ctrl+f
 # 60x10, cursor at column 14, row 8
 ┌────────────────────────────────────────────────────────────┐
-│ long.txt                                                   │
+│ 26  line 26: needle and Needle                             │
 │ 27  line 27: needle and Needle                             │
 │ 28  line 28: needle and Needle                             │
 │ 29  line 29: needle and Needle                             │
@@ -23,31 +23,30 @@
 
 styles
 ┌────────────────────────────────────────────────────────────┐
-│abbbbbbbbacccccccccccccccccccccccccccccccccccccccccccccccccc│
-│addaaeeeeaeeeaffffffaeeeaffffffaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
-│addaaeeeeaeeeaffffffaeeeaffffffaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
-│addaaeeeeaeeeaffffffaeeeaffffffaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
-│ghhggiiiigiiigjjjjjjgiiigffffffggggggggggggggggggggggggggggg│
-│addaaeeeeaeeeaffffffaeeeaffffffaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
-│addaaeeeeaeeeaffffffaeeeaffffffaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
-│addaaeeeeaeeeaffffffaeeeaffffffaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
-│kllllkcgmmmmmmgggggggggggggccnnccnnccoocoocooccpppppppcppppc│
-│kllllkcqqqqqqqqccccnnnnnncnnnncccooooccoooooccooccooockllllk│
+│abbaaccccacccaddddddacccaddddddaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
+│abbaaccccacccaddddddacccaddddddaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
+│abbaaccccacccaddddddacccaddddddaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
+│abbaaccccacccaddddddacccaddddddaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
+│effeeggggegggehhhhhhegggeddddddeeeeeeeeeeeeeeeeeeeeeeeeeeeee│
+│abbaaccccacccaddddddacccaddddddaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
+│abbaaccccacccaddddddacccaddddddaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
+│abbaaccccacccaddddddacccaddddddaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
+│ijjjjikelllllleeeeeeeeeeeeekkmmkkmmkknnknnknnkkoooooookooook│
+│ijjjjikppppppppkkkkmmmmmmkmmmmkkknnnnkknnnnnkknnkknnnkijjjji│
 └────────────────────────────────────────────────────────────┘
 a  bg BG #24283b
-b  fg BLUE #7aa2f7, bg BG #24283b, bold
-c  bg BG_DARK #1f2335
-d  fg FG_GUTTER #3b4261, bg BG #24283b
-e  fg FG #c0caf5, bg BG #24283b
-f  fg FG #c0caf5, bg BG_SEARCH #3d59a1
-g  bg BG_HIGHLIGHT #292e42
-h  fg ORANGE #ff9e64, bg BG_HIGHLIGHT #292e42, bold
-i  fg FG #c0caf5, bg BG_HIGHLIGHT #292e42
-j  fg BG_DARK #1f2335, bg ORANGE #ff9e64
-k  bg YELLOW #e0af68
-l  fg BG_DARK #1f2335, bg YELLOW #e0af68, bold
-m  fg FG #c0caf5, bg BG_VISUAL #364a82
-n  fg DARK5 #737aa2, bg BG_DARK #1f2335
-o  fg FG_DARK #a9b1d6, bg BG_DARK #1f2335
-p  fg DARK3 #545c7e, bg BG_DARK #1f2335
-q  fg FG #c0caf5, bg BG_DARK #1f2335
+b  fg FG_GUTTER #3b4261, bg BG #24283b
+c  fg FG #c0caf5, bg BG #24283b
+d  fg FG #c0caf5, bg BG_SEARCH #3d59a1
+e  bg BG_HIGHLIGHT #292e42
+f  fg ORANGE #ff9e64, bg BG_HIGHLIGHT #292e42, bold
+g  fg FG #c0caf5, bg BG_HIGHLIGHT #292e42
+h  fg BG_DARK #1f2335, bg ORANGE #ff9e64
+i  bg YELLOW #e0af68
+j  fg BG_DARK #1f2335, bg YELLOW #e0af68, bold
+k  bg BG_DARK #1f2335
+l  fg FG #c0caf5, bg BG_VISUAL #364a82
+m  fg DARK5 #737aa2, bg BG_DARK #1f2335
+n  fg FG_DARK #a9b1d6, bg BG_DARK #1f2335
+o  fg DARK3 #545c7e, bg BG_DARK #1f2335
+p  fg FG #c0caf5, bg BG_DARK #1f2335

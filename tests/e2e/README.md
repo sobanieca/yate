@@ -16,7 +16,7 @@ The whole suite takes about a second. It needs `git` installed.
 ## Writing a test
 
 Tests are grouped by area in `editing.rs`, `tree.rs`, `pickers.rs`, `find.rs`, `git.rs`,
-`compare.rs`, `split.rs`, `keys.rs`, `definitions.rs`, `plugins.rs`, `settings.rs` and
+`split.rs`, `keys.rs`, `definitions.rs`, `plugins.rs`, `settings.rs` and
 `update.rs`. A test describes a project, starts yate in it and drives it:
 
 ```rust
@@ -35,7 +35,7 @@ fn comment_toggle() {
         .start();
 
     e.keys("ctrl+/");                            // key names, separated by spaces
-    assert_eq!(e.buffer_text(), "// let a = 1;\n");
+    assert_eq!(e.editor_text(), "// let a = 1;\n");
     e.snapshot("editing_comment_toggle");        // tests/e2e/snapshots/editing_comment_toggle.txt
 }
 ```
@@ -65,7 +65,7 @@ Checks:
 | `snapshot("name")`                    | the screen text against `snapshots/name.txt`             |
 | `snapshot_styles("name")`             | the screen and its colors (one letter per style, and a legend) |
 | `assert_screen_contains("text")`      | a text anywhere on the screen (`assert_screen_lacks` too) |
-| `buffer_text()`, `read_file(path)`    | the active buffer, a file on disk                        |
+| `editor_text()`, `read_file(path)`    | the text being edited, a file on disk                      |
 | `screen()`                            | the frame: `lines()`, `line(y)`, `cursor`                |
 | `clipboard()`, `app()`                | what a paste would insert, the whole `App` state         |
 

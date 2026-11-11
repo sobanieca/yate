@@ -1,0 +1,22 @@
+# tree_resized
+# start: yate (project folder)
+# keys: ]
+# keys: [ [
+# drag: 18,3 -> 33,3
+# 70x14, cursor hidden
+┌──────────────────────────────────────────────────────────────────────┐
+│ PROJECT                                        Y A T E               │
+│ ▸ src                                  yet another text editor       │
+│   .gitignore                                                         │
+│   README.md                        find file                 ctrl+p  │
+│                                    live grep                  alt+f  │
+│                                    file tree                  alt+e  │
+│                                    switch: tree, files        alt+w  │
+│                                    command palette            alt+p  │
+│                                    all key bindings          ctrl+h  │
+│                                    quit                      ctrl+q  │
+│                                                                      │
+│                                                                      │
+│                                                project               │
+│ TREE  main  File tree: 19 columns         text  utf-8  LF  100%  1:1 │
+└──────────────────────────────────────────────────────────────────────┘

@@ -4,14 +4,14 @@
 # keys: home
 # 60x10, cursor hidden
 ┌────────────────────────────────────────────────────────────┐
-│ PROJECT             untitled                               │
-│ ▾ packages                         Y A T E                 │
-│   ▾ web                    yet another text editor         │
-│     ▾ src                                                  │
-│       ▾ component    find file                     ctrl+p  │
-│         ▾ forms      live grep                      alt+f  │
-│           ▾ input    file tree                      alt+e  │
-│               Dat    switch: tree, files            alt+w  │
-│   README.md          review git changes             alt+g  │
+│ PROJECT                            Y A T E                 │
+│ ▾ packages                 yet another text editor         │
+│   ▾ web                                                    │
+│     ▾ src            find file                     ctrl+p  │
+│       ▾ component    live grep                      alt+f  │
+│         ▾ forms      file tree                      alt+e  │
+│           ▾ input    switch: tree, files            alt+w  │
+│               Dat    command palette                alt+p  │
+│   README.md          all key bindings              ctrl+h  │
 │ TREE  untitled    ctrl+h keys   text  utf-8  LF  100%  1:1 │
 └────────────────────────────────────────────────────────────┘

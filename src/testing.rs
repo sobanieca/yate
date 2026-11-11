@@ -97,7 +97,6 @@ pub struct Builder {
     git: bool,
     size: (u16, u16),
     open: Option<String>,
-    diff: Option<(String, String)>,
 }
 
 impl Builder {
@@ -146,13 +145,6 @@ impl Builder {
         self
     }
 
-    /// Starts like `yate diff <left> <right>`, paths relative to the
-    /// working directory.
-    pub fn diff(mut self, left: &str, right: &str) -> Self {
-        self.diff = Some((left.to_string(), right.to_string()));
-        self
-    }
-
     pub fn start(self) -> Harness {
         let temp = temp_dir();
         let root = temp.0.join("project");
@@ -186,16 +178,12 @@ impl Builder {
             }
             None => (None, None),
         };
-        let compare = self.diff.as_ref().map(|(left, right)| {
-            crate::app::compared_paths(&paths.cwd, left, right).expect("paths to compare")
-        });
         let (tx, rx) = mpsc::channel();
         let app = App::start(
             Start {
                 root: root.clone(),
                 file,
                 line,
-                compare,
                 paths,
                 clipboard: Clipboard::in_memory(),
                 size: self.size,
@@ -210,10 +198,9 @@ impl Builder {
             size: self.size,
             steps: Vec::new(),
         };
-        harness.step(match (&self.open, &self.diff) {
-            (_, Some((left, right))) => format!("start: yate diff {left} {right}"),
-            (Some(target), None) => format!("start: yate {target}"),
-            (None, None) => "start: yate (project folder)".to_string(),
+        harness.step(match &self.open {
+            Some(target) => format!("start: yate {target}"),
+            None => "start: yate (project folder)".to_string(),
         });
         harness.settle();
         harness
@@ -240,7 +227,6 @@ impl Harness {
             git: false,
             size: (80, 20),
             open: None,
-            diff: None,
         }
     }
 
@@ -471,8 +457,8 @@ impl Harness {
         &mut self.app
     }
 
-    /// The text of the active buffer.
-    pub fn buffer_text(&self) -> String {
+    /// The text of the file in the focused pane.
+    pub fn editor_text(&self) -> String {
         self.app.doc().text()
     }
 

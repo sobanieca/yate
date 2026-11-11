@@ -10,7 +10,7 @@ const ago = (seconds) => {
 
 yate.registerCommand("git.blame", "Git: Blame current line", () => {
   const path = yate.editor.path();
-  if (!path) return yate.error("The buffer has no file");
+  if (!path) return yate.error("Save the file first");
   const line = yate.editor.cursor().line + 1;
   const result = yate.exec("git", ["blame", "--porcelain", "-L", `${line},${line}`, path], {
     cwd: yate.root(),

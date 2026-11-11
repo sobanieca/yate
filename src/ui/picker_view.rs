@@ -152,7 +152,27 @@ pub fn render(app: &mut App, surface: &mut Surface) -> Option<(u16, u16)> {
     cursor
 }
 
+const GROUP_COLUMN_MIN_WIDTH: u16 = 44;
+
+/// The width of the column that names the section of each command, or 0
+/// when the items have no sections or the list is too narrow for it.
+fn group_column_width(picker: &Picker, rows: Rect) -> u16 {
+    let widest = picker
+        .items
+        .iter()
+        .map(|item| text::str_width(&item.group))
+        .max()
+        .unwrap_or(0);
+    if widest == 0 || rows.w < GROUP_COLUMN_MIN_WIDTH {
+        0
+    } else {
+        widest as u16 + 2
+    }
+}
+
 fn render_rows(picker: &Picker, surface: &mut Surface, rows: Rect, t: &Theme) {
+    let group_width = group_column_width(picker, rows);
+    let filtered = !picker.input.text.trim().is_empty();
     for (row, (index, matched)) in picker
         .shown
         .iter()
@@ -170,13 +190,30 @@ fn render_rows(picker: &Picker, surface: &mut Surface, rows: Rect, t: &Theme) {
         }
         let mut x = rows.x + 2;
         let right = rows.right().saturating_sub(1);
+        if group_width > 0 {
+            let starts_group =
+                row == picker.scroll || picker.items[picker.shown[row - 1].0].group != item.group;
+            if filtered || starts_group {
+                let mut group_x = x;
+                for (i, c) in item.group.chars().enumerate() {
+                    let style = if matched.binary_search(&(i as u32)).is_ok() {
+                        Style::new().fg(t.orange).bg(bg).bold()
+                    } else {
+                        Style::new().fg(t.blue).bg(bg)
+                    };
+                    group_x = surface.put_str(group_x, y, &c.to_string(), style, right);
+                }
+            }
+            x += group_width;
+        }
+        let label_offset = item.label_offset();
         let max_label = match picker.kind {
             PickerKind::Grep | PickerKind::Bookmarks | PickerKind::Definitions
                 if !item.detail.is_empty() =>
             {
                 rows.w.saturating_sub(4) as usize / 2
             }
-            _ => rows.w.saturating_sub(4) as usize,
+            _ => rows.w.saturating_sub(4 + group_width) as usize,
         };
         let chars: Vec<char> = item.label.chars().collect();
         let widths: Vec<usize> = chars
@@ -194,10 +231,7 @@ fn render_rows(picker: &Picker, surface: &mut Surface, rows: Rect, t: &Theme) {
             }
             x = surface.put_str(x, y, "…", Style::new().fg(t.dark5).bg(bg), right);
         }
-        let name_start = if matches!(
-            picker.kind,
-            PickerKind::Files | PickerKind::Buffers | PickerKind::CompareWith
-        ) {
+        let name_start = if picker.kind == PickerKind::Files {
             item.label
                 .rfind('/')
                 .map(|i| item.label[..=i].chars().count())
@@ -206,11 +240,11 @@ fn render_rows(picker: &Picker, surface: &mut Surface, rows: Rect, t: &Theme) {
             usize::MAX
         };
         for (i, c) in chars.iter().enumerate().skip(skip) {
-            let is_match = matched.binary_search(&(i as u32)).is_ok();
+            let is_match = matched.binary_search(&((i + label_offset) as u32)).is_ok();
             let base_fg = match picker.kind {
                 PickerKind::Grep | PickerKind::Bookmarks | PickerKind::Definitions => t.cyan,
                 _ if i >= name_start => t.fg,
-                PickerKind::Files | PickerKind::Buffers | PickerKind::CompareWith => t.dark5,
+                PickerKind::Files => t.dark5,
                 _ => t.fg,
             };
             let style = if is_match {

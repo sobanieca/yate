@@ -1,29 +1,29 @@
-# pickers_buffers
+# pickers_recent_files
 # start: yate README.md
 # keys: ctrl+p
 # type: "app.ts"
 # keys: enter
-# keys: down alt+m
+# keys: down alt+m 1
 # keys: ctrl+p
 # type: "model"
 # keys: enter
-# keys: ctrl+e
+# keys: ctrl+p
 # 80x16, cursor at column 7, row 3
 ┌────────────────────────────────────────────────────────────────────────────────┐
-│ README.md   app.ts   model.ts                                                  │
 │  1  export const lines = [];                                                   │
-│  2╭─ Open buffers ─────────────────────────────────────────────────── 3/3 ─╮   │
-│   │ ❯                                                                      │   │
+│  2                                                                             │
+│   ╭─ Find file ────────────────────────────────────────────────────── 5/5 ─╮   │
+│   │ ❯                                                glob ctrl+f to filter │   │
 │   │────────────────────────────────────────────────────────────────────────│   │
-│   │▌ README.md                                                             │   │
-│   │  src/app.ts                                                            │   │
+│   │▌ src/app.ts                                                            │   │
+│   │  README.md                                                             │   │
 │   │  src/editor/model.ts                                                   │   │
+│   │  src/editor/view.ts                                                    │   │
+│   │  test/view.test.ts                                                     │   │
 │   │                                                                        │   │
 │   │                                                                        │   │
 │   │                                                                        │   │
-│   │                                                                        │   │
-│   │                                                                        │   │
-│   ╰────────────────────────────────────────────────────────────────────────╯   │
+│   ╰─ ctrl+f glob filter, e.g. *.ts, !*.test.ts ────────────────────────────╯   │
 │                                                                                │
 │ PICK  Bookmarked line 2                         typescript  utf-8  LF  0%  1:1 │
 └────────────────────────────────────────────────────────────────────────────────┘

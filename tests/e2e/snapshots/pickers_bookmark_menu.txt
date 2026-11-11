@@ -1,17 +1,19 @@
-# git_review_untracked_file
-# start: yate src/main.rs
-# keys: down home shift+end
-# type: "let name = \"yate\";"
-# keys: ctrl+s
-# write file outside the editor: NOTES.md
-# focus gained
-# keys: alt+g
-# keys: up
-# 80x14, cursor hidden
+# pickers_bookmark_menu
+# start: yate README.md
+# keys: ctrl+p
+# type: "view.ts"
+# keys: enter
+# keys: alt+m 1 down down alt+m 1 ctrl+home alt+m
+# 80x16, cursor hidden
 ┌────────────────────────────────────────────────────────────────────────────────┐
-│ CHANGES (2)             REVIEW  NOTES.md  +1 -0  n/p next/prev change · enter o│
-│ U NOTES.md                        @@ -1,0 +1,1 @@                              │
-│ M src/main.rs                 1 + todo                                         │
+│  1◆ export function render(view) {                                             │
+│  2  ▏ return view.lines; ╭─ Bookmarks ─────────────╮                           │
+│  3◆ }                    │ 1  Toggle on this line  │                           │
+│  4                       │ 2  Next                 │                           │
+│                          │ 3  Previous             │                           │
+│                          │ 4  List                 │                           │
+│                          │ 5  Clear in this file   │                           │
+│                          ╰─────────────────────────╯                           │
 │                                                                                │
 │                                                                                │
 │                                                                                │
@@ -19,8 +21,5 @@
 │                                                                                │
 │                                                                                │
 │                                                                                │
-│                                                                                │
-│                                                                                │
-│                                                                                │
-│ REVIEW  main  Saved src/main.rs                     rust  utf-8  LF  25%  2:23 │
+│ MENU  Bookmarked line 3                         typescript  utf-8  LF  0%  1:1 │
 └────────────────────────────────────────────────────────────────────────────────┘

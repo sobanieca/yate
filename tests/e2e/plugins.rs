@@ -18,7 +18,7 @@ fn a_plugin_switched_on_in_yate_json_registers_a_command_with_a_key() {
         .open("a.txt")
         .start();
     e.keys("ctrl+d alt+s");
-    assert_eq!(e.buffer_text(), "HELLO! world\n");
+    assert_eq!(e.editor_text(), "HELLO! world\n");
     e.keys("alt+p").type_text("shout");
     e.snapshot("plugins_command_in_palette");
 }
@@ -36,7 +36,7 @@ fn options_from_a_plugin_apply() {
         .open("a.js")
         .start();
     e.type_text("if (x) {\ny();");
-    assert_eq!(e.buffer_text(), "if (x) {\n    y();\n}");
+    assert_eq!(e.editor_text(), "if (x) {\n    y();\n}");
     e.snapshot("plugins_options");
 }
 
@@ -60,7 +60,7 @@ fn prompts_and_events_reach_plugins() {
     e.command("greet");
     e.snapshot("plugins_prompt");
     e.keys("ctrl+u").type_text("Ann").keys("enter");
-    assert_eq!(e.buffer_text(), "hi Ann");
+    assert_eq!(e.editor_text(), "hi Ann");
     e.keys("ctrl+s");
     e.assert_screen_contains("saved a.txt from a plugin");
 }
@@ -81,23 +81,15 @@ fn plugin_errors_show_in_the_status_line() {
 }
 
 #[test]
-fn bundled_uuid_plugin_inserts_a_uuid() {
-    let mut e = Harness::builder().file("a.txt", "").open("a.txt").start();
-    e.keys("ctrl+u");
-    let text = e.buffer_text();
-    let parts: Vec<usize> = text.split('-').map(str::len).collect();
-    assert_eq!(parts, [8, 4, 4, 4, 12], "{text}");
-}
-
-#[test]
 fn plugins_not_switched_on_do_not_load_and_bundled_ones_can_be_switched_off() {
-    let mut e = Harness::builder()
-        .home_file("yate.json", r#"{ "plugins": { "uuid": false } }"#)
+    let e = Harness::builder()
+        .home_file("yate.json", r#"{ "plugins": { "git": false } }"#)
         .config("plugins/idle.js", "yate.registerCommand('idle', () => {});")
         .file("a.txt", "")
         .open("a.txt")
         .start();
-    e.keys("ctrl+u");
-    assert_eq!(e.buffer_text(), "");
-    assert!(e.app().plugin_commands.iter().all(|(id, _)| id != "idle"));
+    let commands = &e.app().plugin_commands;
+    assert!(commands.iter().any(|(id, _)| id == "format.prettier"));
+    assert!(commands.iter().all(|(id, _)| id != "git.blame"));
+    assert!(commands.iter().all(|(id, _)| id != "idle"));
 }

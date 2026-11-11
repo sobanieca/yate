@@ -17,7 +17,6 @@ use std::time::{Duration, Instant};
 
 const PRELUDE: &str = include_str!("prelude.js");
 pub const BUNDLED: &[(&str, &str)] = &[
-    ("uuid", include_str!("builtin/uuid.js")),
     ("git", include_str!("builtin/git.js")),
     ("format", include_str!("builtin/format.js")),
 ];
@@ -494,16 +493,15 @@ mod tests {
     }
 
     #[test]
-    fn builtin_plugins_register_commands_and_keys() {
+    fn builtin_plugins_register_commands() {
         let host = host();
         let bridge = host.bridge.borrow();
-        assert!(bridge.commands.iter().any(|(id, _)| id == "uuid.insert"));
         assert!(bridge.commands.iter().any(|(id, _)| id == "git.blame"));
         assert!(
             bridge
-                .bindings
+                .commands
                 .iter()
-                .any(|(key, command, _)| key == "ctrl+u" && command == "uuid.insert")
+                .any(|(id, _)| id == "format.prettier")
         );
     }
 
@@ -532,22 +530,6 @@ mod tests {
     }
 
     #[test]
-    fn uuid_is_well_formed() {
-        let mut host = host();
-        host.run_command("uuid.insert").unwrap();
-        let actions = host.take_actions();
-        let Action::ReplaceSelection(uuid) = &actions[0] else {
-            panic!("{actions:?}");
-        };
-        let parts: Vec<&str> = uuid.split('-').collect();
-        assert_eq!(
-            parts.iter().map(|p| p.len()).collect::<Vec<_>>(),
-            [8, 4, 4, 4, 12]
-        );
-        assert!(parts[2].starts_with('4'));
-    }
-
-    #[test]
     fn yate_json_switches_bundled_and_user_plugins() {
         let dir = std::env::temp_dir().join(format!("yate-plugins-{}", std::process::id()));
         std::fs::create_dir_all(dir.join("plugins")).unwrap();
@@ -563,7 +545,7 @@ mod tests {
         .unwrap();
         let mut host = PluginHost::new().unwrap();
         let switches = [
-            ("uuid".to_string(), false),
+            ("git".to_string(), false),
             ("hello".to_string(), true),
             ("missing".to_string(), true),
         ];
@@ -576,11 +558,11 @@ mod tests {
         let bridge = host.bridge.borrow();
         let ids: Vec<&str> = bridge.commands.iter().map(|(id, _)| id.as_str()).collect();
         assert!(
-            ids.contains(&"hello") && ids.contains(&"git.blame"),
+            ids.contains(&"hello") && ids.contains(&"format.prettier"),
             "{ids:?}"
         );
         assert!(
-            !ids.contains(&"uuid.insert") && !ids.contains(&"unlisted"),
+            !ids.contains(&"git.blame") && !ids.contains(&"unlisted"),
             "{ids:?}"
         );
     }

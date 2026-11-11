@@ -1,6 +1,6 @@
 [package]
 name = "yate"
-version = "0.1.2"
+version = "0.3.0"
 edition = "2024"
 description = "Yet another text editor: a modeless terminal editor with JavaScript plugins"
 license = "MIT"
@@ -16,7 +16,7 @@ tree-sitter = "0.25"
 tree-sitter-language = "0.1"
 ignore = "0.4"
 nucleo-matcher = "0.3"
-similar = { version = "3", features = ["inline"] }
+similar = "3"
 unicode-width = "0.2"
 unicode-segmentation = "1.13"
 regex = "1"

@@ -77,14 +77,14 @@ fn escape_closes_and_alt_r_resumes_the_last_picker() {
 }
 
 #[test]
-fn buffers_and_bookmarks() {
+fn recent_files_come_first_and_bookmarks_are_listed() {
     let mut e = project();
     e.keys("ctrl+p").type_text("app.ts").keys("enter");
-    e.keys("down alt+m");
+    e.keys("down alt+m 1");
     e.keys("ctrl+p").type_text("model").keys("enter");
-    e.keys("ctrl+e");
-    e.snapshot("pickers_buffers");
-    e.keys("esc ctrl+l");
+    e.keys("ctrl+p");
+    e.snapshot("pickers_recent_files");
+    e.keys("esc alt+m 4");
     e.snapshot("pickers_bookmarks");
     e.keys("enter");
     assert_eq!(e.app().doc().name(), "app.ts");
@@ -113,4 +113,67 @@ fn the_glob_filter_is_kept_for_the_next_search() {
     e.assert_screen_contains("glob !test");
     e.assert_screen_lacks("test/view.test.ts");
     e.assert_screen_contains("src/app.ts:1");
+}
+
+#[test]
+fn alt_m_groups_the_bookmark_commands() {
+    let mut e = project();
+    e.keys("ctrl+p").type_text("view.ts").keys("enter");
+    e.keys("alt+m 1 down down alt+m 1 ctrl+home alt+m");
+    e.snapshot("pickers_bookmark_menu");
+    e.keys("2");
+    assert_eq!(e.app().doc().cursor_line(), 2);
+    e.keys("alt+m 3");
+    assert_eq!(e.app().doc().cursor_line(), 0);
+    e.keys("alt+m 5 alt+m 4");
+    e.assert_screen_contains("Bookmarks");
+    e.assert_screen_contains("0/0");
+}
+
+#[test]
+fn the_command_palette_lists_the_commands_of_the_focused_panel() {
+    let mut e = project();
+    e.keys("alt+p").type_text("line");
+    e.assert_screen_contains("Commands (editor)");
+    e.assert_screen_contains("Delete line");
+    e.keys("ctrl+u").type_text("wider");
+    e.assert_screen_contains("No results");
+    e.keys("esc alt+e alt+p");
+    e.snapshot("pickers_command_palette_tree");
+    e.type_text("line");
+    e.assert_screen_lacks("Delete line");
+}
+
+#[test]
+fn the_command_palette_groups_commands_into_sections() {
+    let mut e = Harness::builder()
+        .size(80, 62)
+        .file("README.md", "Call render() to draw.\n")
+        .open("README.md")
+        .start();
+    e.keys("alt+p");
+    e.snapshot("pickers_command_palette_sections");
+    e.type_text("tree");
+    e.assert_screen_contains("File tree  Toggle");
+    e.assert_screen_contains("File tree  Reveal current file");
+}
+
+#[test]
+fn the_command_palette_lists_only_what_can_be_done_now() {
+    let mut e = project();
+    e.keys("alt+p").type_text("pane");
+    e.assert_screen_lacks("Focus the next pane");
+    e.assert_screen_lacks("Close this pane");
+    e.keys("esc alt+s 1 alt+p").type_text("pane");
+    e.assert_screen_contains("Focus the next pane");
+    e.assert_screen_contains("Close this pane");
+    e.keys("esc alt+p").type_text("bookmarks");
+    e.assert_screen_contains("Toggle on this line");
+    e.assert_screen_lacks("Clear in this file");
+    e.keys("enter alt+p").type_text("bookmarks");
+    e.assert_screen_contains("Clear in this file");
+    e.keys("esc alt+p").type_text("undo");
+    e.assert_screen_contains("Edit       Undo");
+    e.keys("esc alt+p").type_text("palette");
+    e.assert_screen_lacks("Command palette");
 }

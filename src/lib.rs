@@ -1,5 +1,5 @@
 //! yate, yet another text editor: a modeless terminal editor with a file
-//! tree, fuzzy file search, live grep, git review and JavaScript plugins.
+//! tree, fuzzy file search, live grep, go to definition and JavaScript plugins.
 //!
 //! The binary is `src/main.rs`; the library exists so the end-to-end tests
 //! in `tests/e2e` can drive the editor through [`testing::Harness`].

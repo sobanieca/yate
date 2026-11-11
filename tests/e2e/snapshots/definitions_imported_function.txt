@@ -1,14 +1,14 @@
 # definitions_imported_function
 # start: yate src/app.ts
-# click: 5,6
-# keys: alt+d
-# 80x16, cursor at column 21, row 1
+# click: 5,5
+# keys: ctrl+g 2
+# 80x16, cursor at column 21, row 0
 ┌────────────────────────────────────────────────────────────────────────────────┐
-│ app.ts   view.ts                                                               │
 │  1  export function render(view) {                                             │
 │  2  ▏ return view.lines;                                                       │
 │  3  }                                                                          │
 │  4                                                                             │
+│                                                                                │
 │                                                                                │
 │                                                                                │
 │                                                                                │

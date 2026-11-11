@@ -2,7 +2,6 @@
 //! clicks, checked against text snapshots of the screen in `snapshots/`.
 //! How to write and troubleshoot them: `tests/e2e/README.md`.
 
-mod compare;
 mod definitions;
 mod editing;
 mod find;

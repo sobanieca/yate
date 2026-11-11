@@ -1,12 +1,12 @@
 # split_two_files
 # start: yate one.txt
-# keys: ctrl+\
+# keys: alt+s 1
 # keys: ctrl+p
 # type: "two.txt"
 # keys: enter
 # 70x10, cursor at column 40, row 1
 ┌──────────────────────────────────────────────────────────────────────┐
-│ one.txt   two.txt                                                    │
+│ one.txt                            two.txt                           │
 │  1  one 1                        │  1  two 1                         │
 │  2  one 2                        │  2  two 2                         │
 │  3  one 3                        │  3  two 3                         │

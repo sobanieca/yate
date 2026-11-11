@@ -1,14 +1,14 @@
 # settings_template
 # start: yate a.txt
 # command: settings.open
-# 80x8, cursor at column 6, row 1
+# 80x8, cursor at column 5, row 0
 ┌────────────────────────────────────────────────────────────────────────────────┐
-│ a.txt   yate.jsonc ●                                                           │
-│   1  {                                                                         │
-│   2  ▏ // yate settings. A yate.json or yate.jsonc closer to the working direct│
-│   3  ▏ // overrides this file key by key. Comments and trailing commas are allo│
-│   4  ▏ "theme": {                                                              │
-│   5  ▏ ▏ // tokyonight-storm, tokyonight-night, tokyonight-moon, tokyonight-day│
-│   6  ▏ ▏ // gruvbox-dark, gruvbox-light, nord or solarized-light               │
+│  1  {                                                                          │
+│  2  ▏ // yate settings. A yate.json or yate.jsonc closer to the working directo│
+│  3  ▏ // overrides this file key by key. Comments and trailing commas are allow│
+│  4  ▏ "theme": {                                                               │
+│  5  ▏ ▏ // tokyonight-storm, tokyonight-night, tokyonight-moon, tokyonight-day,│
+│  6  ▏ ▏ // gruvbox-dark, gruvbox-light, nord or solarized-light                │
+│  7  ▏ ▏ "preset": "tokyonight-storm",                                          │
 │ EDIT  New ~/yate.jsonc: save it to apply              json  utf-8  LF  0%  1:1 │
 └────────────────────────────────────────────────────────────────────────────────┘

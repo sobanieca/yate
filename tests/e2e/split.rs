@@ -4,34 +4,178 @@ fn numbered(count: usize, prefix: &str) -> String {
     (1..=count).map(|i| format!("{prefix} {i}\n")).collect()
 }
 
-fn project() -> Harness {
+fn project_of_size(width: u16, height: u16) -> Harness {
     Harness::builder()
-        .size(70, 10)
+        .size(width, height)
         .file("one.txt", &numbered(60, "one"))
         .file("two.txt", &numbered(60, "two"))
+        .file("three.txt", &numbered(60, "three"))
         .home_file("yate.json", r#"{ "options": { "scrollOff": 0 } }"#)
         .open("one.txt")
         .start()
 }
 
+fn project() -> Harness {
+    project_of_size(70, 10)
+}
+
+fn open(e: &mut Harness, file: &str) {
+    e.keys("ctrl+p").type_text(file).keys("enter");
+}
+
+fn pane_sizes(e: &Harness) -> Vec<(u16, u16)> {
+    let panes = e.app().layout.panes.iter();
+    panes.map(|pane| pane.size()).collect()
+}
+
 #[test]
-fn split_shows_two_panes_with_their_own_files() {
+fn alt_s_asks_which_split_to_make() {
     let mut e = project();
-    e.keys("ctrl+\\");
-    e.keys("ctrl+p").type_text("two.txt").keys("enter");
+    e.keys("alt+s");
+    e.snapshot("split_menu");
+    e.keys("esc");
+    assert!(!e.app().panes.is_split());
+    e.keys("alt+s down enter");
+    assert_eq!(pane_sizes(&e), [(70, 4), (70, 5)]);
+}
+
+#[test]
+fn a_vertical_split_shows_two_panes_with_their_own_files() {
+    let mut e = project();
+    e.keys("alt+s 1");
+    open(&mut e, "two.txt");
     e.snapshot("split_two_files");
     e.keys("ctrl+o");
     assert_eq!(e.app().doc().name(), "one.txt");
     e.keys("ctrl+o");
     assert_eq!(e.app().doc().name(), "two.txt");
-    e.keys("ctrl+\\");
-    assert!(e.app().split.is_none());
+    e.keys("alt+s 5");
+    assert!(!e.app().panes.is_split());
+    assert_eq!(e.app().doc().name(), "one.txt");
+    assert_eq!(e.app().docs.len(), 1);
+}
+
+#[test]
+fn a_horizontal_split_stacks_the_panes() {
+    let mut e = project();
+    e.keys("alt+s 2");
+    open(&mut e, "two.txt");
+    e.snapshot("split_stacked");
+    e.click(10, 2);
+    assert_eq!(e.app().doc().name(), "one.txt");
+    assert_eq!(e.app().doc().cursor_line(), 1);
+}
+
+#[test]
+fn panes_split_the_same_way_share_the_space_evenly() {
+    let mut e = project();
+    e.keys("alt+s 1");
+    assert_eq!(pane_sizes(&e), [(34, 9), (35, 9)]);
+    open(&mut e, "two.txt");
+    e.keys("alt+s 1");
+    open(&mut e, "three.txt");
+    assert_eq!(pane_sizes(&e), [(22, 9), (23, 9), (23, 9)]);
+    e.snapshot("split_three_panes");
+    e.keys("ctrl+o");
+    assert_eq!(e.app().doc().name(), "one.txt");
+    e.keys("alt+s 5");
+    assert_eq!(e.app().doc().name(), "two.txt");
+    assert_eq!(pane_sizes(&e), [(34, 9), (35, 9)]);
+}
+
+#[test]
+fn a_pane_of_a_split_can_be_split_the_other_way() {
+    let mut e = project_of_size(80, 16);
+    e.keys("alt+s 1");
+    open(&mut e, "two.txt");
+    e.keys("alt+s 2");
+    open(&mut e, "three.txt");
+    e.snapshot("split_nested");
+    assert_eq!(pane_sizes(&e), [(39, 15), (40, 7), (40, 8)]);
+    let mut order = Vec::new();
+    for _ in 0..3 {
+        e.keys("ctrl+o");
+        order.push(e.app().doc().name());
+    }
+    assert_eq!(order, ["one.txt", "two.txt", "three.txt"]);
+}
+
+#[test]
+fn alt_h_j_k_l_focus_the_pane_on_that_side() {
+    let mut e = project_of_size(80, 16);
+    e.keys("alt+s 1");
+    open(&mut e, "two.txt");
+    e.keys("alt+s 2");
+    open(&mut e, "three.txt");
+    e.keys("alt+k");
+    assert_eq!(e.app().doc().name(), "two.txt");
+    e.keys("alt+h");
+    assert_eq!(e.app().doc().name(), "one.txt");
+    e.keys("ctrl+g 1").type_text("12\n").keys("alt+l");
+    assert_eq!(e.app().doc().name(), "three.txt");
+    e.keys("alt+j");
+    e.assert_screen_contains("No pane on that side");
+    assert_eq!(e.app().doc().name(), "three.txt");
+}
+
+#[test]
+fn a_pane_is_resized_by_typing_columns_and_rows() {
+    let mut e = project_of_size(80, 16);
+    e.keys("alt+s 1");
+    open(&mut e, "two.txt");
+    e.keys("alt+s 2 alt+s 3");
+    e.snapshot("split_resize_prompt");
+    e.type_text("10,-2\n");
+    assert_eq!(pane_sizes(&e), [(29, 15), (50, 9), (50, 6)]);
+    e.snapshot("split_resized");
+    e.keys("ctrl+o alt+s 3").type_text("-100\n");
+    e.assert_screen_contains("No room for more: resized by -19,0");
+    assert_eq!(pane_sizes(&e), [(10, 15), (69, 9), (69, 6)]);
+    e.keys("alt+s 3").type_text("wide\n");
+    e.assert_screen_contains("wide: type the columns,rows to add");
+    e.keys("alt+s 4");
+    assert_eq!(pane_sizes(&e), [(39, 15), (40, 7), (40, 8)]);
+}
+
+#[test]
+fn a_new_pane_makes_its_neighbors_even_again() {
+    let mut e = project();
+    e.keys("alt+s 1 alt+s 3").type_text("8\n");
+    assert_eq!(pane_sizes(&e), [(26, 9), (43, 9)]);
+    e.keys("alt+s 1");
+    assert_eq!(pane_sizes(&e), [(22, 9), (23, 9), (23, 9)]);
+}
+
+#[test]
+fn a_split_needs_room_for_the_new_pane() {
+    let mut e = project();
+    e.keys("alt+s 2 alt+s 2");
+    assert_eq!(pane_sizes(&e), [(70, 3), (70, 3), (70, 3)]);
+    e.keys("alt+s 2");
+    e.assert_screen_contains("No room for another pane");
+    assert_eq!(e.app().panes.ids().len(), 3);
+    e.resize(70, 8);
+    assert_eq!(pane_sizes(&e), [(70, 7)]);
+    e.assert_screen_lacks("two 1");
+    e.resize(70, 10);
+    assert_eq!(pane_sizes(&e).len(), 3);
+}
+
+#[test]
+fn split_commands_without_a_split_say_how_to_split() {
+    let mut e = project();
+    e.keys("alt+s 3");
+    e.assert_screen_contains("Not split: alt+s splits the editor");
+    e.keys("esc ctrl+o");
+    e.assert_screen_contains("Not split: alt+s splits the editor");
+    e.keys("alt+l");
+    e.assert_screen_contains("Not split: alt+s splits the editor");
 }
 
 #[test]
 fn the_same_file_in_both_panes_keeps_two_cursors() {
     let mut e = project();
-    e.keys("ctrl+\\ ctrl+g").type_text("40\n");
+    e.keys("alt+s 1 ctrl+g 1").type_text("40\n");
     e.keys("ctrl+o");
     assert_eq!(e.app().doc().cursor_line(), 0);
     e.keys("ctrl+o");
@@ -40,10 +184,12 @@ fn the_same_file_in_both_panes_keeps_two_cursors() {
 }
 
 #[test]
-fn scroll_sync_moves_both_panes() {
+fn scroll_sync_moves_every_pane() {
     let mut e = project();
-    e.keys("ctrl+\\");
-    e.keys("ctrl+p").type_text("two.txt").keys("enter");
+    e.keys("alt+s 1");
+    open(&mut e, "two.txt");
+    e.keys("alt+s 1");
+    open(&mut e, "three.txt");
     e.keys("ctrl+j");
     for _ in 0..20 {
         e.keys("down");
@@ -52,25 +198,90 @@ fn scroll_sync_moves_both_panes() {
     e.keys("ctrl+j");
     e.keys("ctrl+home");
     e.assert_screen_contains("one 14");
-    e.assert_screen_contains("two 1 ");
+    e.assert_screen_contains("two 14");
+    e.assert_screen_contains("three 1 ");
 }
 
 #[test]
-fn clicking_the_other_pane_focuses_it() {
+fn the_wheel_scrolls_the_pane_under_the_mouse() {
     let mut e = project();
-    e.keys("ctrl+\\");
-    e.keys("ctrl+p").type_text("two.txt").keys("enter");
+    e.keys("alt+s 1");
+    open(&mut e, "two.txt");
+    e.scroll(10, 3, 1);
+    e.assert_screen_contains("one 4");
+    e.assert_screen_contains("two 1 ");
+    assert_eq!(e.app().doc().name(), "two.txt");
+}
+
+#[test]
+fn clicking_another_pane_focuses_it() {
+    let mut e = project();
+    e.keys("alt+s 1");
+    open(&mut e, "two.txt");
     e.click(10, 3);
     assert_eq!(e.app().doc().name(), "one.txt");
     assert_eq!(e.app().doc().cursor_line(), 2);
+    e.click(50, 0);
+    assert_eq!(e.app().doc().name(), "two.txt");
 }
 
 #[test]
-fn closing_the_file_of_the_other_pane_closes_the_split() {
+fn closing_a_pane_asks_about_unsaved_changes() {
     let mut e = project();
-    e.keys("ctrl+\\");
-    e.keys("ctrl+p").type_text("two.txt").keys("enter");
-    e.keys("ctrl+o ctrl+w");
-    assert!(e.app().split.is_none());
+    e.keys("alt+s 1");
+    open(&mut e, "two.txt");
+    e.type_text("x").keys("alt+s 5");
+    e.assert_screen_contains("two.txt has unsaved changes");
+    e.keys("esc");
+    assert!(e.app().panes.is_split());
+    e.keys("alt+s 5 s");
+    assert!(!e.app().panes.is_split());
+    assert_eq!(e.app().doc().name(), "one.txt");
+    assert_eq!(e.app().docs.len(), 1);
+    assert!(e.read_file("two.txt").starts_with("xtwo 1\n"));
+}
+
+#[test]
+fn closing_the_other_panes_asks_about_each_unsaved_file() {
+    let mut e = project_of_size(80, 16);
+    e.keys("alt+s 1");
+    open(&mut e, "two.txt");
+    e.type_text("x").keys("alt+s 2");
+    open(&mut e, "three.txt");
+    e.type_text("y").keys("ctrl+o alt+s 6");
+    e.assert_screen_contains("two.txt has unsaved changes");
+    e.keys("d");
+    e.assert_screen_contains("three.txt has unsaved changes");
+    assert_eq!(e.app().panes.ids().len(), 2);
+    e.keys("s");
+    assert!(!e.app().panes.is_split());
+    assert_eq!(e.app().doc().name(), "one.txt");
+    assert_eq!(e.app().docs.len(), 1);
+    assert!(e.read_file("two.txt").starts_with("two 1\n"));
+    assert!(e.read_file("three.txt").starts_with("ythree 1\n"));
+}
+
+#[test]
+fn a_file_shown_in_two_panes_can_be_left_in_one_without_saving() {
+    let mut e = project();
+    e.keys("alt+s 1").type_text("x");
+    open(&mut e, "two.txt");
     assert_eq!(e.app().doc().name(), "two.txt");
+    e.keys("ctrl+o");
+    assert!(e.editor_text().starts_with("xone 1\n"));
+    e.keys("alt+s 5");
+    e.assert_screen_contains("one.txt has unsaved changes");
+}
+
+#[test]
+fn deleting_a_file_closes_its_panes() {
+    let mut e = project();
+    e.keys("alt+s 1 alt+s 2");
+    open(&mut e, "two.txt");
+    e.command("file.delete").keys("y");
+    assert_eq!(e.app().panes.ids().len(), 2);
+    assert_eq!(e.app().doc().name(), "one.txt");
+    e.command("file.delete").keys("y");
+    assert!(!e.app().panes.is_split());
+    assert_eq!(e.app().doc().name(), "untitled");
 }

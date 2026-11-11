@@ -1,34 +1,33 @@
 # settings_theme_from_home
 # start: yate a.js
-# 40x5, cursor at column 5, row 1
+# 40x5, cursor at column 5, row 0
 ┌────────────────────────────────────────┐
-│ a.js                                   │
 │  1  // greeting                        │
 │  2  const name = "yate";               │
 │  3                                     │
+│                                        │
 │ EDIT …  javascript  utf-8  LF  0%  1:1 │
 └────────────────────────────────────────┘
 
 styles
 ┌────────────────────────────────────────┐
-│abbbbacccccccccccccccccccccccccccccccccc│
-│ddeddffdffffffffdddddddddddddddddddddddd│
-│aagaahhhhhaiiiiajakkkkkkjaaaaaaaaaaaaaaa│
-│aagaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
-│lmmmmlnccooooooooooccoooooccooccooclmmml│
+│aabaaccaccccccccaaaaaaaaaaaaaaaaaaaaaaaa│
+│ddeddfffffdggggdhdiiiiiihddddddddddddddd│
+│ddeddddddddddddddddddddddddddddddddddddd│
+│dddddddddddddddddddddddddddddddddddddddd│
+│jkkkkjlmmnnnnnnnnnnmmnnnnnmmnnmmnnmjkkkj│
 └────────────────────────────────────────┘
-a  bg BG #1a1b26
-b  fg BLUE #7aa2f7, bg BG #1a1b26, bold
-c  bg BG_DARK #16161e
-d  bg BG_HIGHLIGHT #292e42
-e  fg ORANGE #ff8800, bg BG_HIGHLIGHT #292e42, bold
-f  fg GREEN #9ece6a, bg BG_HIGHLIGHT #292e42
-g  fg FG_GUTTER #3b4261, bg BG #1a1b26
-h  fg #ff0000, bg BG #1a1b26, bold
-i  fg FG #c0caf5, bg BG #1a1b26
-j  fg BLUE5 #89ddff, bg BG #1a1b26
-k  fg GREEN #9ece6a, bg BG #1a1b26
-l  bg BLUE #7aa2f7
-m  fg BG_DARK #16161e, bg BLUE #7aa2f7, bold
-n  fg FG #c0caf5, bg BG_DARK #16161e
-o  fg FG_DARK #a9b1d6, bg BG_DARK #16161e
+a  bg BG_HIGHLIGHT #292e42
+b  fg ORANGE #ff8800, bg BG_HIGHLIGHT #292e42, bold
+c  fg GREEN #9ece6a, bg BG_HIGHLIGHT #292e42
+d  bg BG #1a1b26
+e  fg FG_GUTTER #3b4261, bg BG #1a1b26
+f  fg #ff0000, bg BG #1a1b26, bold
+g  fg FG #c0caf5, bg BG #1a1b26
+h  fg BLUE5 #89ddff, bg BG #1a1b26
+i  fg GREEN #9ece6a, bg BG #1a1b26
+j  bg BLUE #7aa2f7
+k  fg BG_DARK #16161e, bg BLUE #7aa2f7, bold
+l  fg FG #c0caf5, bg BG_DARK #16161e
+m  bg BG_DARK #16161e
+n  fg FG_DARK #a9b1d6, bg BG_DARK #16161e

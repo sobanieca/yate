@@ -30,10 +30,10 @@ fn replace_one_then_all() {
         .keys("tab")
         .type_text("sum")
         .keys("enter");
-    assert!(e.buffer_text().starts_with("let sum = 0;"));
+    assert!(e.editor_text().starts_with("let sum = 0;"));
     e.snapshot("find_replace_bar");
     e.keys("alt+a");
-    assert!(!e.buffer_text().contains("total"));
+    assert!(!e.editor_text().contains("total"));
     e.assert_screen_contains("Replaced 2 matches");
 }
 
@@ -47,9 +47,9 @@ fn invalid_regex_is_shown_in_red_without_matches() {
 #[test]
 fn go_to_line() {
     let mut e = editor();
-    e.keys("ctrl+g").type_text("3").keys("enter");
+    e.keys("ctrl+g 1").type_text("3").keys("enter");
     assert_eq!(e.app().doc().cursor_line(), 2);
-    assert_eq!(e.screen().cursor, Some((7, 3)));
+    assert_eq!(e.screen().cursor, Some((7, 2)));
 }
 
 #[test]
@@ -69,7 +69,7 @@ fn every_match_is_highlighted_while_finding_and_none_after() {
     assert_eq!(e.app().doc().cursor_line(), 1);
     e.keys("up");
     e.assert_screen_contains("3 of 80");
-    e.keys("esc ctrl+g").type_text("30").keys("enter ctrl+f");
+    e.keys("esc ctrl+g 1").type_text("30").keys("enter ctrl+f");
     e.snapshot_styles("find_matches_scrolled");
     e.keys("esc");
     e.snapshot_styles("find_closed_without_highlights");

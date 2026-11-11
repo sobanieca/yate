@@ -5,11 +5,11 @@ Guidance for AI coding agents (Claude Code and others) working in this repositor
 ## Project
 
 yate (yet another text editor) is a modeless terminal text editor written in Rust and
-shipped as one binary. It behaves like a basic VS Code: a file tree, Ctrl+P, live grep, a git
-review view, split view, go to definition without a language server, and JavaScript plugins
+shipped as one binary. It behaves like a basic VS Code: a file tree, Ctrl+P, live grep,
+split view, go to definition without a language server, and JavaScript plugins
 in QuickJS.
 
-The current version is 0.1.1, an early release. The 0.x series is still settling, so prefer
+The current version is 0.3.0, an early release. The 0.x series is still settling, so prefer
 the better design over compatibility: change keys, options or the plugin API when needed,
 without shims, and document the change.
 
@@ -48,21 +48,21 @@ git (the tests create git repositories).
 
 | Module                           | Job                                                                 |
 | -------------------------------- | ------------------------------------------------------------------- |
-| `src/main.rs`, `src/help.txt`    | arguments, `--help`, `--version`, `yate diff`, `yate update`        |
+| `src/main.rs`, `src/help.txt`    | arguments, `--help`, `--version`, `yate update`                     |
 | `src/lib.rs`                     | the library, used by `main.rs` and the end-to-end tests             |
 | `src/testing.rs`                 | the end-to-end test harness (`Harness`) and snapshot comparison     |
 | `src/app/mod.rs`                 | `App` state, the event loop, plugin calls, opening files            |
-| `src/app/commands.rs`            | the command table (`COMMANDS`) and every built-in command           |
-| `src/app/input.rs`               | keys, mouse and paste, per focus (editor, find, tree, review)       |
+| `src/app/commands.rs`            | the command table (`COMMANDS`), the command palette, the key menus and every built-in command |
+| `src/app/input.rs`               | keys, mouse and paste, per focus (editor, find, tree) and overlay |
 | `src/app/goto.rs`                | go to definition / file under the cursor                            |
-| `src/app/review.rs`              | the review view state: git changes, or two compared files or folders |
-| `src/app/split.rs`               | split view panes, scroll sync and the file switcher                 |
+| `src/app/panes.rs`               | the pane tree of a split: groups side by side or stacked, even sizes, resizes |
+| `src/app/split.rs`               | split view commands (split, close, focus, resize), scroll sync and the recent file switcher |
 | `src/editor/document.rs`         | `Document`: rope, syntax tree, history, selection, scroll, git signs |
 | `src/editor/ops.rs`              | editing commands and cursor motions                                 |
 | `src/editor/selection.rs`        | cursor and selection as char indices in the rope                    |
 | `src/editor/history.rs`          | undo/redo transactions                                              |
 | `src/syntax/`                    | languages (`languages.rs`), incremental parsing and highlighting, definitions and ES imports/exports (`definitions.rs`) |
-| `src/workspace/`                 | git (child process), file index, file tree, live grep, glob filters, diffs, folder comparison, path and module resolution (`resolve.rs`), project definition search |
+| `src/workspace/`                 | git (child process), file index, file tree, live grep, glob filters, gutter diffs, path and module resolution (`resolve.rs`), project definition search |
 | `src/picker.rs`                  | picker model and fuzzy matching (nucleo)                            |
 | `src/plugins/`                   | QuickJS host, `prelude.js` (the `yate` API), bundled plugins in `builtin/` |
 | `src/keymap.rs`                  | key names, default bindings, per-context lookup                     |
@@ -82,6 +82,13 @@ How the pieces fit:
 - **One thread owns the state.** Background threads (input, file index, git status, live
   grep) send `AppEvent`s over one channel. The loop renders a frame, waits for an event and
   handles it.
+- **One file per pane, no buffers.** `App::docs` holds only the documents on screen: one
+  per file the panes of a split show (`App::panes`; the cursor and scroll of the focused pane
+  live in its document, the other panes keep theirs in `Pane`). `App::open` shows a file in place of the one in the
+  focused pane; a document no pane shows is dropped (`drop_hidden_docs`), and only its path,
+  cursor and scroll stay in `App::recent` (Ctrl+P order, the Alt+W switcher). Anything that
+  takes a file off the screen first calls `App::may_leave` (or `may_drop`), which asks to
+  save or discard unsaved changes and then runs the action again.
 - **All text changes go through `Document::apply`**, which records undo history and feeds
   tree-sitter `InputEdit`s, so the syntax tree is reparsed incrementally before the next frame.
 - **Highlighting is computed per frame for the visible bytes only** with a `QueryCursor`
@@ -98,7 +105,7 @@ How the pieces fit:
   (theme, options, keys, plugins), then the JavaScript plugins they switch on. Views take
   every color from `app.theme`; never hard-code a color. Syntax highlighting gets per-capture
   styles from `Theme::capture_styles` at draw time, so a theme change needs no reparse.
-- **Plugins** see a snapshot of the buffer and queue `Action`s that the app applies after the
+- **Plugins** see a snapshot of the text in the editor and queue `Action`s that the app applies after the
   call. Plugins are loaded only from `~/.config/yate/plugins`, never from the opened project;
   `yate.json` only names them.
 
@@ -134,9 +141,18 @@ query. Update the language count and list in `README.md` and `docs/index.html` (
   rquickjs, ignore, nucleo-matcher, similar, regex, unicode-width/segmentation, ureq (rustls,
   for updates only), flate2 (unpacking update downloads). git runs as a child process; never link a git library.
 - UTF-8 only. No other encodings.
-- Keys must not need function keys and must work inside tmux and Termux: every Ctrl+Shift
-  binding needs an Alt alternative, and avoid Ctrl+B (tmux prefix), Ctrl+Tab and Shift+Tab as
-  the only way to do something.
+- Keys must not need function keys and must work inside tmux and Termux: no default binding
+  uses Ctrl+Shift, and avoid Ctrl+B (tmux prefix), Ctrl+Tab and Shift+Tab as the only way to
+  do something.
+- Every command has at most one default key (a test in `src/keymap.rs` checks it). Related
+  commands share one key that opens a numbered menu (`MenuSpec` in `src/app/commands.rs`:
+  Ctrl+G go to, Alt+M bookmarks, Alt+S split) instead of getting a key each.
+- Every command has a `Group` (its section in the palette; titles do not repeat it) and a
+  `Scope` in `COMMANDS`. The command palette lists only what the focused panel can do right
+  now: a command with nothing to work on gets a condition in `LISTED_WHEN`, and one that only
+  makes sense as a key goes in `NOT_IN_PALETTE`. Keep the palette short.
+- yate has no diff, compare or git review views, on purpose: git tools and coding agents do
+  that better. Git support is the status colors in the tree and the signs in the gutter.
 - When adding or changing keys or commands, update `src/help.txt`, `README.md` and, for the
   plugin API, `docs/plugins.md`; for `yate.json`, `docs/configuration.md`.
 

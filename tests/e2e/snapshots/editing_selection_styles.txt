@@ -1,9 +1,8 @@
 # editing_selection_styles
 # start: yate app.js
 # keys: ctrl+home down shift+down shift+end
-# 60x12, cursor at column 7, row 3
+# 60x12, cursor at column 7, row 2
 ┌────────────────────────────────────────────────────────────┐
-│ app.js                                                     │
 │  1  const colors = {                                       │
 │  2    bg: "#24283b",                                       │
 │  3  };                                                     │
@@ -14,41 +13,41 @@
 │  8                                                         │
 │                                                            │
 │                                                            │
+│                                                            │
 │ EDIT …pp.js  (19 selected) javascript  utf-8  LF  28%  3:3 │
 └────────────────────────────────────────────────────────────┘
 
 styles
 ┌────────────────────────────────────────────────────────────┐
-│abbbbbbacccccccccccccccccccccccccccccccccccccccccccccccccccc│
-│aadaaeeeeeaffffffagahaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
-│aadaaiijjkilkkkkkkklmiaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
-│aanaaomaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
-│aadaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
-│aadaaeeeeeeeeafffffhffffhahaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
-│aadaadaeeeeeeappppppaggffffhpgaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
-│aadaahaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
-│aadaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
+│aabaacccccaddddddaeafaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
+│aabaagghhigjiiiiiiijkgaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
+│aalaamkaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
+│aabaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
+│aabaaccccccccadddddfddddfafaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
+│aabaabaccccccannnnnnaeeddddfneaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
+│aabaafaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
+│aabaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
 │aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
 │aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
-│qrrrrqsssssscctttctttttttttcttttttttttcctttttccttcctttcqrrrq│
+│aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
+│oppppoqqqqqqrrsssrsssssssssrssssssssssrrsssssrrssrrsssropppo│
 └────────────────────────────────────────────────────────────┘
 a  bg BG #24283b
-b  fg BLUE #7aa2f7, bg BG #24283b, bold
-c  bg BG_DARK #1f2335
-d  fg FG_GUTTER #3b4261, bg BG #24283b
-e  fg PURPLE #9d7cd8, bg BG #24283b, italic
-f  fg FG #c0caf5, bg BG #24283b
-g  fg BLUE5 #89ddff, bg BG #24283b
-h  fg FG_DARK #a9b1d6, bg BG #24283b
-i  bg BG_VISUAL #364a82
-j  fg GREEN1 #73daca, bg BG_VISUAL #364a82
-k  fg FG #c0caf5, bg BG_VISUAL #364a82
-l  fg GREEN #9ece6a, bg BG_VISUAL #364a82
-m  fg BLUE5 #89ddff, bg BG_VISUAL #364a82
-n  fg ORANGE #ff9e64, bg BG #24283b, bold
-o  fg FG_DARK #a9b1d6, bg BG_VISUAL #364a82
-p  fg GREEN #9ece6a, bg BG #24283b
-q  bg BLUE #7aa2f7
-r  fg BG_DARK #1f2335, bg BLUE #7aa2f7, bold
-s  fg FG #c0caf5, bg BG_DARK #1f2335
-t  fg FG_DARK #a9b1d6, bg BG_DARK #1f2335
+b  fg FG_GUTTER #3b4261, bg BG #24283b
+c  fg PURPLE #9d7cd8, bg BG #24283b, italic
+d  fg FG #c0caf5, bg BG #24283b
+e  fg BLUE5 #89ddff, bg BG #24283b
+f  fg FG_DARK #a9b1d6, bg BG #24283b
+g  bg BG_VISUAL #364a82
+h  fg GREEN1 #73daca, bg BG_VISUAL #364a82
+i  fg FG #c0caf5, bg BG_VISUAL #364a82
+j  fg GREEN #9ece6a, bg BG_VISUAL #364a82
+k  fg BLUE5 #89ddff, bg BG_VISUAL #364a82
+l  fg ORANGE #ff9e64, bg BG #24283b, bold
+m  fg FG_DARK #a9b1d6, bg BG_VISUAL #364a82
+n  fg GREEN #9ece6a, bg BG #24283b
+o  bg BLUE #7aa2f7
+p  fg BG_DARK #1f2335, bg BLUE #7aa2f7, bold
+q  fg FG #c0caf5, bg BG_DARK #1f2335
+r  bg BG_DARK #1f2335
+s  fg FG_DARK #a9b1d6, bg BG_DARK #1f2335

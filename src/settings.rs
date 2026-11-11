@@ -32,15 +32,16 @@ const TEMPLATE_START: &str = r##"{
   },
   // Same names as yate.setOption: "tabSize": 4, "nerdIcons": true, "keyHintDelay": 500...
   "options": {},
-  // Every key binding, by context: global (everywhere), editor, tree and review.
+  // Every key binding, by context: global (everywhere), editor and tree.
   // A context binding wins over a global one. Change a key or a command id here;
-  // "" removes a key. ctrl+h lists the keys, the command palette every command.
+  // "" removes a key. Each command has one key; ctrl+g and alt+m open a menu of
+  // commands, and binding one of those commands to a key skips the menu.
   "keys": {
 "##;
 
 const TEMPLATE_END: &str = r##"  },
   // Plugins by name: true loads ~/.config/yate/plugins/<name>.js; false turns
-  // one off, also the bundled uuid, git and format.
+  // one off, also the bundled git and format.
   "plugins": {}
 }
 "##;
@@ -217,7 +218,7 @@ impl Settings {
         {
             let Some(context) = Context::parse(context_name) else {
                 errors.push(format!(
-                    "keys.{context_name}: unknown context (known: global, editor, tree, review)"
+                    "keys.{context_name}: unknown context (known: global, editor, tree)"
                 ));
                 continue;
             };

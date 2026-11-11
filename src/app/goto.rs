@@ -1,4 +1,4 @@
-//! Go to definition (F12, Alt+D, Ctrl+click). What is under the cursor decides:
+//! Go to definition (Ctrl+G 2, Ctrl+click). What is under the cursor decides:
 //! a string or a `path:line:col` opens that file (ES imports are resolved like Node
 //! and TypeScript do); a name jumps to its definition in this file, in the module it
 //! is imported from, or anywhere in the project (a picker when there are several).
@@ -141,15 +141,7 @@ fn missing_file(app: &mut App, written: &str) {
 }
 
 fn open_at(app: &mut App, path: &Path, line: Option<usize>, col: usize) {
-    if !app.open(path, line) {
-        return;
-    }
-    if let Some(line) = line {
-        let doc = app.doc_mut();
-        let pos = doc.pos(line, col);
-        doc.selection = Selection::point(pos);
-    }
-    app.scroll_to_cursor();
+    app.open_at(path, line, col);
 }
 
 fn goto_name(app: &mut App, context: &Context, name: &str, at: usize) {
@@ -294,7 +286,7 @@ pub fn handle_definitions(app: &mut App, result: DefinitionSearch) {
                     path: Some(f.path.clone()),
                     line: Some(f.line),
                     col: f.col,
-                    data: String::new(),
+                    ..PickerItem::default()
                 })
                 .collect();
             let title = format!("Definitions of {name}");
