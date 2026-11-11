@@ -1,0 +1,21 @@
+# plugins_error_dialog
+# start: yate a.txt
+# command: say.long
+# type: "x"
+# paste: "pasted"
+# keys: esc
+# type: "x"
+# command: say.lines
+# 60x10, cursor at column 18, row 5
+┌────────────────────────────────────────────────────────────┐
+│  1  xhello                                                 │
+│  2            ╭─ Error ────────────────────╮               │
+│               │ first problem              │               │
+│               │ second problem             │               │
+│               │                            │               │
+│               │  Close                     │               │
+│               ╰────────────────────────────╯               │
+│                                                            │
+│                                                            │
+│ ERROR  a.txt ●        esc close   text  utf-8  LF  0%  1:2 │
+└────────────────────────────────────────────────────────────┘

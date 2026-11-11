@@ -1,0 +1,13 @@
+# plugins_message_takes_the_file_info_room
+# start: yate a.txt
+# command: say.short
+# command: say.medium
+# 60x6, cursor at column 5, row 0
+┌────────────────────────────────────────────────────────────┐
+│  1  hello                                                  │
+│  2                                                         │
+│                                                            │
+│                                                            │
+│                                                            │
+│ EDIT  Sorted 12 lines of the selection, a to z         1:1 │
+└────────────────────────────────────────────────────────────┘

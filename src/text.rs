@@ -154,6 +154,38 @@ pub fn truncate_to_width(text: &str, width: usize) -> String {
     out
 }
 
+/// The lines of `text` broken at spaces so none is wider than `width`;
+/// a word that is too long is cut.
+pub fn wrap(text: &str, width: usize) -> Vec<String> {
+    let width = width.max(1);
+    let mut lines = Vec::new();
+    for line in text.lines() {
+        let line: String = line
+            .replace('\t', "    ")
+            .chars()
+            .filter(|c| !c.is_control())
+            .collect();
+        let mut rest = line.trim_end();
+        let before = lines.len();
+        while str_width(rest) > width {
+            let fitting = truncate_to_width(rest, width).len();
+            let first = rest.graphemes(true).next().map_or(1, str::len);
+            let word_ends = rest[fitting..].starts_with(' ');
+            let space = rest[..fitting].rfind(' ');
+            let cut = match space.filter(|at| !rest[..*at].trim().is_empty()) {
+                Some(space) if !word_ends => space,
+                _ => fitting.max(first),
+            };
+            lines.push(rest[..cut].trim_end().to_string());
+            rest = rest[cut..].trim_start();
+        }
+        if !rest.is_empty() || lines.len() == before {
+            lines.push(rest.to_string());
+        }
+    }
+    lines
+}
+
 /// Shortens `text` from the left with an ellipsis so it fits `width`.
 pub fn truncate_left(text: &str, width: usize) -> String {
     if str_width(text) <= width {
@@ -179,6 +211,16 @@ pub fn truncate_left(text: &str, width: usize) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn wrap_breaks_lines_at_spaces() {
+        assert_eq!(wrap("one two three", 7), ["one two", "three"]);
+        assert_eq!(wrap("one two three", 8), ["one two", "three"]);
+        assert_eq!(wrap("one\n\n  two\tx\n", 20), ["one", "", "  two    x"]);
+        assert_eq!(wrap("abcdefgh ij", 3), ["abc", "def", "gh", "ij"]);
+        assert_eq!(wrap("    indented words", 12), ["    indented", "words"]);
+        assert_eq!(wrap("界界界", 1), ["界", "界", "界"]);
+    }
 
     #[test]
     fn display_columns_expand_tabs() {

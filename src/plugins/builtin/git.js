@@ -1,4 +1,4 @@
-// Git helpers from the nvim setup: GitBlame for the cursor line.
+// Git helpers from the nvim setup: GitBlame for the cursor line, in a dialog.
 
 const ago = (seconds) => {
   const diff = Math.floor(Date.now() / 1000) - seconds;
@@ -24,5 +24,12 @@ yate.registerCommand("git.blame", "Git: Blame current line", () => {
   const hash = lines[0].split(" ")[0];
   if (/^0+$/.test(hash)) return yate.notify("Not committed yet");
   const time = Number(field("author-time"));
-  yate.notify(`${hash.slice(0, 8)} ${field("author")}, ${ago(time)}: ${field("summary")}`);
+  const date = new Date(time * 1000).toISOString().slice(0, 10);
+  yate.show(`Git blame: line ${line}`, [
+    `Commit  ${hash.slice(0, 8)}`,
+    `Author  ${field("author")}`,
+    `Date    ${date} (${ago(time)})`,
+    "",
+    field("summary"),
+  ].join("\n"));
 });

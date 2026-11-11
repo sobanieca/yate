@@ -331,6 +331,20 @@ pub struct Message {
     pub text: String,
     pub error: bool,
     pub at: Instant,
+    /// Stays in the status line, cut short, when it does not fit there.
+    quiet: bool,
+    /// Whether it was decided where it shows: status line or dialog.
+    placed: bool,
+}
+
+/// A message in a box over the screen until it is closed: one that does
+/// not fit the status line, or one a plugin shows.
+pub struct Dialog {
+    pub title: String,
+    pub text: String,
+    pub error: bool,
+    /// The first line of the text on screen.
+    pub scroll: usize,
 }
 
 pub struct Preview {
@@ -383,6 +397,8 @@ pub struct App {
     pub tree: FileTree,
     pub tree_visible: bool,
     pub overlay: Option<Overlay>,
+    /// Drawn over everything else; gets the keys until it is closed.
+    pub dialog: Option<Dialog>,
     pub last_picker: Option<Box<Picker>>,
     /// The glob filter typed last in the file finder or live grep.
     pub picker_glob: String,
@@ -449,6 +465,7 @@ impl App {
             focus: Focus::Editor,
             tree_visible: false,
             overlay: None,
+            dialog: None,
             last_picker: None,
             picker_glob: String::new(),
             find: FindState::default(),
@@ -507,22 +524,61 @@ impl App {
         &mut self.docs[self.active]
     }
 
+    /// Shows a message in the status line, or in a dialog when it does
+    /// not fit there.
     pub fn notify(&mut self, text: impl Into<String>) {
-        self.message = Some(Message {
-            text: text.into(),
-            error: false,
-            at: Instant::now(),
-        });
+        self.set_message(text.into(), false, false);
+    }
+
+    /// A message nobody asked for (background work): it never opens a
+    /// dialog, the status line cuts it short.
+    pub fn notify_quietly(&mut self, text: impl Into<String>) {
+        self.set_message(text.into(), false, true);
     }
 
     pub fn error(&mut self, text: impl Into<String>) {
         let text = text.into();
         crate::log::write_to(&self.paths.state_dir, &text);
+        self.set_message(text, true, false);
+    }
+
+    fn set_message(&mut self, text: String, error: bool, quiet: bool) {
         self.message = Some(Message {
-            text,
-            error: true,
+            text: text.trim_end().to_string(),
+            error,
             at: Instant::now(),
+            quiet,
+            placed: false,
         });
+    }
+
+    pub fn show_dialog(&mut self, title: impl Into<String>, text: impl Into<String>, error: bool) {
+        self.dialog = Some(Dialog {
+            title: title.into(),
+            text: text.into().trim_end().to_string(),
+            error,
+            scroll: 0,
+        });
+    }
+
+    /// Moves a new message that the status line cannot show whole (too
+    /// long, several lines) into a dialog.
+    fn place_message(&mut self) {
+        let room = crate::ui::status_message_room(self);
+        let Some(message) = &mut self.message else {
+            return;
+        };
+        if std::mem::replace(&mut message.placed, true) || message.quiet {
+            return;
+        }
+        let one_line = !message.text.contains('\n');
+        if one_line && crate::text::str_width(&message.text) < room {
+            return;
+        }
+        if let Some(message) = self.message.take() {
+            let title = if message.error { "Error" } else { "Message" };
+            self.show_dialog(title, message.text, message.error);
+        }
     }
 
     /// A path for display: relative to the project, `~/` in the home folder.
@@ -912,7 +968,7 @@ impl App {
             AppEvent::UpdateCheck(latest) => {
                 self.pending_jobs = self.pending_jobs.saturating_sub(1);
                 if let Some(latest) = latest {
-                    self.notify(crate::update::available_message(&latest));
+                    self.notify_quietly(crate::update::available_message(&latest));
                     self.update_available = Some(latest);
                 }
             }
@@ -984,7 +1040,7 @@ impl App {
             if error {
                 self.error(text);
             } else {
-                self.notify(text);
+                self.notify_quietly(text);
             }
         }
     }
@@ -1093,6 +1149,7 @@ impl App {
                         self.notify(text);
                     }
                 }
+                Action::Show(title, text) => self.show_dialog(title, text, false),
                 Action::Insert(text) => {
                     let head = self.doc().selection.head;
                     self.doc_mut().selection = Selection::point(head);
@@ -1176,7 +1233,7 @@ impl App {
     /// plugins), then the JavaScript plugins they switch on, which can
     /// override them.
     /// Returns false when something was wrong (reported in the status
-    /// line and the log).
+    /// line or a dialog, and the log).
     pub fn load_config(&mut self) -> bool {
         self.plugin_commands.clear();
         self.keymap = Keymap::defaults();
@@ -1184,9 +1241,7 @@ impl App {
         let mut problems = Vec::new();
         let mut settings_errors = Vec::new();
         let plugin_switches = self.apply_settings(&mut settings_errors);
-        if !settings_errors.is_empty() {
-            problems.push(settings_errors.join("; "));
-        }
+        problems.append(&mut settings_errors);
         match PluginHost::new() {
             Ok(host) => {
                 self.plugins = Some(host);
@@ -1199,16 +1254,14 @@ impl App {
                 if let Err(err) = result {
                     errors.push(err);
                 }
-                if !errors.is_empty() {
-                    problems.push(format!("plugin errors: {}", errors.join("; ")));
-                }
+                problems.extend(errors.iter().map(|error| format!("plugin {error}")));
             }
             Err(err) => problems.push(format!("plugins disabled: {err}")),
         }
         if problems.is_empty() {
             return true;
         }
-        self.error(problems.join(" | "));
+        self.error(problems.join("\n"));
         false
     }
 }
@@ -1324,6 +1377,7 @@ impl App {
         if self.layout.editor != previous_editor {
             self.scroll_to_cursor();
         }
+        self.place_message();
         self.prepare_frame();
         let mut surface = Surface::new(width, height);
         let cursor = crate::ui::render(self, &mut surface);

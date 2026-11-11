@@ -452,7 +452,7 @@ cargo dist              <span class="c"># static binary in dist/yate</span></pre
                 <tr><td><span class="mode-chip find">FIND</span></td><td>The find and replace bar.</td><td><span class="k" data-k="esc"></span></td></tr>
               </tbody>
             </table></div>
-            <p>After the label: the git branch, the file with a <code>●</code> when it has unsaved changes, messages, and on the right the language, encoding, line ending, scroll position and <code>line:column</code>.</p>
+            <p>After the label: the git branch, the file with a <code>●</code> when it has unsaved changes, messages, and on the right the language, encoding, line ending, scroll position and <code>line:column</code>. A message that needs the room hides the file details for a moment; one that still does not fit, or has several lines (an error in <code>yate.json</code> or a plugin, git blame), opens in a dialog: <span class="k" data-k="up|down"></span> scroll it, <span class="k" data-k="esc"></span> or Enter closes it.</p>
             <p>In the gutter, a bar marks lines added or changed since the last commit, and a low mark shows where lines were deleted. Colors written as <code>#rrggbb</code> are drawn in their own color.</p>
           </article>
 
@@ -551,7 +551,7 @@ cargo dist              <span class="c"># static binary in dist/yate</span></pre
               </tbody>
             </table></div>
             <p>File names take their git status color: modified, added, untracked, deleted. Set <code>nerdIcons</code> to <code>true</code> for Nerd Font file icons.</p>
-            <p>yate has no diff or review view: use <code>git diff</code>, your git tool or a coding agent for that. The bundled <b>Git: Blame current line</b> command (palette) shows the commit, author and age of the cursor line in the status line.</p>
+            <p>yate has no diff or review view: use <code>git diff</code>, your git tool or a coding agent for that. The bundled <b>Git: Blame current line</b> command (palette) shows the commit, author, date and summary of the cursor line in a dialog; Esc closes it.</p>
           </article>
 
           <article class="chapter" id="navigation">
@@ -592,7 +592,7 @@ cargo dist              <span class="c"># static binary in dist/yate</span></pre
           <article class="chapter" id="config">
             <h2>Configuration</h2>
             <p><code>yate.json</code> holds the theme, options, key bindings and plugins. It is JSONC: comments and trailing commas are allowed, and the file can be named <code>yate.jsonc</code> too. yate reads <code>~/yate.json</code> first, then every <code>yate.json</code> from <code>/</code> down to the working directory; in each folder <code>yate.jsonc</code> comes after <code>yate.json</code>. Closer files win, key by key, so a project can set <code>tabSize</code> and keep your theme. A project <code>yate.json</code> is data only and safe to commit.</p>
-            <p><b>Open yate.json</b> in the palette opens the closest file or creates <code>~/yate.jsonc</code> from a commented template. Saving it applies the change at once. Mistakes show in the status line with file, line and column.</p>
+            <p><b>Open yate.json</b> in the palette opens the closest file or creates <code>~/yate.jsonc</code> from a commented template. Saving it applies the change at once. Mistakes show with file, line and column in the status line, or in a dialog when there are several.</p>
             <pre class="code wide">{
   <span class="pr">"theme"</span>: {
     <span class="pr">"preset"</span>: <span class="s">"tokyonight-night"</span>,
@@ -669,7 +669,8 @@ yate.<span class="fn">on</span>(<span class="s">"beforeSave"</span>, () <span cl
                 <tr><td class="id">bindKey(key, id, context)</td><td>Binds a key in <code>editor</code> (default), <code>tree</code> or <code>global</code>; an empty id removes it</td></tr>
                 <tr><td class="id">on(event, fn)</td><td><code>open</code>, <code>beforeSave</code>, <code>save</code>; edits in <code>beforeSave</code> are saved</td></tr>
                 <tr><td class="id">setOption(name, value)</td><td>Sets an option from the table above</td></tr>
-                <tr><td class="id">notify(msg) · error(msg)</td><td>Shows a message in the status line</td></tr>
+                <tr><td class="id">notify(msg) · error(msg)</td><td>Shows a message in the status line, or in a dialog when it does not fit there or has several lines</td></tr>
+                <tr><td class="id">show(title, text)</td><td>Shows text in a dialog; long text scrolls, Esc closes it</td></tr>
                 <tr><td class="id">prompt(label, fn, initial)</td><td>Asks for text; <code>fn</code> is not called when cancelled</td></tr>
                 <tr><td class="id">openFile(path, line) · root()</td><td>Opens a file relative to the project root; returns the root</td></tr>
                 <tr><td class="id">exec(cmd, args, { input, cwd })</td><td>Runs a program without a shell and returns <code>{ code, stdout, stderr }</code></td></tr>
@@ -678,7 +679,7 @@ yate.<span class="fn">on</span>(<span class="s">"beforeSave"</span>, () <span cl
                 <tr><td class="id">editor.cursor() · selection()</td><td><code>{ line, col }</code>; <code>{ start, end, text }</code></td></tr>
                 <tr><td class="id">editor.insert · replaceSelection · setText</td><td>Change the text; <code>setText</code> is one undo step</td></tr>
                 <tr><td class="id">editor.setCursor · select</td><td>Move the cursor, select a range</td></tr>
-                <tr><td class="id">console.log(...)</td><td>Prints to the status line</td></tr>
+                <tr><td class="id">console.log(...)</td><td>Like <code>notify</code></td></tr>
               </tbody>
             </table></div>
             <p>Bundled plugins use the same API: <b>Git: Blame current line</b>, <b>Format document with Prettier</b> and <b>TypeScript: Add // @ts-nocheck</b>. Read their source in <a href="https://github.com/sobanieca/yate/tree/main/src/plugins/builtin">src/plugins/builtin</a>, the API in <a href="https://github.com/sobanieca/yate/blob/main/docs/plugins.md">docs/plugins.md</a>, and a complete example in <a href="https://github.com/sobanieca/yate/tree/main/examples">examples/</a>.</p>

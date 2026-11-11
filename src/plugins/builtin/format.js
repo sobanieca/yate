@@ -8,7 +8,7 @@ yate.registerCommand("format.prettier", "Format document with Prettier", () => {
     input: yate.editor.text(),
     cwd: yate.root(),
   });
-  if (result.code !== 0) return yate.error(result.stderr.trim().split("\n")[0] || "prettier failed");
+  if (result.code !== 0) return yate.error(result.stderr.trim() || "prettier failed");
   yate.editor.setText(result.stdout);
   yate.notify("Formatted with Prettier");
 });

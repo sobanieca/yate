@@ -14,6 +14,18 @@ fn a_newer_release_is_announced_in_the_status_bar() {
 }
 
 #[test]
+fn the_announcement_never_opens_a_dialog() {
+    let mut e = Harness::builder()
+        .size(40, 5)
+        .file("a.txt", "hello\n")
+        .open("a.txt")
+        .start();
+    e.update_check(Some("9.9.9"));
+    assert!(e.app().dialog.is_none());
+    e.assert_screen_contains("yate 9.9.9 is available");
+}
+
+#[test]
 fn no_message_when_yate_is_up_to_date() {
     let mut e = Harness::builder()
         .size(70, 5)

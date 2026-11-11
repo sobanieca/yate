@@ -21,6 +21,10 @@ const MENU_REPEAT_WINDOW: Duration = Duration::from_millis(1500);
 impl App {
     pub fn handle_key(&mut self, key: KeyEvent) {
         let repeat = self.menu_repeat.take();
+        if self.dialog.is_some() {
+            self.dialog_key(key);
+            return;
+        }
         if self.overlay.is_some() {
             self.switcher = None;
             self.overlay_key(key);
@@ -346,6 +350,66 @@ impl App {
         self.open(&row.path, None);
     }
 
+    /// How far the text of the open dialog scrolls, and a page of it.
+    fn dialog_scroll_range(&self) -> (usize, usize) {
+        let Some(dialog) = &self.dialog else {
+            return (0, 1);
+        };
+        let view = crate::ui::dialog_view(dialog, &self.layout);
+        (view.lines.len().saturating_sub(view.rows), view.rows.max(1))
+    }
+
+    fn scroll_dialog(&mut self, lines: isize) {
+        let (last, _) = self.dialog_scroll_range();
+        if let Some(dialog) = &mut self.dialog {
+            dialog.scroll = dialog
+                .scroll
+                .min(last)
+                .saturating_add_signed(lines)
+                .min(last);
+        }
+    }
+
+    /// A key while a message dialog is open: Esc, Enter or Space close it,
+    /// the arrows scroll a long text.
+    fn dialog_key(&mut self, key: KeyEvent) {
+        let ctrl = key.modifiers.contains(KeyModifiers::CONTROL);
+        let (last, page) = self.dialog_scroll_range();
+        let (last, page) = (last as isize, page as isize);
+        match key.code {
+            KeyCode::Esc | KeyCode::Enter | KeyCode::Char(' ') => self.dialog = None,
+            KeyCode::Char('c') if ctrl => self.dialog = None,
+            KeyCode::Up => self.scroll_dialog(-1),
+            KeyCode::Down => self.scroll_dialog(1),
+            KeyCode::PageUp => self.scroll_dialog(-page),
+            KeyCode::PageDown => self.scroll_dialog(page),
+            KeyCode::Home => self.scroll_dialog(-last),
+            KeyCode::End => self.scroll_dialog(last),
+            _ => {}
+        }
+    }
+
+    /// The wheel scrolls a message dialog; a click on its button or
+    /// outside of it closes it.
+    fn dialog_mouse(&mut self, mouse: MouseEvent) {
+        let Some(dialog) = &self.dialog else {
+            return;
+        };
+        let view = crate::ui::dialog_view(dialog, &self.layout);
+        let lines = self.options.mouse_scroll_lines as isize;
+        match mouse.kind {
+            MouseEventKind::ScrollUp => self.scroll_dialog(-lines),
+            MouseEventKind::ScrollDown => self.scroll_dialog(lines),
+            MouseEventKind::Down(MouseButton::Left) => {
+                let on_button = view.button.contains(mouse.column, mouse.row);
+                if on_button || !view.area.contains(mouse.column, mouse.row) {
+                    self.dialog = None;
+                }
+            }
+            _ => {}
+        }
+    }
+
     fn overlay_key(&mut self, key: KeyEvent) {
         match self.overlay.take() {
             Some(Overlay::Picker(picker)) => self.picker_key(picker, key),
@@ -513,6 +577,9 @@ impl App {
 
     pub fn handle_paste(&mut self, text: &str) {
         self.menu_repeat = None;
+        if self.dialog.is_some() {
+            return;
+        }
         let text = text.replace("\r\n", "\n").replace('\r', "\n");
         match &mut self.overlay {
             Some(Overlay::Picker(picker)) => {
@@ -555,6 +622,10 @@ impl App {
         let (x, y) = (mouse.column, mouse.row);
         let lines = self.options.mouse_scroll_lines;
         self.menu_repeat = None;
+        if self.dialog.is_some() {
+            self.dialog_mouse(mouse);
+            return;
+        }
         if self.menu_visible() {
             self.menu_mouse(mouse);
             return;

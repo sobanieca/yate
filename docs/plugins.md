@@ -24,8 +24,8 @@ yate loads, in this order:
 
 `$XDG_CONFIG_HOME` replaces `~/.config` when set. Plugins run after `yate.json`, so they can
 override its options and keys. Saving a file in the config folder reloads everything; so
-does the command **Reload yate.json and plugins**. Errors show in the status line and in
-`~/.local/state/yate/yate.log`.
+does the command **Reload yate.json and plugins**. Errors show in the status line, or in a
+dialog when they do not fit there, and in `~/.local/state/yate/yate.log`.
 
 Plugins are only loaded from your config folder, never from the opened project: a plugin can
 run programs with `yate.exec`, and opening a repository must not run its code.
@@ -62,8 +62,11 @@ yate.bindKey(key, commandId, context)
 yate.on(event, fn)
 
 yate.setOption(name, value)
+// A message in the status line. One that does not fit there, or has several
+// lines, opens in a dialog instead, which Esc closes.
 yate.notify(message)
-yate.error(message)
+yate.error(message)                          // the same in red, also logged
+yate.show(title, text)                       // always a dialog; long text scrolls
 yate.prompt(label, (answer) => {}, initial)  // not called when cancelled
 yate.openFile(path, line)                    // relative to the project root
 yate.root()                                  // project root
@@ -84,7 +87,7 @@ yate.editor.setText(text)           // whole text, one undo step
 yate.editor.setCursor(line, col)
 yate.editor.select({ line, col }, { line, col })
 
-console.log(...)            // shows in the status line
+console.log(...)            // like yate.notify
 ```
 
 ## Options

@@ -43,6 +43,8 @@ impl Snapshot {
 #[derive(Debug, Clone, PartialEq)]
 pub enum Action {
     Notify(String, bool),
+    /// A dialog: title and text.
+    Show(String, String),
     Insert(String),
     ReplaceSelection(String),
     SetText(String),
@@ -361,6 +363,9 @@ fn install_natives<'js>(ctx: &Ctx<'js>, bridge: Rc<RefCell<Bridge>>) -> rquickjs
         message, error
     ));
     act!("log", |message: String| Action::Notify(message, false));
+    act!("show", |title: String, text: String| Action::Show(
+        title, text
+    ));
     act!("openFile", |path: String, line: i32| Action::OpenFile(
         path,
         (line >= 0).then_some(line as usize)

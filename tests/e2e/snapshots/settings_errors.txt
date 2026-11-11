@@ -1,9 +1,17 @@
 # settings_errors
 # start: yate a.txt
-# 120x4, cursor at column 5, row 0
-┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│  1                                                                                                                     │
-│                                                                                                                        │
-│                                                                                                                        │
-│ EDIT  yate.json: theme.preset: unknown preset "solarized" (known: tokyonight-storm, tokyon  text  utf-8  LF  100%  1:1 │
-└────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+# 100x12, cursor at column 5, row 9
+┌────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│  ╭─ Error ──────────────────────────────────────────────────────────────────────────────────────╮  │
+│  │ yate.json: theme.preset: unknown preset "solarized" (known: tokyonight-storm,                │  │
+│  │ tokyonight-night, tokyonight-moon, tokyonight-day, gruvbox-dark, gruvbox-light, nord,        │  │
+│  │ solarized-light)                                                                             │  │
+│  │ yate.json: options.tabsize: unknown option tabsize (known: tabSize, insertSpaces, scrollOff, │  │
+│  │ indentGuides, autoPairs, lineNumbers, cursorLine, colorize, nerdIcons, showIgnored,          │  │
+│  │ treeFollow, treeAutoCloseWidth, treeWidth, mouseScrollLines, jumpChars, jumpLines,           │  │
+│  │ updateCheck, keyHintDelay)                                                                   │  │
+│  │                                                                                              │  │
+│  │  Close                                                                                       │  │
+│  ╰──────────────────────────────────────────────────────────────────────────────────────────────╯  │
+│ ERROR  a.txt                                                esc close   text  utf-8  LF  100%  1:1 │
+└────────────────────────────────────────────────────────────────────────────────────────────────────┘

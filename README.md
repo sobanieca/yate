@@ -146,7 +146,9 @@ way: Ctrl+L ← outdents.
 Bars and dialogs add no keys: they are forms. In the find bar Tab moves from the text to the
 checkboxes for case, regex and replace and to the Replace buttons, ← and → move along a
 row, and Space or Enter ticks or presses. Questions (unsaved changes, delete, quit) show
-buttons: ← → and Enter, or the first letter of a button. The file tree has two checkboxes
+buttons: ← → and Enter, or the first letter of a button. A message too long for the status
+line (an error with several lines, git blame) opens in a dialog: ↑ ↓ scroll it, Esc or Enter
+closes it. The file tree has two checkboxes
 above the files, `[ ] changed` (only changed files) and `[ ] ignored` (git-ignored files
 too): ↑ from the first file reaches them, Space or Enter ticks, ↓ goes back. Clicks work
 everywhere.

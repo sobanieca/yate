@@ -58,6 +58,7 @@
     setOption: (name, value) => native.setOption(String(name), value),
     notify: (message) => native.notify(String(message), false),
     error: (message) => native.notify(String(message), true),
+    show: (title, text) => native.show(String(title), String(text)),
     exec: (command, args = [], options = {}) =>
       native.exec(String(command), args.map(String), options.input ?? null, options.cwd ?? null),
     openFile: (path, line) => native.openFile(String(path), line ?? -1),

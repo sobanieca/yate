@@ -157,6 +157,11 @@ query. Update the language count and list in `README.md` and `docs/index.html` (
   `ui::find_controls`; confirmations: `Prompt::choices` and `ui::prompt_buttons`; the tree
   filters: `TreeFilter` and `sidebar::filter_controls`). Do not
   give an option or a button of a form a key of its own.
+- Messages go through `App::notify` and `App::error`. One that fits shows in the status
+  line (the file info makes room for it); one that does not, or has several lines, opens in
+  a dialog (`App::dialog`, `ui::dialog_view`) that Esc closes, so never shorten a message to
+  make it fit. Messages from background work use `App::notify_quietly`, which never opens
+  a dialog, so nothing takes the keys while the person types.
 - Every command has a `Group` (its section in the palette; titles do not repeat it) and a
   `Scope` in `COMMANDS`. The command palette lists only what the focused panel can do right
   now: a command with nothing to work on gets a condition in `LISTED_WHEN`, and one that only

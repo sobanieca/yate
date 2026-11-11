@@ -10,8 +10,8 @@ pub mod surface;
 pub mod theme;
 
 use crate::app::{
-    App, FindField, FindState, Focus, Layout, MenuItem, MenuSpec, Overlay, PaneArea, Prompt,
-    menu_key_label,
+    App, Dialog, FindField, FindState, Focus, Layout, MenuItem, MenuSpec, Overlay, PaneArea,
+    Prompt, menu_key_label,
 };
 use crate::text;
 use surface::{Rect, Style, Surface};
@@ -79,7 +79,7 @@ pub fn render(app: &mut App, surface: &mut Surface) -> Option<(u16, u16)> {
     if app.overlay.is_none() && app.switcher_visible() {
         render_switcher(app, surface, &layout);
     }
-    match &app.overlay {
+    let cursor = match &app.overlay {
         Some(Overlay::Picker(_)) => picker_view::render(app, surface),
         Some(Overlay::Prompt(prompt)) => render_prompt(prompt, surface, &app.theme, &layout),
         Some(Overlay::Menu(menu)) if app.menu_visible() => {
@@ -89,6 +89,10 @@ pub fn render(app: &mut App, surface: &mut Surface) -> Option<(u16, u16)> {
             None
         }
         Some(Overlay::Menu(_)) => cursor,
+        None => cursor,
+    };
+    match &app.dialog {
+        Some(dialog) => render_dialog(dialog, surface, &app.theme, &layout),
         None => cursor,
     }
 }
@@ -159,6 +163,11 @@ pub fn focus_color(t: &theme::Theme, focus: Focus) -> surface::Rgb {
 
 fn status_label(app: &App) -> (&'static str, surface::Rgb) {
     let t = &app.theme;
+    match &app.dialog {
+        Some(dialog) if dialog.error => return (" ERROR ", t.red),
+        Some(_) => return (" INFO ", t.cyan),
+        None => {}
+    }
     match (&app.overlay, app.focus) {
         (Some(Overlay::Picker(_)), _) => (" PICK ", t.cyan),
         (None, _) if app.switcher.is_some() => (" SWITCH ", t.cyan),
@@ -168,6 +177,32 @@ fn status_label(app: &App) -> (&'static str, surface::Rgb) {
         (_, Focus::Find) => (" FIND ", focus_color(t, Focus::Find)),
         (_, Focus::Tree) => (" TREE ", focus_color(t, Focus::Tree)),
     }
+}
+
+const WIDEST_STATUS_LABEL: usize = 8;
+
+fn status_branch(app: &App) -> Option<String> {
+    let branch = app.git.branch.as_ref()?;
+    Some(if app.options.nerd_icons {
+        format!(" \u{e0a0} {branch} ")
+    } else {
+        format!(" {branch} ")
+    })
+}
+
+fn status_position(app: &App) -> String {
+    let doc = app.doc();
+    let (line, col) = doc.line_col(doc.selection.head);
+    format!(" {}:{} ", line + 1, col + 1)
+}
+
+/// The width of the longest message the status line shows whole: the
+/// file info on its right makes room for it, the label, the branch and
+/// the cursor position stay.
+pub fn status_message_room(app: &App) -> usize {
+    let branch = status_branch(app).map_or(0, |branch| text::str_width(&branch));
+    let taken = WIDEST_STATUS_LABEL + branch + text::str_width(&status_position(app)) + 1;
+    (app.layout.status.w as usize).saturating_sub(taken)
 }
 
 fn render_status(app: &App, surface: &mut Surface, area: Rect) {
@@ -181,12 +216,7 @@ fn render_status(app: &App, surface: &mut Surface, area: Rect) {
         Style::new().fg(t.bg_dark).bg(accent).bold(),
         area.right(),
     );
-    if let Some(branch) = &app.git.branch {
-        let branch = if app.options.nerd_icons {
-            format!(" \u{e0a0} {branch} ")
-        } else {
-            format!(" {branch} ")
-        };
+    if let Some(branch) = status_branch(app) {
         x = surface.put_str(
             x,
             area.y,
@@ -196,7 +226,7 @@ fn render_status(app: &App, surface: &mut Surface, area: Rect) {
         );
     }
     let doc = app.doc();
-    let (line, col) = doc.line_col(doc.selection.head);
+    let (line, _) = doc.line_col(doc.selection.head);
     let percent = if doc.line_count() <= 1 {
         100
     } else {
@@ -218,7 +248,7 @@ fn render_status(app: &App, surface: &mut Surface, area: Rect) {
         " {sync}{selection}{language}  utf-8  {}  {percent}% ",
         if doc.crlf { "CRLF" } else { "LF" }
     );
-    let position = format!(" {}:{} ", line + 1, col + 1);
+    let position = status_position(app);
     let position_x = area
         .right()
         .saturating_sub(text::str_width(&position) as u16);
@@ -229,7 +259,15 @@ fn render_status(app: &App, surface: &mut Surface, area: Rect) {
         Style::new().fg(t.bg_dark).bg(accent).bold(),
         area.right(),
     );
-    let info_x = position_x.saturating_sub(text::str_width(&right_info) as u16);
+    let message = app.message.as_ref();
+    let message_text = message.map(|message| format!(" {}", message.text.replace('\n', " ")));
+    let message_width = message_text.as_deref().map_or(0, text::str_width);
+    let beside_info = position_x.saturating_sub(text::str_width(&right_info) as u16);
+    let info_x = if message_width > beside_info.saturating_sub(x + 1) as usize {
+        position_x
+    } else {
+        beside_info
+    };
     surface.put_str(
         info_x,
         area.y,
@@ -239,13 +277,13 @@ fn render_status(app: &App, surface: &mut Surface, area: Rect) {
     );
 
     let middle_width = info_x.saturating_sub(x + 1) as usize;
-    if let Some(message) = &app.message {
+    if let (Some(message), Some(message_text)) = (message, &message_text) {
         let style = if message.error {
             Style::new().fg(t.red).bg(t.bg_dark).bold()
         } else {
             Style::new().fg(t.green1).bg(t.bg_dark)
         };
-        let text = text::truncate_to_width(&format!(" {}", message.text), middle_width);
+        let text = text::truncate_to_width(message_text, middle_width);
         surface.put_str(x, area.y, &text, style, info_x);
         return;
     }
@@ -302,6 +340,13 @@ fn status_hints(app: &App) -> Vec<String> {
     let key = |command: &str| app.keymap.hint(command);
     let hint = |command: &str, what: &str| key(command).map(|k| format!("{k} {what}"));
     let mut hints: Vec<Option<String>> = Vec::new();
+    if let Some(dialog) = &app.dialog {
+        let view = dialog_view(dialog, &app.layout);
+        let scrolls = view.lines.len() > view.rows;
+        hints.push(scrolls.then(|| "↑↓ scroll".to_string()));
+        hints.push(Some("esc close".to_string()));
+        return hints.into_iter().flatten().collect();
+    }
     if let Some(Overlay::Menu(menu)) = &app.overlay {
         let keys: Vec<String> = menu_rows(menu.spec).into_iter().map(|row| row.0).collect();
         return vec![
@@ -590,6 +635,97 @@ fn render_find(app: &App, surface: &mut Surface, area: Rect) -> Option<(u16, u16
         surface.put_str(hint_x, area.y, hint, hint_style, area.right());
     }
     cursor
+}
+
+const DIALOG_BUTTON: &str = "Close";
+const DIALOG_WIDEST: u16 = 100;
+const DIALOG_NARROWEST: usize = 30;
+
+/// A message dialog on screen, for drawing, scrolling and mouse clicks.
+pub struct DialogView {
+    pub area: Rect,
+    /// The text, wrapped to the width of the dialog.
+    pub lines: Vec<String>,
+    /// How many lines of the text are on screen.
+    pub rows: usize,
+    /// The Close button; empty when the screen has no row for it.
+    pub button: Rect,
+}
+
+pub fn dialog_view(dialog: &Dialog, layout: &Layout) -> DialogView {
+    let screen = Rect::new(0, 0, layout.status.w, layout.status.y);
+    let widest = screen
+        .w
+        .saturating_sub(4)
+        .clamp(screen.w.min(12), DIALOG_WIDEST);
+    let lines = text::wrap(&dialog.text, widest.saturating_sub(4) as usize);
+    let longest = lines.iter().map(|line| text::str_width(line)).max();
+    let title = text::str_width(&dialog.title) + 6;
+    let width = (longest.unwrap_or(0) + 4).max(title).max(DIALOG_NARROWEST);
+    let width = (width as u16).min(widest);
+    let chrome = match screen.h {
+        0..=3 => 2,
+        4..=6 => 3,
+        _ => 4,
+    };
+    let rows = lines.len().min(screen.h.saturating_sub(chrome) as usize);
+    let rows = rows.max(1);
+    let height = (rows as u16 + chrome).min(screen.h);
+    let area = Rect::new(
+        screen.w.saturating_sub(width) / 2,
+        screen.h.saturating_sub(height) / 3,
+        width,
+        height,
+    );
+    let button_width = match chrome {
+        2 => 0,
+        _ => text::str_width(DIALOG_BUTTON) as u16 + 2,
+    };
+    let button = Rect::new(area.x + 2, area.bottom().saturating_sub(2), button_width, 1);
+    DialogView {
+        area,
+        lines,
+        rows,
+        button,
+    }
+}
+
+fn render_dialog(
+    dialog: &Dialog,
+    surface: &mut Surface,
+    t: &theme::Theme,
+    layout: &Layout,
+) -> Option<(u16, u16)> {
+    let view = dialog_view(dialog, layout);
+    let area = view.area;
+    let accent = if dialog.error { t.red } else { t.blue };
+    surface.fill(area, Style::new().fg(t.fg).bg(t.bg_dark));
+    let title = (!dialog.title.is_empty()).then_some(dialog.title.as_str());
+    surface.border(area, Style::new().fg(accent).bg(t.bg_dark), title);
+    let right = area.right().saturating_sub(2);
+    let last = view.lines.len().saturating_sub(view.rows);
+    let scroll = dialog.scroll.min(last);
+    let shown = view.lines.iter().skip(scroll).take(view.rows);
+    for (i, line) in shown.enumerate() {
+        let style = Style::new().fg(t.fg).bg(t.bg_dark);
+        surface.put_str(area.x + 2, area.y + 1 + i as u16, line, style, right);
+    }
+    let button = view.button;
+    if button.w == 0 {
+        return None;
+    }
+    let button_style = Style::new().fg(t.bg_dark).bg(accent).bold();
+    let label = format!(" {DIALOG_BUTTON} ");
+    surface.put_str(button.x, button.y, &label, button_style, right);
+    if last > 0 {
+        let end = scroll + view.rows;
+        let range = format!("↑↓ {}-{end} of {}", scroll + 1, view.lines.len());
+        let range_style = Style::new().fg(t.dark5).bg(t.bg_dark);
+        if button.right() + 2 + text::str_width(&range) as u16 <= right {
+            surface.put_str_right(right, button.y, &range, range_style);
+        }
+    }
+    Some((button.x + 1, button.y))
 }
 
 fn prompt_area(prompt: &Prompt, layout: &Layout) -> Rect {

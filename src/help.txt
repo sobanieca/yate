@@ -54,6 +54,8 @@ you wait (keyHintDelay). No key needs alt, ctrl+shift or a function key.
 
 Bars and dialogs are forms: tab (or left / right) moves between their fields, checkboxes
 and buttons, space or enter picks one, and a click does the same. They add no keys.
+A message too long for the status line opens in a dialog: up / down scroll it, esc or
+enter closes it.
 
 No tabs: the editor shows one file (one per pane in a split). Opening a file takes the place of the
 one shown; unsaved changes ask first (Save, Discard or Cancel: left / right and enter, or

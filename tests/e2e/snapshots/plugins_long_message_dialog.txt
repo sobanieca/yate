@@ -1,0 +1,16 @@
+# plugins_long_message_dialog
+# start: yate a.txt
+# command: say.long
+# 60x10, cursor at column 5, row 5
+┌────────────────────────────────────────────────────────────┐
+│  1  hello                                                  │
+│  ╭─ Message ────────────────────────────────────────────╮  │
+│  │ The quick brown fox jumps over the lazy dog, then it │  │
+│  │ rests under the old oak tree                         │  │
+│  │                                                      │  │
+│  │  Close                                               │  │
+│  ╰──────────────────────────────────────────────────────╯  │
+│                                                            │
+│                                                            │
+│ INFO  a.txt           esc close   text  utf-8  LF  0%  1:1 │
+└────────────────────────────────────────────────────────────┘

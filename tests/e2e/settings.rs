@@ -62,9 +62,9 @@ fn keys_from_yate_json() {
 }
 
 #[test]
-fn mistakes_in_yate_json_show_in_the_status_line() {
+fn mistakes_in_yate_json_show_in_the_status_line_or_a_dialog() {
     Harness::builder()
-        .size(120, 4)
+        .size(100, 12)
         .file(
             "yate.json",
             "{ \"theme\": { \"preset\": \"solarized\" }, \"options\": { \"tabsize\": 4 } }",
