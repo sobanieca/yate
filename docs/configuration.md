@@ -135,7 +135,7 @@ related commands, and a letter or an arrow then runs one:
 | ------ | --------------- | ----------------------------------------------------------------- |
 | Ctrl+G | `goto.menu`     | `goto.line`, `goto.definition`, `jump.back`, `jump.forward`       |
 | Ctrl+K | `bookmark.menu` | `bookmark.toggle`, `bookmark.next`, `bookmark.previous`, `picker.bookmarks`, `bookmark.clear` |
-| Ctrl+W | `view.paneMenu` | `view.splitVertical`, `view.splitHorizontal`, `view.focusPaneLeft` / `Below` / `Above` / `Right`, `view.focusNextPane`, `view.resizePane`, `view.equalPanes`, `view.closePane`, `view.closeOtherPanes`, `view.toggleScrollSync` |
+| Ctrl+W | `view.paneMenu` | `view.splitVertical`, `view.splitHorizontal`, `view.focusPaneLeft` / `Below` / `Above` / `Right`, `view.focusNextPane`, `view.resizePane`, `view.equalPanes`, `view.closePane`, `view.closeOtherPanes`, `view.toggleScrollSync`, `tab.close`, `tab.closeOthers` |
 | Ctrl+T | `tree.menu`     | `tree.toggle`, `tree.reveal`, `tree.focus`, `tree.lock`           |
 | Ctrl+L | `edit.lineMenu` | `edit.moveLineUp`, `edit.moveLineDown`, `edit.outdent`, `edit.indent`, `edit.duplicateLine`, `edit.deleteLine` |
 
@@ -146,9 +146,10 @@ have no key of their own; bind one to skip the menu:
 { "keys": { "editor": { "ctrl+e": "goto.definition" }, "global": { "ctrl+j": "bookmark.next" } } }
 ```
 
-Ctrl+O (`switch.next`) waits for a digit: `1` focuses the file tree, `2`-`9` show a recent
-file, the latest first. Pressing it again shows the next recent file instead;
-`switch.previous` goes the other way and has no key.
+Ctrl+O (`switch.next`) waits for a digit: `1` focuses the file tree, `2`-`9` show a tab, from
+the left. Pressing it again shows the next tab instead; `switch.previous` goes the other way
+and has no key. `tab.next` and `tab.previous` show the next and previous tab right away and
+have no key either.
 
 Ctrl+I, Ctrl+M and Ctrl+[ cannot be bound: terminals send them as Tab, Enter and Esc.
 

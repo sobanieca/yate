@@ -127,12 +127,12 @@ fn files_changed_on_disk_are_reloaded() {
 #[test]
 fn mouse_click_moves_the_cursor_and_drag_selects() {
     let mut e = app_js();
-    e.click(10, 5);
+    e.click(10, 6);
     let cursor = e.screen().cursor;
-    assert_eq!(cursor, Some((10, 5)));
-    e.drag((5, 0), (10, 0));
+    assert_eq!(cursor, Some((10, 6)));
+    e.drag((5, 1), (10, 1));
     assert_eq!(e.app().doc().selected_text(), "const");
-    e.double_click(17, 4);
+    e.double_click(17, 5);
     assert_eq!(e.app().doc().selected_text(), "greet");
 }
 

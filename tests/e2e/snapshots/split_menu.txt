@@ -1,16 +1,17 @@
 # split_menu
 # start: yate one.txt
 # keys: ctrl+w
-# 70x10, cursor hidden
+# 70x11, cursor hidden
 ┌──────────────────────────────────────────────────────────────────────┐
-│  1  one 1                                                            │
-│  2  one 2       ╭─ Panes ──────────────────────────╮                 │
-│  3  one 3       │ v    Split: side by side         │                 │
-│  4  one 4       │ s    Split: one above the other  │                 │
-│  5  one 5       │ h ←  Focus left                  │                 │
-│  6  one 6       │ j ↓  Focus below                 │                 │
-│  7  one 7       │ k ↑  Focus above                 │                 │
-│  8  one 8       │ l →  Focus right                 │                 │
-│  9  one 9       ╰──────────────────────────────────╯                 │
+│ one.txt ×                                                            │
+│  1  one 1      ╭─ Panes and tabs ───────────────────╮                │
+│  2  one 2      │ v    Split: side by side           │                │
+│  3  one 3      │ s    Split: one above the other    │                │
+│  4  one 4      │ h ←  Focus left                    │                │
+│  5  one 5      │ j ↓  Focus below                   │                │
+│  6  one 6      │ k ↑  Focus above                   │                │
+│  7  one 7      │ l →  Focus right                   │                │
+│  8  one 8      │ w    Focus the next pane           │                │
+│  9  one 9      ╰────────────────────────────────────╯                │
 │ MENU  one.txt                               text  utf-8  LF  0%  1:1 │
 └──────────────────────────────────────────────────────────────────────┘

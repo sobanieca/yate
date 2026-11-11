@@ -9,7 +9,7 @@ shipped as one binary. It sits between nano and neovim: simple to use like nano 
 keys shown on screen), with project tools like neovim: a file tree, Ctrl+P, live grep, split
 view, go to definition without a language server, and JavaScript plugins in QuickJS.
 
-The current version is 0.5.0, an early release. The 0.x series is still settling, so prefer
+The current version is 0.6.0, an early release. The 0.x series is still settling, so prefer
 the better design over compatibility: change keys, options or the plugin API when needed,
 without shims, and document the change.
 
@@ -56,7 +56,8 @@ git (the tests create git repositories).
 | `src/app/input.rs`               | keys, mouse and paste, per focus (editor, find, tree) and overlay |
 | `src/app/goto.rs`                | go to definition / file under the cursor                            |
 | `src/app/panes.rs`               | the pane tree of a split: groups side by side or stacked, even sizes, resizes |
-| `src/app/split.rs`               | split view commands (split, close, focus, resize), scroll sync and the recent file switcher |
+| `src/app/split.rs`               | split view commands (split, close, focus, resize), scroll sync and the Ctrl+O switcher |
+| `src/app/tabs.rs`, `src/ui/tabs.rs` | tabs: the files opened, in order (`App::tabs`), and the tab bar   |
 | `src/editor/document.rs`         | `Document`: rope, syntax tree, history, selection, scroll, git signs |
 | `src/editor/ops.rs`              | editing commands and cursor motions                                 |
 | `src/editor/selection.rs`        | cursor and selection as char indices in the rope                    |
@@ -82,11 +83,13 @@ How the pieces fit:
 - **One thread owns the state.** Background threads (input, file index, git status, live
   grep) send `AppEvent`s over one channel. The loop renders a frame, waits for an event and
   handles it.
-- **One file per pane, no buffers.** `App::docs` holds only the documents on screen: one
+- **One file per pane, tabs without buffers.** `App::docs` holds only the documents on screen: one
   per file the panes of a split show (`App::panes`; the cursor and scroll of the focused pane
   live in its document, the other panes keep theirs in `Pane`). `App::open` shows a file in place of the one in the
   focused pane; a document no pane shows is dropped (`drop_hidden_docs`), and only its path,
-  cursor and scroll stay in `App::recent` (Ctrl+P order, the Ctrl+O switcher). Anything that
+  cursor and scroll stay in `App::recent` (Ctrl+P order). `App::tabs` lists the paths of the
+  opened files for the tab bar and the Ctrl+O switcher; a tab is only a path, so showing a
+  tab is opening its file. Anything that
   takes a file off the screen first calls `App::may_leave` (or `may_drop`), which asks to
   save or discard unsaved changes and then runs the action again.
 - **All text changes go through `Document::apply`**, which records undo history and feeds
@@ -147,7 +150,7 @@ query. Update the language count and list in `README.md` and `docs/index.html` (
   do something. A test in `src/keymap.rs` checks it.
 - Keep the direct keys few: only what is pressed all the time (save, find, clipboard, undo)
   gets one. Everything else goes into a menu (`MenuSpec` in `src/app/commands.rs`: Ctrl+G go
-  to, Ctrl+K bookmarks, Ctrl+W panes, Ctrl+T file tree, Ctrl+L lines), where a letter or an
+  to, Ctrl+K bookmarks, Ctrl+W panes and tabs, Ctrl+T file tree, Ctrl+L lines), where a letter or an
   arrow picks the command, with Ctrl held or not. Do not use `i`, `m` or a digit as a menu
   key (Ctrl+I and Ctrl+M are Tab and Enter, terminals send no Ctrl+digit). Only commands on
   the arrow keys repeat (`repeats`): right after one, Ctrl and an arrow run it again, so a

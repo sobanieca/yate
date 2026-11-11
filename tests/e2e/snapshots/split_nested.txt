@@ -8,8 +8,9 @@
 # keys: ctrl+p
 # type: "three.txt"
 # keys: enter
-# 80x16, cursor at column 45, row 8
+# 80x17, cursor at column 45, row 9
 ┌────────────────────────────────────────────────────────────────────────────────┐
+│ one.txt ×  two.txt ×  three.txt ×                                              │
 │ one.txt                                 two.txt                                │
 │  1  one 1                             │  1  two 1                              │
 │  2  one 2                             │  2  two 2                              │

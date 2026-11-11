@@ -3,9 +3,9 @@
 # keys: ctrl+t
 # 70x12, cursor hidden
 ┌──────────────────────────────────────────────────────────────────────┐
-│  1  let a = 1;                                                       │
-│  2            ╭─ File tree ──────────────────────────╮               │
-│               │ t  Toggle                            │               │
+│ a.js ×                                                               │
+│  1  let a = 1;╭─ File tree ──────────────────────────╮               │
+│  2            │ t  Toggle                            │               │
 │               │ r  Reveal current file               │               │
 │               │ f  Focus                             │               │
 │               │ l  Lock / unlock following the file  │               │

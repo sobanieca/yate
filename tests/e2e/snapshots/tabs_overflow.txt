@@ -1,0 +1,19 @@
+# tabs_overflow
+# start: yate first.js
+# keys: ctrl+p
+# type: "second.js"
+# keys: enter
+# keys: ctrl+p
+# type: "third.js"
+# keys: enter
+# keys: ctrl+p
+# type: "fourth.js"
+# keys: enter
+# 30x5, cursor at column 5, row 1
+┌──────────────────────────────┐
+│‹ third.js ×  fourth.js ×     │
+│  1                           │
+│                              │
+│                              │
+│ javascript  utf-8  LF  1 1:1 │
+└──────────────────────────────┘

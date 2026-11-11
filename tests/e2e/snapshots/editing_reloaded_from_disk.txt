@@ -2,11 +2,11 @@
 # start: yate app.js
 # write file outside the editor: app.js
 # focus gained
-# 60x12, cursor at column 5, row 0
+# 60x12, cursor at column 5, row 1
 ┌────────────────────────────────────────────────────────────┐
+│ app.js ×                                                   │
 │  1  const changed = true;                                  │
 │  2                                                         │
-│                                                            │
 │                                                            │
 │                                                            │
 │                                                            │

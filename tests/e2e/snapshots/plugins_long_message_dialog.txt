@@ -3,7 +3,7 @@
 # command: say.long
 # 60x10, cursor at column 5, row 5
 ┌────────────────────────────────────────────────────────────┐
-│  1  hello                                                  │
+│ a.txt ×                                                    │
 │  ╭─ Message ────────────────────────────────────────────╮  │
 │  │ The quick brown fox jumps over the lazy dog, then it │  │
 │  │ rests under the old oak tree                         │  │

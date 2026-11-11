@@ -7,10 +7,11 @@ mod goto;
 mod input;
 mod panes;
 mod split;
+mod tabs;
 
 pub use commands::menu_key_label;
 pub use panes::{Direction, Pane, PaneArea, Panes, Side};
-pub use split::Switcher;
+pub use split::{MAX_SWITCH_TARGETS, Switcher};
 
 use crate::bookmarks::{self, Bookmarks};
 use crate::clipboard::Clipboard;
@@ -360,6 +361,8 @@ pub struct Layout {
     pub editor: Rect,
     /// Everything the editor panes share.
     pub editor_area: Rect,
+    /// The row of tabs above the panes.
+    pub tabs: Option<Rect>,
     /// The panes on screen; in a split each has a title row with its file.
     pub panes: Vec<PaneArea>,
     /// The columns between side by side panes.
@@ -391,6 +394,8 @@ pub struct App {
     next_doc_id: usize,
     /// The files shown lately, the latest first.
     pub recent: Vec<Recent>,
+    /// The files in the tab bar, in the order they were opened.
+    pub tabs: Vec<PathBuf>,
     /// Set while an action runs again after its unsaved changes were given up.
     leave_confirmed: bool,
     pub focus: Focus,
@@ -461,6 +466,7 @@ impl App {
             active: 0,
             next_doc_id: 1,
             recent: Vec::new(),
+            tabs: Vec::new(),
             leave_confirmed: false,
             focus: Focus::Editor,
             tree_visible: false,
@@ -726,11 +732,14 @@ impl App {
         }
     }
 
-    /// Moves the file of the focused pane to the front of the recent files.
+    /// Moves the file of the focused pane to the front of the recent files
+    /// and gives it a tab.
     pub(crate) fn touch_recent(&mut self) {
         let Some(path) = self.doc().path.clone() else {
             return;
         };
+        let previous = self.recent.first().map(|recent| recent.path.clone());
+        self.add_tab(previous.as_deref());
         let recent = match self.recent.iter().position(|recent| recent.path == path) {
             Some(index) => self.recent.remove(index),
             None => Recent {
@@ -1049,6 +1058,9 @@ impl App {
     fn prepare_frame(&mut self) {
         if self.focus != Focus::Tree {
             self.tree.filter_focus = None;
+        }
+        if self.layout.tabs.is_some() == self.tabs.is_empty() {
+            self.relayout();
         }
         for index in 0..self.docs.len() {
             self.refresh_doc(index);

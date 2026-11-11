@@ -3,14 +3,14 @@
 # keys: down end
 # type: "\nlet greeting = 1;"
 # keys: down down ctrl+l k
-# 80x14, cursor at column 5, row 4
+# 80x14, cursor at column 5, row 5
 ┌────────────────────────────────────────────────────────────────────────────────┐
+│ main.rs ●                                                                      │
 │  1  fn main() {                                                                │
 │  2  ▏ ▏ let name = "world";                                                    │
 │▎ 3  ▏ ▏ let greeting = 1;                                                      │
 │  4  ▏ ▏ println!("hello {name}");                                              │
 │▁ 5  ▏ ▏                                                                        │
-│                                                                                │
 │                                                                                │
 │                                                                                │
 │                                                                                │

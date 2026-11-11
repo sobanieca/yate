@@ -168,7 +168,7 @@ const BOOKMARK_MENU: MenuSpec = MenuSpec {
 };
 
 const PANE_MENU: MenuSpec = MenuSpec {
-    title: "Panes",
+    title: "Panes and tabs",
     command: "view.paneMenu",
     again: Some("view.focusNextPane"),
     items: &[
@@ -183,6 +183,8 @@ const PANE_MENU: MenuSpec = MenuSpec {
         once(&["="], "Equal sizes", "view.equalPanes"),
         once(&["c"], "Close this pane", "view.closePane"),
         once(&["o"], "Close the other panes", "view.closeOtherPanes"),
+        once(&["x"], "Close this tab", "tab.close"),
+        once(&["t"], "Close the tabs not on screen", "tab.closeOthers"),
         once(
             &["y"],
             "Scroll together (on / off)",
@@ -308,7 +310,7 @@ commands! {
     "bookmark.previous", "Previous", Bookmarks, Editor => |app| bookmark_step(app, false);
     "picker.bookmarks", "List", Bookmarks, Anywhere => open_bookmarks_picker;
     "bookmark.clear", "Clear in this file", Bookmarks, Editor => clear_bookmarks;
-    "view.paneMenu", "Split, focus, resize or close panes…", View, Anywhere => |app| open_menu(app, &PANE_MENU);
+    "view.paneMenu", "Split, focus, resize or close panes, close tabs…", View, Anywhere => |app| open_menu(app, &PANE_MENU);
     "view.splitVertical", "Split vertically (side by side)", View, Editor => |app| app.split_pane(Direction::SideBySide);
     "view.splitHorizontal", "Split horizontally (one above the other)", View, Editor => |app| app.split_pane(Direction::Stacked);
     "view.resizePane", "Resize this pane…", View, Editor => App::resize_pane_prompt;
@@ -321,20 +323,24 @@ commands! {
     "view.focusPaneAbove", "Focus the pane above", View, Editor => |app| app.focus_pane_on(Side::Above);
     "view.focusPaneBelow", "Focus the pane below", View, Editor => |app| app.focus_pane_on(Side::Below);
     "view.toggleScrollSync", "Scroll all panes together (sync on / off)", View, Editor => App::toggle_scroll_sync;
-    "switch.next", "Switch to the tree (1) or a recent file (2-9); again: next recent file", View, Anywhere => |app| {
+    "switch.next", "Switch to the tree (1) or a tab (2-9); again: next tab", View, Anywhere => |app| {
         if app.switcher.is_some() {
-            app.cycle_recent(1);
+            app.step_tab(1);
         } else {
             app.start_switcher();
         }
     };
-    "switch.previous", "Switch to the tree or a recent file; again: previous recent file", View, Anywhere => |app| {
+    "switch.previous", "Switch to the tree or a tab; again: previous tab", View, Anywhere => |app| {
         if app.switcher.is_some() {
-            app.cycle_recent(-1);
+            app.step_tab(-1);
         } else {
             app.start_switcher();
         }
     };
+    "tab.next", "Next tab", View, Anywhere => |app| app.step_tab(1);
+    "tab.previous", "Previous tab", View, Anywhere => |app| app.step_tab(-1);
+    "tab.close", "Close this tab", View, Editor => App::close_current_tab;
+    "tab.closeOthers", "Close the tabs not on screen", View, Anywhere => App::close_other_tabs;
     "view.toggleLineNumbers", "Toggle line numbers", View, Editor => |app| app.options.line_numbers = !app.options.line_numbers;
     "view.toggleIndentGuides", "Toggle indent guides", View, Editor => |app| app.options.indent_guides = !app.options.indent_guides;
     "language.choose", "Set language of the file…", View, Editor => open_language_picker;
@@ -407,6 +413,13 @@ const LISTED_WHEN: &[(&[&str], Condition)] = &[
         !app.find.input.text.is_empty()
     }),
     (&["picker.resume"], |app| app.last_picker.is_some()),
+    (&["tab.next", "tab.previous"], |app| app.tabs.len() > 1),
+    (&["tab.close"], |app| app.current_tab().is_some()),
+    (&["tab.closeOthers"], |app| {
+        let shown =
+            |tab: &std::path::PathBuf| app.docs.iter().any(|d| d.path.as_ref() == Some(tab));
+        app.tabs.iter().any(|tab| !shown(tab))
+    }),
     (&["jump.back"], |app| app.jump_index > 0),
     (&["jump.forward"], |app| {
         app.jump_index + 1 < app.jumps.len()
@@ -1048,8 +1061,8 @@ fn copy_path(app: &mut App) {
 /// section of the palette.
 const BUILT_IN_KEYS: &[(&str, &str)] = &[
     ("ctrl+o 1", "Switch: focus the file tree"),
-    ("ctrl+o 2-9", "Switch: show recent file 1-8"),
-    ("ctrl+o ctrl+o", "Switch: next recent file"),
+    ("ctrl+o 2-9", "Switch: show tab 1-8"),
+    ("ctrl+o ctrl+o", "Switch: next tab"),
     ("ctrl+key", "Menu: the same as the key"),
     ("ctrl+arrow", "Menu: run its arrow command again"),
     ("shift+arrows", "Editor: select"),
@@ -1404,6 +1417,7 @@ pub fn answer_prompt(app: &mut App, prompt: Prompt, answer: Option<String>) {
                             });
                         }
                     }
+                    app.rename_tabs(&from, &to);
                     for recent in &mut app.recent {
                         if let Ok(rest) = recent.path.strip_prefix(&from) {
                             recent.path = if rest.as_os_str().is_empty() {
@@ -1443,6 +1457,7 @@ pub fn answer_prompt(app: &mut App, prompt: Prompt, answer: Option<String>) {
                         app.forget_doc(id);
                     }
                     app.recent.retain(|recent| !recent.path.starts_with(&path));
+                    app.tabs.retain(|tab| !tab.starts_with(&path));
                     app.notify(format!("Deleted {}", app.relative(&path)));
                     app.tree.rebuild(&app.git);
                     app.refresh_files();

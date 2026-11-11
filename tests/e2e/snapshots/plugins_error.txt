@@ -2,8 +2,8 @@
 # start: yate a.txt
 # 110x8, cursor at column 20, row 4
 ┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│  1              ╭─ Error ─────────────────────────────────────────────────────────────────╮                  │
-│                 │ plugin broken: undefinedFunction is not defined (plugins/broken.js:2:1) │                  │
+│ a.txt ×         ╭─ Error ─────────────────────────────────────────────────────────────────╮                  │
+│  1              │ plugin broken: undefinedFunction is not defined (plugins/broken.js:2:1) │                  │
 │                 │ plugin option tabSize expects a number, not "wide"                      │                  │
 │                 │                                                                         │                  │
 │                 │  Close                                                                  │                  │

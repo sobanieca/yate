@@ -29,8 +29,9 @@
 # keys: down
 # keys: down
 # keys: down
-# 70x10, cursor at column 52, row 8
+# 70x11, cursor at column 52, row 9
 ┌──────────────────────────────────────────────────────────────────────┐
+│ one.txt ×  two.txt ×  three.txt ×                                    │
 │ one.txt                two.txt                 three.txt             │
 │ 14  one 14           │ 14  two 14            │ 14  three 14          │
 │ 15  one 15           │ 15  two 15            │ 15  three 15          │

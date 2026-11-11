@@ -1,0 +1,17 @@
+# tabs_numbered
+# start: yate a.js
+# keys: ctrl+p
+# type: "b.js"
+# keys: enter
+# keys: ctrl+o
+# 60x8, cursor at column 5, row 1
+┌────────────────────────────────────────────────────────────┐
+│ 2 a.js ×  3 b.js ×                                         │
+│  1                                                         │
+│                                                            │
+│                                                            │
+│                                                            │
+│                                                            │
+│                                                            │
+│ SWITCH  b.js              javascript  utf-8  LF  100%  1:1 │
+└────────────────────────────────────────────────────────────┘

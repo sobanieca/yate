@@ -4,8 +4,9 @@
 # type: "40\n"
 # keys: ctrl+w w
 # keys: ctrl+w w
-# 70x10, cursor at column 40, row 8
+# 70x11, cursor at column 40, row 9
 ┌──────────────────────────────────────────────────────────────────────┐
+│ one.txt ×                                                            │
 │ one.txt                            one.txt                           │
 │  1  one 1                        │ 33  one 33                        │
 │  2  one 2                        │ 34  one 34                        │

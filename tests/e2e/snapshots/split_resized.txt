@@ -6,8 +6,9 @@
 # keys: enter
 # keys: ctrl+w s ctrl+w r
 # type: "10,-2\n"
-# 80x16, cursor at column 35, row 10
+# 80x17, cursor at column 35, row 11
 ┌────────────────────────────────────────────────────────────────────────────────┐
+│ one.txt ×  two.txt ×                                                           │
 │ one.txt                       two.txt                                          │
 │  1  one 1                   │  1  two 1                                        │
 │  2  one 2                   │  2  two 2                                        │

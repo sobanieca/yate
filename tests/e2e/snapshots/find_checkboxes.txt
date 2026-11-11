@@ -7,10 +7,10 @@
 # type: "."
 # 70x8, cursor at column 15, row 6
 ┌──────────────────────────────────────────────────────────────────────┐
+│ words.txt ×                                                          │
 │  1  needle Needle                                                    │
 │  2  needles                                                          │
 │  3                                                                   │
-│                                                                      │
 │                                                                      │
 │                                                                      │
 │ FIND   needle.                [x] Aa  [x] .*  [ ] replace  1 of 2    │
@@ -19,28 +19,30 @@
 
 styles
 ┌──────────────────────────────────────────────────────────────────────┐
-│aabaaccccccdeeeeeeaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
-│aafaagggggggaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
-│aafaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
+│abbbbbbbbbacaddddddddddddddddddddddddddddddddddddddddddddddddddddddddd│
+│aaeaaffffffghhhhhhaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
+│aaiaajjjjjjjaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
+│aaiaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
 │aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
 │aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
-│aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
-│hiiiihjklllllllkkkkkkkkkkkkkkjjmmmjmmjjmmmjmmjjnjnjnnnnnnnjjojoojojjjj│
-│hiiiihjpppppppppjjjjjjjjjjjjjjjjoojooooooooojoooojjooooojjoojjoojhiiih│
+│kllllkdmnnnnnnnmmmmmmmmmmmmmmddooodooddooodooddpdpdpppppppddqdqqdqdddd│
+│kllllkdrrrrrrrrrddddddddddddddddqqdqqqqqqqqqdqqqqddqqqqqddqqddqqdklllk│
 └──────────────────────────────────────────────────────────────────────┘
 a  bg BG #24283b
-b  fg ORANGE #ff9e64, bg BG #24283b, bold
-c  fg BG_DARK #1f2335, bg ORANGE #ff9e64
-d  bg ORANGE #ff9e64
-e  fg FG #c0caf5, bg BG #24283b
-f  fg FG_GUTTER #3b4261, bg BG #24283b
-g  fg FG #c0caf5, bg BG_SEARCH #3d59a1
-h  bg YELLOW #e0af68
-i  fg BG_DARK #1f2335, bg YELLOW #e0af68, bold
-j  bg BG_DARK #1f2335
-k  bg BG_HIGHLIGHT #292e42
-l  fg FG #c0caf5, bg BG_HIGHLIGHT #292e42
-m  fg CYAN #7dcfff, bg BG_DARK #1f2335, bold
-n  fg DARK5 #737aa2, bg BG_DARK #1f2335
-o  fg FG_DARK #a9b1d6, bg BG_DARK #1f2335
-p  fg FG #c0caf5, bg BG_DARK #1f2335
+b  fg FG #c0caf5, bg BG #24283b, bold
+c  fg DARK5 #737aa2, bg BG #24283b
+d  bg BG_DARK #1f2335
+e  fg ORANGE #ff9e64, bg BG #24283b, bold
+f  fg BG_DARK #1f2335, bg ORANGE #ff9e64
+g  bg ORANGE #ff9e64
+h  fg FG #c0caf5, bg BG #24283b
+i  fg FG_GUTTER #3b4261, bg BG #24283b
+j  fg FG #c0caf5, bg BG_SEARCH #3d59a1
+k  bg YELLOW #e0af68
+l  fg BG_DARK #1f2335, bg YELLOW #e0af68, bold
+m  bg BG_HIGHLIGHT #292e42
+n  fg FG #c0caf5, bg BG_HIGHLIGHT #292e42
+o  fg CYAN #7dcfff, bg BG_DARK #1f2335, bold
+p  fg DARK5 #737aa2, bg BG_DARK #1f2335
+q  fg FG_DARK #a9b1d6, bg BG_DARK #1f2335
+r  fg FG #c0caf5, bg BG_DARK #1f2335

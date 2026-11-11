@@ -641,7 +641,7 @@ impl App {
             self.picker_mouse(mouse);
             return;
         }
-        if self.tree_resize_mouse(mouse) {
+        if self.tab_mouse(mouse) || self.tree_resize_mouse(mouse) {
             return;
         }
         let pressed = mouse.kind == MouseEventKind::Down(MouseButton::Left);
@@ -770,8 +770,35 @@ impl App {
         };
         let in_rows = y >= sidebar.y && y < sidebar.bottom();
         let in_title = self.layout.panes.iter().any(|p| p.title.contains(x, y));
-        let beside = x == sidebar.right() && !in_title;
+        let in_tabs = self.layout.tabs.is_some_and(|tabs| tabs.contains(x, y));
+        let beside = x == sidebar.right() && !in_title && !in_tabs;
         in_rows && (x + 1 == sidebar.right() || beside)
+    }
+
+    /// A click on a tab shows its file; a click on its `×`, or a middle
+    /// click, closes it. Returns true when the event was on the tab bar.
+    fn tab_mouse(&mut self, mouse: MouseEvent) -> bool {
+        let (x, y) = (mouse.column, mouse.row);
+        let Some(area) = self.layout.tabs.filter(|area| area.contains(x, y)) else {
+            return false;
+        };
+        let closes = match mouse.kind {
+            MouseEventKind::Down(MouseButton::Left) => false,
+            MouseEventKind::Down(MouseButton::Middle) => true,
+            _ => return true,
+        };
+        let cells = crate::ui::tabs::cells(self, area);
+        let Some(cell) = cells.iter().find(|cell| cell.area.contains(x, y)) else {
+            return true;
+        };
+        let path = self.tabs[cell.index].clone();
+        if closes || cell.close.contains(x, y) {
+            self.close_tab(&path);
+        } else {
+            self.show_file(&path);
+            self.focus = Focus::Editor;
+        }
+        true
     }
 
     fn menu_mouse(&mut self, mouse: MouseEvent) {

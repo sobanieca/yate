@@ -7,18 +7,18 @@
 # type: "c.js"
 # keys: enter
 # keys: ctrl+o
-# 70x12, cursor at column 5, row 0
+# 70x12, cursor at column 5, row 1
 ┌──────────────────────────────────────────────────────────────────────┐
-│  1  let c = 3;                                                       │
-│  2                    ╭─ Switch to ──────────╮                       │
-│                       │ 1  File tree         │                       │
-│                       │ 2  c.js              │                       │
+│ 2 a.js ×  3 b.js ×  4 c.js ×                                         │
+│  1  let c = 3;        ╭─ Switch to ──────────╮                       │
+│  2                    │ 1  File tree         │                       │
+│                       │ 2  a.js              │                       │
 │                       │ 3  b.js              │                       │
-│                       │ 4  a.js              │                       │
+│                       │ 4  c.js              │                       │
 │                       ╰──────────────────────╯                       │
 │                                                                      │
 │                                                                      │
 │                                                                      │
 │                                                                      │
-│ SWITCH  c.js                          javascript  utf-8  LF  0%  1:1 │
+│ SWITCH  c.js       1 tree · 2-9 tab   javascript  utf-8  LF  0%  1:1 │
 └──────────────────────────────────────────────────────────────────────┘

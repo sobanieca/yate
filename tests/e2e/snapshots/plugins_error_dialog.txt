@@ -8,9 +8,9 @@
 # command: say.lines
 # 60x10, cursor at column 18, row 5
 ┌────────────────────────────────────────────────────────────┐
-│  1  xhello                                                 │
-│  2            ╭─ Error ────────────────────╮               │
-│               │ first problem              │               │
+│ a.txt ●                                                    │
+│  1  xhello    ╭─ Error ────────────────────╮               │
+│  2            │ first problem              │               │
 │               │ second problem             │               │
 │               │                            │               │
 │               │  Close                     │               │

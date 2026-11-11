@@ -4,6 +4,7 @@
 # type: "total"
 # 70x10, cursor at column 13, row 8
 ┌──────────────────────────────────────────────────────────────────────┐
+│ cart.js ×                                                            │
 │  1  let total = 0;                                                   │
 │  2  for (const item of items) {                                      │
 │  3  ▏ total += item.price;                                           │
@@ -11,40 +12,41 @@
 │  5  console.log(total);                                              │
 │  6                                                                   │
 │                                                                      │
-│                                                                      │
 │ FIND   total                  [ ] Aa  [ ] .*  [ ] replace  1 of 3    │
 │ FIND  cart.js           (5 selected) javascript  utf-8  LF  0%  1:10 │
 └──────────────────────────────────────────────────────────────────────┘
 
 styles
 ┌──────────────────────────────────────────────────────────────────────┐
-│aabaacccadddddaeafeaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
-│aagaacccahcccccaiiiiaccaiiiiihahaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
-│aagaagajjjjjaeeaiiiiekkkkkeaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
-│aagaahaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
-│aagaaiiiiiiiekkkhjjjjjheaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
-│aagaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
+│abbbbbbbacaddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd│
+│aaeaafffagggggahaihaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
+│aajaafffakfffffallllaffalllllkakaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
+│aajaajammmmmahhallllhnnnnnhaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
+│aajaakaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
+│aajaalllllllhnnnkmmmmmkhaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
+│aajaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
 │aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
-│aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
-│lmmmmlnopppppoooooooooooooooonnqnqnqqnnqnqnqqnnqnqnqqqqqqqnnrnrrnrnnnn│
-│lmmmmlnsssssssnnnnnnnnnnnrrnrrrrrrrrrnrrrrrrrrrrnnrrrrrnnrrnnrrnlmmmml│
+│oppppodqrrrrrqqqqqqqqqqqqqqqqddsdsdssddsdsdssddsdsdsssssssddtdttdtdddd│
+│oppppoduuuuuuudddddddddddttdtttttttttdttttttttttddtttttddttddttdoppppo│
 └──────────────────────────────────────────────────────────────────────┘
 a  bg BG #24283b
-b  fg ORANGE #ff9e64, bg BG #24283b, bold
-c  fg PURPLE #9d7cd8, bg BG #24283b, italic
-d  fg BG_DARK #1f2335, bg ORANGE #ff9e64
-e  fg BLUE5 #89ddff, bg BG #24283b
-f  fg ORANGE #ff9e64, bg BG #24283b
-g  fg FG_GUTTER #3b4261, bg BG #24283b
-h  fg FG_DARK #a9b1d6, bg BG #24283b
-i  fg FG #c0caf5, bg BG #24283b
-j  fg FG #c0caf5, bg BG_SEARCH #3d59a1
-k  fg GREEN1 #73daca, bg BG #24283b
-l  bg YELLOW #e0af68
-m  fg BG_DARK #1f2335, bg YELLOW #e0af68, bold
-n  bg BG_DARK #1f2335
-o  bg BG_HIGHLIGHT #292e42
-p  fg FG #c0caf5, bg BG_HIGHLIGHT #292e42
-q  fg DARK5 #737aa2, bg BG_DARK #1f2335
-r  fg FG_DARK #a9b1d6, bg BG_DARK #1f2335
-s  fg FG #c0caf5, bg BG_DARK #1f2335
+b  fg FG #c0caf5, bg BG #24283b, bold
+c  fg DARK5 #737aa2, bg BG #24283b
+d  bg BG_DARK #1f2335
+e  fg ORANGE #ff9e64, bg BG #24283b, bold
+f  fg PURPLE #9d7cd8, bg BG #24283b, italic
+g  fg BG_DARK #1f2335, bg ORANGE #ff9e64
+h  fg BLUE5 #89ddff, bg BG #24283b
+i  fg ORANGE #ff9e64, bg BG #24283b
+j  fg FG_GUTTER #3b4261, bg BG #24283b
+k  fg FG_DARK #a9b1d6, bg BG #24283b
+l  fg FG #c0caf5, bg BG #24283b
+m  fg FG #c0caf5, bg BG_SEARCH #3d59a1
+n  fg GREEN1 #73daca, bg BG #24283b
+o  bg YELLOW #e0af68
+p  fg BG_DARK #1f2335, bg YELLOW #e0af68, bold
+q  bg BG_HIGHLIGHT #292e42
+r  fg FG #c0caf5, bg BG_HIGHLIGHT #292e42
+s  fg DARK5 #737aa2, bg BG_DARK #1f2335
+t  fg FG_DARK #a9b1d6, bg BG_DARK #1f2335
+u  fg FG #c0caf5, bg BG_DARK #1f2335

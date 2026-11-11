@@ -7,15 +7,15 @@
 # keys: ctrl+q left
 # 60x12, cursor at column 8, row 4
 ┌────────────────────────────────────────────────────────────┐
+│ app.js ●                                                   │
 │  1  xconst colors = {                                      │
 │  2  ▏ bg: "#24283b",                                       │
-│  3  };                                                     │
-│  4  ╭─ Unsaved: app.js. Quit anyway? ────────────────╮     │
-│  5  │  Yes   No                                      │     │
-│  6  ╰────────────────────────────────────────────────╯     │
+│  3  ╭─ Unsaved: app.js. Quit anyway? ────────────────╮     │
+│  4  │  Yes   No                                      │     │
+│  5  ╰────────────────────────────────────────────────╯     │
+│  6  ▏ return `hello ${name}`;                              │
 │  7  }                                                      │
 │  8                                                         │
-│                                                            │
 │                                                            │
 │                                                            │
 │ INPUT  app.js ●             javascript  utf-8  LF  0%  1:2 │
@@ -23,40 +23,43 @@
 
 styles
 ┌────────────────────────────────────────────────────────────┐
-│aabaaccccccaccccccadaeaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
-│ffgffgfhhifjiiiiiiijkfffffffffffffffffffffffffffffffffffffff│
-│ffgfflkfffffffffffffffffffffffffffffffffffffffffffffffffffff│
-│ffgffmmnoooooooonooooooonoooonooooooonmmmmmmmmmmmmmmmmmfffff│
-│ffgffmnpqrrpnascannnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnmfffff│
-│ffgffmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmfffff│
-│ffgfflffffffffffffffffffffffffffffffffffffffffffffffffffffff│
-│ffgfffffffffffffffffffffffffffffffffffffffffffffffffffffffff│
-│ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff│
-│ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff│
-│ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff│
-│tuuuuutnvvvvvvnwnnnnnnnnnnnnnxxxxxxxxxxnnxxxxxnnxxnnxxntuuut│
+│abbbbbbacadddddddddddddddddddddddddddddddddddddddddddddddddd│
+│eefeeggggggeggggggeheieeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee│
+│aajaajakklamlllllllmnaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
+│aajaaoodppppppppdpppppppdppppdpppppppdoooooooooooooooooaaaaa│
+│aajaaodqrssqdetgedddddddddddddddddddddddddddddddddddddoaaaaa│
+│aajaaooooooooooooooooooooooooooooooooooooooooooooooooooaaaaa│
+│aajaajauuuuuuammmmmmannllllvmnaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
+│aajaavaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
+│aajaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
+│aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
+│aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
+│wxxxxxwdyyyyyydzdddddddddddddAAAAAAAAAAddAAAAAddAAddAAdwxxxw│
 └────────────────────────────────────────────────────────────┘
-a  bg BG_HIGHLIGHT #292e42
-b  fg ORANGE #ff9e64, bg BG_HIGHLIGHT #292e42, bold
-c  fg FG #c0caf5, bg BG_HIGHLIGHT #292e42
-d  fg BLUE5 #89ddff, bg BG_HIGHLIGHT #292e42
-e  fg FG_DARK #a9b1d6, bg BG_HIGHLIGHT #292e42
-f  bg BG #24283b
-g  fg FG_GUTTER #3b4261, bg BG #24283b
-h  fg GREEN1 #73daca, bg BG #24283b
-i  fg FG #c0caf5, bg BG #24283b
-j  fg GREEN #9ece6a, bg BG #24283b
-k  fg BLUE5 #89ddff, bg BG #24283b
-l  fg FG_DARK #a9b1d6, bg BG #24283b
-m  fg BLUE #7aa2f7, bg BG_DARK #1f2335
-n  bg BG_DARK #1f2335
-o  fg BLUE #7aa2f7, bg BG_DARK #1f2335, bold
-p  bg BLUE #7aa2f7
-q  fg BG_DARK #1f2335, bg BLUE #7aa2f7, bold, underline
-r  fg BG_DARK #1f2335, bg BLUE #7aa2f7, bold
-s  fg FG #c0caf5, bg BG_HIGHLIGHT #292e42, underline
-t  bg ORANGE #ff9e64
-u  fg BG_DARK #1f2335, bg ORANGE #ff9e64, bold
-v  fg FG #c0caf5, bg BG_DARK #1f2335
-w  fg ORANGE #ff9e64, bg BG_DARK #1f2335
-x  fg FG_DARK #a9b1d6, bg BG_DARK #1f2335
+a  bg BG #24283b
+b  fg FG #c0caf5, bg BG #24283b, bold
+c  fg ORANGE #ff9e64, bg BG #24283b
+d  bg BG_DARK #1f2335
+e  bg BG_HIGHLIGHT #292e42
+f  fg ORANGE #ff9e64, bg BG_HIGHLIGHT #292e42, bold
+g  fg FG #c0caf5, bg BG_HIGHLIGHT #292e42
+h  fg BLUE5 #89ddff, bg BG_HIGHLIGHT #292e42
+i  fg FG_DARK #a9b1d6, bg BG_HIGHLIGHT #292e42
+j  fg FG_GUTTER #3b4261, bg BG #24283b
+k  fg GREEN1 #73daca, bg BG #24283b
+l  fg FG #c0caf5, bg BG #24283b
+m  fg GREEN #9ece6a, bg BG #24283b
+n  fg BLUE5 #89ddff, bg BG #24283b
+o  fg BLUE #7aa2f7, bg BG_DARK #1f2335
+p  fg BLUE #7aa2f7, bg BG_DARK #1f2335, bold
+q  bg BLUE #7aa2f7
+r  fg BG_DARK #1f2335, bg BLUE #7aa2f7, bold, underline
+s  fg BG_DARK #1f2335, bg BLUE #7aa2f7, bold
+t  fg FG #c0caf5, bg BG_HIGHLIGHT #292e42, underline
+u  fg PURPLE #9d7cd8, bg BG #24283b, italic
+v  fg FG_DARK #a9b1d6, bg BG #24283b
+w  bg ORANGE #ff9e64
+x  fg BG_DARK #1f2335, bg ORANGE #ff9e64, bold
+y  fg FG #c0caf5, bg BG_DARK #1f2335
+z  fg ORANGE #ff9e64, bg BG_DARK #1f2335
+A  fg FG_DARK #a9b1d6, bg BG_DARK #1f2335

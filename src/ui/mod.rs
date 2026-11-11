@@ -7,6 +7,7 @@ pub mod input;
 pub mod picker_view;
 pub mod sidebar;
 pub mod surface;
+pub mod tabs;
 pub mod theme;
 
 use crate::app::{
@@ -25,6 +26,12 @@ pub fn layout(app: &App, width: u16, height: u16) -> Layout {
     } else {
         (None, main)
     };
+    let (tabs, rest) = if app.tabs.is_empty() {
+        (None, rest)
+    } else {
+        let (tabs, rest) = rest.split_top(1);
+        (Some(tabs), rest)
+    };
     let (editor_area, find) = if app.find_open {
         let (editor_area, find) = rest.split_bottom(app.find.rows().len() as u16);
         (editor_area, Some(find))
@@ -38,6 +45,7 @@ pub fn layout(app: &App, width: u16, height: u16) -> Layout {
         .find(|pane| pane.id == app.panes.focused);
     Layout {
         sidebar,
+        tabs,
         editor: focused.map_or(editor_area, |pane| pane.body),
         editor_area,
         panes: placement.panes,
@@ -55,6 +63,9 @@ pub fn render(app: &mut App, surface: &mut Surface) -> Option<(u16, u16)> {
     let tree_cursor = layout
         .sidebar
         .and_then(|area| sidebar::render(app, surface, area));
+    if let Some(area) = layout.tabs {
+        tabs::render(app, surface, area);
+    }
     for pane in &layout.panes {
         render_pane_title(app, surface, pane);
         if pane.id != app.panes.focused {
@@ -359,8 +370,8 @@ fn status_hints(app: &App) -> Vec<String> {
     }
     if app.switcher.is_some() {
         hints.push(Some("esc cancel".to_string()));
-        hints.push(hint("switch.next", "next file"));
-        hints.push(Some("1 tree · 2-9 recent file".to_string()));
+        hints.push(hint("switch.next", "next tab"));
+        hints.push(Some("1 tree · 2-9 tab".to_string()));
         return hints.into_iter().flatten().collect();
     }
     match app.focus {

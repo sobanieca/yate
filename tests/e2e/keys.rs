@@ -87,7 +87,7 @@ fn a_click_chooses_from_a_menu() {
 }
 
 #[test]
-fn ctrl_o_shows_the_recent_files_after_the_delay() {
+fn ctrl_o_shows_the_tabs_after_the_delay() {
     let mut e = project(0);
     open_all(&mut e);
     e.keys("ctrl+o");
@@ -95,7 +95,7 @@ fn ctrl_o_shows_the_recent_files_after_the_delay() {
     e.keys("3");
     assert_eq!(e.app().doc().name(), "b.js");
     e.assert_screen_lacks("Switch to");
-    e.keys("ctrl+o 3");
+    e.keys("ctrl+o 4");
     assert_eq!(e.app().doc().name(), "c.js");
     assert_eq!(e.app().docs.len(), 1);
 }
@@ -121,28 +121,27 @@ fn ctrl_o_1_focuses_the_file_tree() {
 }
 
 #[test]
-fn repeated_ctrl_o_cycles_the_recent_files() {
+fn repeated_ctrl_o_walks_through_the_tabs() {
     let mut e = project(0);
     open_all(&mut e);
     e.keys("ctrl+o ctrl+o");
-    assert_eq!(e.app().doc().name(), "b.js");
-    e.keys("ctrl+o");
     assert_eq!(e.app().doc().name(), "a.js");
+    e.keys("ctrl+o");
+    assert_eq!(e.app().doc().name(), "b.js");
     e.keys("ctrl+o");
     assert_eq!(e.app().doc().name(), "c.js");
     e.command("switch.previous");
-    assert_eq!(e.app().doc().name(), "a.js");
+    assert_eq!(e.app().doc().name(), "b.js");
     e.keys("x");
-    assert_eq!(e.editor_text(), "xlet a = 1;\n");
+    assert_eq!(e.editor_text(), "xlet b = 2;\n");
 }
 
 #[test]
-fn the_keys_of_tabs_are_not_bound() {
+fn alt_and_ctrl_tab_keys_switch_no_tab() {
     let mut e = project(0);
     open_all(&mut e);
     e.keys("ctrl+e alt+, alt+. ctrl+tab");
     assert_eq!(e.app().doc().name(), "c.js");
-    e.assert_screen_lacks("a.js");
 }
 
 #[test]

@@ -4,8 +4,9 @@
 # keys: ctrl+p
 # type: "two.txt"
 # keys: enter
-# 70x10, cursor at column 5, row 5
+# 70x11, cursor at column 5, row 6
 ┌──────────────────────────────────────────────────────────────────────┐
+│ one.txt ×  two.txt ×                                                 │
 │ one.txt                                                              │
 │  1  one 1                                                            │
 │  2  one 2                                                            │

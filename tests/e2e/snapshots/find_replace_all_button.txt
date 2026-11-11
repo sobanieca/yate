@@ -8,13 +8,13 @@
 # keys: right right
 # 70x10, cursor at column 43, row 8
 ┌──────────────────────────────────────────────────────────────────────┐
+│ cart.js ●                                                            │
 │  1  let sum = 0;                                                     │
 │  2  for (const item of items) {                                      │
 │  3  ▏ total += item.price;                                           │
 │  4  }                                                                │
 │  5  console.log(total);                                              │
 │  6                                                                   │
-│                                                                      │
 │ FIND   total                  [ ] Aa  [ ] .*  [x] replace  1 of 2    │
 │        sum                     Replace    Replace all                │
 │ FIND  cart.js ●         (5 selected) javascript  utf-8  LF  40%  3:8 │
@@ -22,35 +22,36 @@
 
 styles
 ┌──────────────────────────────────────────────────────────────────────┐
-│aabaacccadddaeafeaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
-│aabaacccagcccccaddddaccadddddgagaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
-│aahaabaiiiiiaeeaddddejjjjjeaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
-│aabaagaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
-│aabaadddddddejjjgkkkkkgeaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
-│aabaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
-│aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
-│lmmmmlnopppppoooooooooooooooonnqnqnqqnnqnqnqqnnrrrnrrrrrrrnnsnssnsnnnn│
-│nnnnnnnopppoooooooooooooooooonnoppppppponnlmmmmmmmlmmmlnnnnnnnnnnnnnnn│
-│lmmmmlntttttttnunnnnnnnnnssnsssssssssnssssssssssnnsssssnnssnnsssnlmmml│
+│abbbbbbbacaddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd│
+│aaeaafffagggahachaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
+│aaeaafffaifffffaggggaffagggggiaiaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
+│aajaaeakkkkkahhagggghlllllhaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
+│aaeaaiaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
+│aaeaaggggggghlllimmmmmihaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
+│aaeaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
+│noooondpqqqqqppppppppppppppppddrdrdrrddrdrdrrddsssdsssssssddtdttdtdddd│
+│dddddddpqqqppppppppppppppppppddpqqqqqqqpddnooooooonooonddddddddddddddd│
+│noooonduuuuuuudvdddddddddttdtttttttttdttttttttttddtttttddttddtttdnooon│
 └──────────────────────────────────────────────────────────────────────┘
 a  bg BG #24283b
-b  fg FG_GUTTER #3b4261, bg BG #24283b
-c  fg PURPLE #9d7cd8, bg BG #24283b, italic
-d  fg FG #c0caf5, bg BG #24283b
-e  fg BLUE5 #89ddff, bg BG #24283b
-f  fg ORANGE #ff9e64, bg BG #24283b
-g  fg FG_DARK #a9b1d6, bg BG #24283b
-h  fg ORANGE #ff9e64, bg BG #24283b, bold
-i  fg BG_DARK #1f2335, bg ORANGE #ff9e64
-j  fg GREEN1 #73daca, bg BG #24283b
-k  fg FG #c0caf5, bg BG_SEARCH #3d59a1
-l  bg YELLOW #e0af68
-m  fg BG_DARK #1f2335, bg YELLOW #e0af68, bold
-n  bg BG_DARK #1f2335
-o  bg BG_HIGHLIGHT #292e42
-p  fg FG #c0caf5, bg BG_HIGHLIGHT #292e42
-q  fg DARK5 #737aa2, bg BG_DARK #1f2335
-r  fg CYAN #7dcfff, bg BG_DARK #1f2335, bold
-s  fg FG_DARK #a9b1d6, bg BG_DARK #1f2335
-t  fg FG #c0caf5, bg BG_DARK #1f2335
-u  fg ORANGE #ff9e64, bg BG_DARK #1f2335
+b  fg FG #c0caf5, bg BG #24283b, bold
+c  fg ORANGE #ff9e64, bg BG #24283b
+d  bg BG_DARK #1f2335
+e  fg FG_GUTTER #3b4261, bg BG #24283b
+f  fg PURPLE #9d7cd8, bg BG #24283b, italic
+g  fg FG #c0caf5, bg BG #24283b
+h  fg BLUE5 #89ddff, bg BG #24283b
+i  fg FG_DARK #a9b1d6, bg BG #24283b
+j  fg ORANGE #ff9e64, bg BG #24283b, bold
+k  fg BG_DARK #1f2335, bg ORANGE #ff9e64
+l  fg GREEN1 #73daca, bg BG #24283b
+m  fg FG #c0caf5, bg BG_SEARCH #3d59a1
+n  bg YELLOW #e0af68
+o  fg BG_DARK #1f2335, bg YELLOW #e0af68, bold
+p  bg BG_HIGHLIGHT #292e42
+q  fg FG #c0caf5, bg BG_HIGHLIGHT #292e42
+r  fg DARK5 #737aa2, bg BG_DARK #1f2335
+s  fg CYAN #7dcfff, bg BG_DARK #1f2335, bold
+t  fg FG_DARK #a9b1d6, bg BG_DARK #1f2335
+u  fg FG #c0caf5, bg BG_DARK #1f2335
+v  fg ORANGE #ff9e64, bg BG_DARK #1f2335

@@ -2,8 +2,9 @@
 # start: yate app.js
 # keys: ctrl+end
 # type: "function add(a, b) {\nreturn a + b"
-# 60x12, cursor at column 19, row 8
+# 60x12, cursor at column 19, row 9
 ┌────────────────────────────────────────────────────────────┐
+│ app.js ●                                                   │
 │  1  const colors = {                                       │
 │  2  ▏ bg: "#24283b",                                       │
 │  3  };                                                     │
@@ -14,6 +15,5 @@
 │  8  function add(a, b) {                                   │
 │  9  ▏ return a + b                                         │
 │ 10  }                                                      │
-│                                                            │
 │ EDIT  app.js ●            javascript  utf-8  LF  88%  9:15 │
 └────────────────────────────────────────────────────────────┘

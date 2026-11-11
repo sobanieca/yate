@@ -4,9 +4,9 @@
 # keys: ctrl+t r
 # 70x14, cursor hidden
 ┌──────────────────────────────────────────────────────────────────────┐
-│ PROJECT                 1  # demo                                    │
-│ [ ] changed             2                                            │
-│ [ ] ignored                                                          │
+│ PROJECT                README.md ×                                   │
+│ [ ] changed             1  # demo                                    │
+│ [ ] ignored             2                                            │
 │ ▸ src                                                                │
 │   .gitignore                                                         │
 │   README.md                                                          │

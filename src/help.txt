@@ -37,14 +37,15 @@ Menus: a key, then the key of a command.
                         the cursor (path:line:col works; ctrl+p takes file:line),
                         left jump back, right jump forward
   ctrl+k  bookmarks     t toggle, down next, up previous, l list, c clear in this file
-  ctrl+w  panes         v split side by side, s split one above the other, h j k l or the
+  ctrl+w  panes, tabs   v split side by side, s split one above the other, h j k l or the
                         arrows focus the pane on that side, w next pane, r resize (type
                         columns,rows to add: 10, -10 or 10,-2), = equal sizes, c close
-                        the pane, o close the others, y scroll all panes together
+                        the pane, o close the others, y scroll all panes together,
+                        x close the tab, t close the tabs not on screen
   ctrl+t  file tree     t toggle, r reveal file, f focus, l lock following the file
   ctrl+l  lines         up / down move, left / right outdent / indent, d duplicate,
                         k delete
-  ctrl+o  recent files  1 file tree, 2-9 recent files; ctrl+o again: next recent file
+  ctrl+o  switch        1 file tree, 2-9 the tabs; ctrl+o again: next tab
 
 The second key works with ctrl still held (ctrl+w ctrl+v), except ctrl+c, which closes the
 menu like esc. The key of a menu twice runs its usual command: ctrl+t ctrl+t toggles the
@@ -57,10 +58,11 @@ and buttons, space or enter picks one, and a click does the same. They add no ke
 A message too long for the status line opens in a dialog: up / down scroll it, esc or
 enter closes it.
 
-No tabs: the editor shows one file (one per pane in a split). Opening a file takes the place of the
-one shown; unsaved changes ask first (Save, Discard or Cancel: left / right and enter, or
-the first letter; esc stays). A file opens again
-where the cursor was, and ctrl+p lists the files you had last on top.
+Tabs: every file you open gets a tab above the editor, right of the current one. Click a
+tab to show it, click its x to close it. Only the files on screen are loaded: showing
+another tab with unsaved changes asks first (Save, Discard or Cancel: left / right and
+enter, or the first letter; esc stays). A file opens again where the cursor was, and
+ctrl+p lists the files you had last on top.
 
 File tree: enter open, left/right fold, f find file in the folder, g live grep in the
            folder, ctrl+n new, r rename, d delete, y copy path, shift+r refresh,

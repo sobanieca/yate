@@ -1,18 +1,18 @@
 # definitions_go_to_menu
 # start: yate src/app.ts
-# click: 5,5
+# click: 5,6
 # keys: ctrl+g
 # 80x16, cursor hidden
 ┌────────────────────────────────────────────────────────────────────────────────┐
-│  1  import { render } from './editor/view';                                    │
-│  2  import { rows╭─ Go to ─────────────────────────────────╮                   │
-│  3  import * as m│ l  Line…                                │                   │
-│  4               │ d  Definition or file under the cursor  │                   │
-│  5  const app = {│ ←  Back                                 │                   │
-│  6  render(app); │ →  Forward                              │                   │
-│  7  model.reset()╰─────────────────────────────────────────╯                   │
+│ app.ts ×                                                                       │
+│  1  import { rend╭─ Go to ─────────────────────────────────╮                   │
+│  2  import { rows│ l  Line…                                │                   │
+│  3  import * as m│ d  Definition or file under the cursor  │                   │
+│  4               │ ←  Back                                 │                   │
+│  5  const app = {│ →  Forward                              │                   │
+│  6  render(app); ╰─────────────────────────────────────────╯                   │
+│  7  model.reset();                                                             │
 │  8                                                                             │
-│                                                                                │
 │                                                                                │
 │                                                                                │
 │                                                                                │

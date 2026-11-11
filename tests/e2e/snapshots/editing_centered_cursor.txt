@@ -1,7 +1,8 @@
 # editing_centered_cursor
 # start: yate long.txt:50
-# 40x10, cursor at column 6, row 4
+# 40x10, cursor at column 6, row 5
 ┌────────────────────────────────────────┐
+│ long.txt ×                             │
 │  46  line 46                           │
 │  47  line 47                           │
 │  48  line 48                           │
@@ -10,6 +11,5 @@
 │  51  line 51                           │
 │  52  line 52                           │
 │  53  line 53                           │
-│  54  line 54                           │
 │ EDIT ….txt  text  utf-8  LF  49%  50:1 │
 └────────────────────────────────────────┘

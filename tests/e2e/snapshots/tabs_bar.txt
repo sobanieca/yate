@@ -1,0 +1,20 @@
+# tabs_bar
+# start: yate a.js
+# keys: ctrl+p
+# type: "c.js"
+# keys: enter
+# keys: ctrl+o 2
+# keys: ctrl+p
+# type: "b.js"
+# keys: enter
+# 60x8, cursor at column 5, row 1
+┌────────────────────────────────────────────────────────────┐
+│ a.js ×  b.js ×  c.js ×                                     │
+│  1  let b = 2;                                             │
+│  2                                                         │
+│                                                            │
+│                                                            │
+│                                                            │
+│                                                            │
+│ EDIT  b.js                  javascript  utf-8  LF  0%  1:1 │
+└────────────────────────────────────────────────────────────┘

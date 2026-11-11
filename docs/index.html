@@ -328,7 +328,7 @@ img { max-width: 100%; }
 <main id="top">
   <div class="wrap hero">
     <div class="hero-grid">
-      <div class="eyebrow"><span>yate · yet another text editor</span><span class="pill">v0.5.0 · early</span></div>
+      <div class="eyebrow"><span>yate · yet another text editor</span><span class="pill">v0.6.0 · early</span></div>
       <h1>A terminal editor between <em>nano</em> and <em>neovim</em>.</h1>
       <p class="lede">Simple to use like nano: no modes, type and the text goes in, and the keys show on screen. Ready for a whole project like neovim: a file tree, Ctrl+P, live grep, split view, go to definition and JavaScript plugins, with nothing to set up. One binary with no runtime dependencies, for quick, comfortable edits in a terminal or a tmux pane.</p>
       <div class="install">
@@ -370,8 +370,8 @@ img { max-width: 100%; }
         <article class="feature"><h3>Go to definition <span class="k" data-k="ctrl+g d"></span></h3><p>Jump to a function, class or variable in the file, through ES imports and re-exports, or across the project. On a path or an import it opens the file. No language server needed.</p></article>
         <article class="feature"><h3>Syntax highlighting</h3><p>Tree-sitter grammars for 36 languages are compiled in and parsed incrementally, so highlighting stays exact while you type.</p></article>
         <article class="feature"><h3>Command palette <span class="k" data-k="ctrl+h"></span></h3><p>Lists only what the focused panel can do right now, grouped in sections: File, Edit, Search, Go to and so on, each command with its keys. Search by section or name, bind any command to a key, or run it from a plugin.</p></article>
-        <article class="feature"><h3>Few keys, Ctrl only <span class="k" data-k="ctrl+g"></span></h3><p>A handful of direct keys for what you do all the time, and six menu keys for the rest: Ctrl+G go to, Ctrl+K bookmarks, Ctrl+W panes, Ctrl+T file tree, Ctrl+L lines, Ctrl+O recent files. A letter or an arrow picks the command; the menu shows when you wait. No Alt, function or Ctrl+Shift keys.</p></article>
-        <article class="feature"><h3>Switch with Ctrl+O <span class="k" data-k="ctrl+o"></span></h3><p>Ctrl+O then 1 focuses the file tree, 2-9 show a recent file; wait and the numbers pop up. Press Ctrl+O again to walk through the recent files.</p></article>
+        <article class="feature"><h3>Few keys, Ctrl only <span class="k" data-k="ctrl+g"></span></h3><p>A handful of direct keys for what you do all the time, and six menu keys for the rest: Ctrl+G go to, Ctrl+K bookmarks, Ctrl+W panes and tabs, Ctrl+T file tree, Ctrl+L lines, Ctrl+O switch. A letter or an arrow picks the command; the menu shows when you wait. No Alt, function or Ctrl+Shift keys.</p></article>
+        <article class="feature"><h3>Tabs <span class="k" data-k="ctrl+o"></span></h3><p>Every file you open gets a tab. Click one, or press Ctrl+O and the number it shows (1 is the file tree); Ctrl+O again walks through the tabs. Only the files on screen are loaded, so nothing unsaved hides behind a tab.</p></article>
         <article class="feature"><h3>Split view <span class="k" data-k="ctrl+w"></span></h3><p>As many panes as you need, side by side or one above the other: several files, or several places in one file with their own cursors. Panes share the space evenly until you resize one. Scroll sync moves all panes together.</p></article>
         <article class="feature"><h3>JavaScript plugins</h3><p>An embedded QuickJS engine runs the plugins you switch on in <code>yate.json</code>: register commands, bind keys, react to saves, run programs.</p></article>
         <article class="feature"><h3>Made for tmux</h3><p>Copies go to the tmux paste buffer, paste reads it, and the editor dims when the pane loses focus. No key needs Ctrl+Shift.</p></article>
@@ -441,7 +441,7 @@ cargo dist              <span class="c"># static binary in dist/yate</span></pre
 
           <article class="chapter" id="screen">
             <h2>The screen</h2>
-            <p>From left to right and top to bottom: the file tree (toggle it with <span class="k" data-k="ctrl+t t"></span>), the editor with line numbers, git signs and indent guides, and the status line with the path of the file. There are no tabs: the editor shows one file, or several in a split, each with its path above it.</p>
+            <p>From left to right and top to bottom: the file tree (toggle it with <span class="k" data-k="ctrl+t t"></span>), the editor with line numbers, git signs and indent guides, and the status line with the path of the file. Above the editor the tabs list the files you opened; the editor shows one of them, or several in a split, each with its path above it.</p>
             <p>The status line starts with a label that tells you where your keys go. It is the closest thing yate has to a mode, and it changes only when focus moves. Each focus area has its own color, and the title of the focused panel takes it too:</p>
             <div class="tbl wide"><table>
               <thead><tr><th>Label</th><th>Focus</th><th>Leave with</th></tr></thead>
@@ -558,8 +558,8 @@ cargo dist              <span class="c"># static binary in dist/yate</span></pre
             <p>The bar is a form, so it has no keys of its own to remember: a click on a checkbox or a button does the same as Space, and typing while a checkbox has the focus goes back to the find text.</p>
             <h2>Files, jumps and bookmarks</h2>
             <ul class="plain">
-              <li><b>One file per pane.</b> yate has no tabs, no buffers and nothing to close. Opening a file shows it in place of the current one. When the current one has unsaved changes yate asks first with the buttons <b>Save</b>, <b>Discard</b> and <b>Cancel</b>: <span class="k" data-k="left|right"></span> and <span class="k" data-k="enter"></span> choose one, the first letter of a button presses it, Esc stays. A file opens again where the cursor was. To get back to a file use <span class="k" data-k="ctrl+g left"></span>, <span class="k" data-k="ctrl+p"></span> (the files you had last are on top) or <span class="k" data-k="ctrl+o"></span>.</li>
-              <li><b>Ctrl+O.</b> <span class="k" data-k="ctrl+o"></span> waits for a digit: <kbd>1</kbd> focuses the file tree, <kbd>2</kbd>-<kbd>9</kbd> show the recent files, the latest first (<kbd>2</kbd> is the current file, <kbd>3</kbd> the one before). Wait a moment (<code>keyHintDelay</code>, 500 ms) and the numbered targets pop up. Pressing <span class="k" data-k="ctrl+o"></span> again shows the next recent file. Esc cancels; any other key leaves the switcher and does its usual job.</li>
+              <li><b>Tabs.</b> Every file you open gets a tab above the editor, right of the current one. Click a tab to show its file, click its <kbd>×</kbd> (or middle-click the tab) to close it, or use <span class="k" data-k="ctrl+w x"></span>; <span class="k" data-k="ctrl+w t"></span> closes the tabs no pane shows. Closing the current tab shows the one next to it. A tab is only a file name: yate loads just the files on screen, so when the current file has unsaved changes, showing another tab asks first with the buttons <b>Save</b>, <b>Discard</b> and <b>Cancel</b>: <span class="k" data-k="left|right"></span> and <span class="k" data-k="enter"></span> choose one, the first letter of a button presses it, Esc stays. A <kbd>●</kbd> marks a tab with unsaved changes. A file opens again where the cursor was. <span class="k" data-k="ctrl+g left"></span> and <span class="k" data-k="ctrl+p"></span> (the files you had last are on top) get you back too.</li>
+              <li><b>Ctrl+O.</b> <span class="k" data-k="ctrl+o"></span> waits for a digit: <kbd>1</kbd> focuses the file tree, <kbd>2</kbd>-<kbd>9</kbd> show the tabs from the left, and the tabs show their digits while it waits. Wait a moment (<code>keyHintDelay</code>, 500 ms) and the numbered targets pop up too. Pressing <span class="k" data-k="ctrl+o"></span> again shows the next tab. Esc cancels; any other key leaves the switcher and does its usual job.</li>
               <li><b>Split view.</b> <span class="k" data-k="ctrl+w"></span> pops up the panes menu: <kbd>v</kbd> splits the focused pane vertically (two panes side by side), <kbd>s</kbd> horizontally (one above the other). Split again for more panes, in any mix. Panes split the same way share the space evenly. <kbd>r</kbd> resizes the focused pane: type the columns to add, like <code>10</code> or <code>-10</code>, the rows for stacked panes, or both as <code>columns,rows</code> (<code>10,-2</code>); the pane next to it gives or takes them. <kbd>=</kbd> makes all panes equal again, <kbd>c</kbd> closes the focused pane and <kbd>o</kbd> closes all the others. Each pane has its own file, cursor and scroll, so one file can show several places at once. <kbd>h</kbd> <kbd>j</kbd> <kbd>k</kbd> <kbd>l</kbd> or the arrows move to the pane on the left, below, above and on the right (the one level with the cursor), <kbd>w</kbd> to the next pane (<span class="k" data-k="ctrl+w ctrl+w"></span>), a click to any pane. <kbd>y</kbd> turns scroll sync on: scrolling one pane scrolls the others by the same number of lines, handy to read two versions side by side. When the terminal gets too small for the panes, only the focused one is shown.</li>
               <li><b>Go to.</b> <span class="k" data-k="ctrl+g"></span> pops up a menu: <kbd>l</kbd> asks for a line number, <kbd>d</kbd> goes to the definition, <kbd>←</kbd> and <kbd>→</kbd> walk the jump list. Esc closes the menu.</li>
               <li><b>Go to definition.</b> <span class="k" data-k="ctrl+g d"></span> or Ctrl+click. On a name, yate finds its definition with tree-sitter: in the same file (the innermost scope wins), in the module an ES <code>import</code> points to (following re-exports and <code>export *</code>), or anywhere in the project; several matches open a picker. On a definition it lists the other definitions with that name. On a string, an import or a <code>path:line:col</code> it opens the file. Imports resolve like Node and TypeScript: extensions, <code>index</code> files, <code>tsconfig.json</code>/<code>jsconfig.json</code> <code>paths</code> and <code>baseUrl</code>, <code>package.json</code> <code>imports</code> and <code>exports</code>, <code>node_modules</code> and <code>@types</code>. Definitions are found in JavaScript, TypeScript, Rust, Go, Python, C, C++, Java, C#, Lua, Ruby, PHP, Elixir, Dart, Gleam and Swift; in other languages the name opens live grep.</li>
@@ -826,7 +826,8 @@ yate.<span class="fn">on</span>(<span class="s">"beforeSave"</span>, () <span cl
   ];
   function editorScreen() {
     const SW = 24, EW = W - SW;
-    const right = editorRows(EW, true);
+    const tabs = fit([["dk d5", " lib.rs × "], ["bg fg b", " main.rs "], ["bg or", "● "], ["dk d5", " mod.rs × "]], EW, "dk");
+    const right = [tabs].concat(editorRows(EW, true).slice(0, 14));
     const rows = right.map((r, i) => fit(tree[i] || [], SW, tree[i] && tree[i][0][0].startsWith("hl") ? "hl" : "dk").concat(r));
     rows.push(status("EDIT", [["dk fd", "src/main.rs "], ["dk or", "●"]], "rust  utf-8  LF  46%", "6:20"));
     return rows;
@@ -893,7 +894,7 @@ yate.<span class="fn">on</span>(<span class="s">"beforeSave"</span>, () <span cl
   }
 
   const SCREENS = {
-    editor: { build: editorScreen, caption: "The tree shows git status colors, the gutter marks changed (blue) and added (teal) lines, and the status line shows the focus label in the color of the focus area, the branch, file and cursor position." },
+    editor: { build: editorScreen, caption: "The tabs list the files you opened, a dot marks unsaved changes. The tree shows git status colors, the gutter marks changed (blue) and added (teal) lines, and the status line shows the focus label in the color of the focus area, the branch, file and cursor position." },
     files: { build: filesScreen, caption: "Ctrl+P matches the letters you type anywhere in the path, in order. Enter opens the file; Esc returns to where you were." },
     grep: { build: grepScreen, caption: "Live grep searches the project as you type. Tab moves to the glob field to narrow it to some files; Enter jumps to the line." },
     palette: { build: paletteScreen, caption: "Ctrl+H lists what the focused panel can do right now, grouped in sections. Type to search by section or name; Enter runs the command." },
@@ -919,10 +920,10 @@ yate.<span class="fn">on</span>(<span class="s">"beforeSave"</span>, () <span cl
     ["ctrl+s", "Save file", "Global", "file.save"],
     ["ctrl+n", "New file", "Global", "file.new"],
     ["ctrl+q", "Quit", "Global", "app.quit"],
-    ["ctrl+o", "Switch: then 1 file tree, 2-9 recent file; again: next recent file", "Global", "switch.next"],
+    ["ctrl+o", "Switch: then 1 file tree, 2-9 a tab; again: next tab", "Global", "switch.next"],
     ["ctrl+g", "Go to menu: line, definition, back, forward", "Global", "goto.menu"],
     ["ctrl+k", "Bookmarks menu: toggle, next, previous, list, clear", "Global", "bookmark.menu"],
-    ["ctrl+w", "Panes menu: split, focus, resize, close, scroll sync", "Global", "view.paneMenu"],
+    ["ctrl+w", "Panes and tabs menu: split, focus, resize, close, scroll sync, close tabs", "Global", "view.paneMenu"],
     ["ctrl+t", "File tree menu: toggle, reveal, focus, lock", "Global", "tree.menu"],
     ["ctrl+l", "Lines menu: move, indent, duplicate, delete", "Editor", "edit.lineMenu"],
     ["ctrl+z", "Undo", "Editor", "edit.undo"],
@@ -940,8 +941,8 @@ yate.<span class="fn">on</span>(<span class="s">"beforeSave"</span>, () <span cl
     ["ctrl+home|ctrl+end", "File start / end", "Editor", ""],
     ["shift+left", "Extend the selection with any motion", "Editor", ""],
     ["1", "File tree", "Switch", ""],
-    ["2|3|9", "Recent file 1 to 8, the latest first", "Switch", ""],
-    ["ctrl+o", "Next recent file", "Switch", "switch.next"],
+    ["2|3|9", "Tab 1 to 8, from the left", "Switch", ""],
+    ["ctrl+o", "Next tab", "Switch", "switch.next"],
     ["esc", "Cancel", "Switch", ""],
     ["ctrl+g l", "Go to line", "Menu", "goto.line"],
     ["ctrl+g d", "Go to definition or file under the cursor (Ctrl+click too)", "Menu", "goto.definition"],
@@ -964,6 +965,8 @@ yate.<span class="fn">on</span>(<span class="s">"beforeSave"</span>, () <span cl
     ["ctrl+w c", "Close the pane", "Menu", "view.closePane"],
     ["ctrl+w o", "Close the other panes", "Menu", "view.closeOtherPanes"],
     ["ctrl+w y", "Scroll all panes together (sync on / off)", "Menu", "view.toggleScrollSync"],
+    ["ctrl+w x", "Close the tab", "Menu", "tab.close"],
+    ["ctrl+w t", "Close the tabs not on screen", "Menu", "tab.closeOthers"],
     ["ctrl+t t", "File tree: toggle (Ctrl+T Ctrl+T)", "Menu", "tree.toggle"],
     ["ctrl+t r", "File tree: reveal current file", "Menu", "tree.reveal"],
     ["ctrl+t f", "File tree: focus", "Menu", "tree.focus"],

@@ -48,7 +48,7 @@ fn cursor(e: &Harness) -> (String, (usize, usize)) {
 #[test]
 fn an_import_path_opens_the_module_and_ctrl_g_left_comes_back() {
     let mut e = project();
-    e.click(31, 0).keys("ctrl+g d");
+    e.click(31, 1).keys("ctrl+g d");
     assert_eq!(cursor(&e).0, "src/editor/view.ts");
     e.keys("ctrl+g left");
     assert_eq!(cursor(&e), ("src/app.ts".to_string(), (0, 26)));
@@ -57,7 +57,7 @@ fn an_import_path_opens_the_module_and_ctrl_g_left_comes_back() {
 #[test]
 fn an_imported_name_jumps_to_its_definition_in_the_module() {
     let mut e = project();
-    e.click(5, 5).keys("ctrl+g d");
+    e.click(5, 6).keys("ctrl+g d");
     assert_eq!(cursor(&e), ("src/editor/view.ts".to_string(), (0, 16)));
     e.snapshot("definitions_imported_function");
 }
@@ -65,28 +65,28 @@ fn an_imported_name_jumps_to_its_definition_in_the_module() {
 #[test]
 fn reexports_and_path_aliases_are_followed() {
     let mut e = project();
-    e.click(26, 4).keys("ctrl+g d");
+    e.click(26, 5).keys("ctrl+g d");
     assert_eq!(cursor(&e), ("src/editor/model.ts".to_string(), (0, 13)));
 }
 
 #[test]
 fn a_name_defined_in_the_same_file_moves_the_cursor() {
     let mut e = project();
-    e.ctrl_click(12, 5);
+    e.ctrl_click(12, 6);
     assert_eq!(cursor(&e), ("src/app.ts".to_string(), (4, 6)));
 }
 
 #[test]
 fn a_member_is_found_in_the_project() {
     let mut e = project();
-    e.click(11, 6).keys("ctrl+g d");
+    e.click(11, 7).keys("ctrl+g d");
     assert_eq!(cursor(&e), ("src/editor/model.ts".to_string(), (1, 16)));
 }
 
 #[test]
 fn at_a_definition_the_other_definitions_are_listed() {
     let mut e = project();
-    e.click(5, 5).keys("ctrl+g d").keys("ctrl+g d");
+    e.click(5, 6).keys("ctrl+g d").keys("ctrl+g d");
     e.snapshot("definitions_picker");
     e.keys("down enter");
     assert_eq!(cursor(&e), ("test/helpers.ts".to_string(), (1, 13)));
@@ -96,7 +96,7 @@ fn at_a_definition_the_other_definitions_are_listed() {
 fn a_path_with_a_line_number_in_text_opens_there() {
     let mut e = project();
     e.keys("ctrl+p").type_text("README").keys("enter");
-    e.ctrl_click(12, 0);
+    e.ctrl_click(12, 1);
     assert_eq!(cursor(&e), ("src/editor/view.ts".to_string(), (1, 0)));
 }
 
@@ -119,7 +119,7 @@ fn an_unknown_name_says_so() {
 #[test]
 fn ctrl_g_asks_for_a_line_or_the_definition() {
     let mut e = project();
-    e.click(5, 5).keys("ctrl+g");
+    e.click(5, 6).keys("ctrl+g");
     e.snapshot("definitions_go_to_menu");
     e.keys("d");
     assert_eq!(cursor(&e), ("src/editor/view.ts".to_string(), (0, 16)));
@@ -130,7 +130,7 @@ fn ctrl_g_asks_for_a_line_or_the_definition() {
 #[test]
 fn the_go_to_menu_takes_its_keys_with_ctrl_held_and_escape() {
     let mut e = project();
-    e.click(5, 5).keys("ctrl+g esc");
+    e.click(5, 6).keys("ctrl+g esc");
     e.assert_screen_lacks("Go to");
     assert_eq!(cursor(&e).0, "src/app.ts");
     e.keys("ctrl+g x 9 enter");
@@ -143,7 +143,7 @@ fn the_go_to_menu_takes_its_keys_with_ctrl_held_and_escape() {
 #[test]
 fn ctrl_arrows_repeat_back_and_forward_right_after_the_go_to_menu() {
     let mut e = project();
-    e.click(5, 5).keys("ctrl+g d ctrl+g l").type_text("3\n");
+    e.click(5, 6).keys("ctrl+g d ctrl+g l").type_text("3\n");
     assert_eq!(cursor(&e), ("src/editor/view.ts".to_string(), (2, 0)));
     e.keys("ctrl+g left");
     assert_eq!(cursor(&e), ("src/editor/view.ts".to_string(), (0, 16)));

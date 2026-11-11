@@ -8,11 +8,12 @@
 //! other panes by the same number of lines and columns.
 //!
 //! Each pane shows one file. A file that leaves the screen is forgotten,
-//! except for its path and cursor in the recent files.
+//! except for its tab and its path and cursor in the recent files.
 //!
 //! Ctrl+O arms the switcher: a digit then focuses the file tree (1) or shows
-//! a recent file (2-9), and every further Ctrl+O shows the next recent file.
-//! The numbered targets pop up after `keyHintDelay` milliseconds.
+//! a tab (2-9), and every further Ctrl+O shows the next tab. The tabs show
+//! their numbers while it is armed, and the numbered targets pop up after
+//! `keyHintDelay` milliseconds.
 
 use super::panes::{self, Direction, Side};
 use super::{App, Focus, Overlay, Prompt, PromptKind, gutter_width};
@@ -25,8 +26,8 @@ use std::time::{Duration, Instant};
 
 pub struct Switcher {
     pub started: Instant,
-    /// The recent files when the switcher was armed, so their numbers stay
-    /// while it is used.
+    /// The tabs when the switcher was armed, so their numbers stay while
+    /// it is used.
     pub files: Vec<PathBuf>,
 }
 
@@ -336,10 +337,10 @@ impl App {
         self.switcher = Some(Switcher {
             started: Instant::now(),
             files: self
-                .recent
+                .tabs
                 .iter()
                 .take(MAX_SWITCH_TARGETS - 1)
-                .map(|recent| recent.path.clone())
+                .cloned()
                 .collect(),
         });
     }
@@ -373,8 +374,7 @@ impl App {
         }
     }
 
-    /// The numbered targets of the switcher: the file tree, then the recent
-    /// files.
+    /// The numbered targets of the switcher: the file tree, then the tabs.
     pub fn switch_targets(&self) -> Vec<String> {
         let first = "File tree".to_string();
         let files = self.switcher.iter().flat_map(|s| &s.files).map(|path| {
@@ -403,11 +403,11 @@ impl App {
     pub(super) fn switcher_key(&mut self, key: KeyEvent, command: Option<&str>) -> bool {
         match command {
             Some("switch.next") => {
-                self.cycle_recent(1);
+                self.step_tab(1);
                 return true;
             }
             Some("switch.previous") => {
-                self.cycle_recent(-1);
+                self.step_tab(-1);
                 return true;
             }
             _ => {}
@@ -435,7 +435,7 @@ impl App {
         }
         match files.get(number - 2) {
             Some(path) => self.show_file(path),
-            None => self.notify(format!("No recent file {number}")),
+            None => self.notify(format!("No tab {number}")),
         }
     }
 
@@ -464,29 +464,6 @@ impl App {
                 self.open(path, None);
             }
         }
-    }
-
-    /// Shows the next (or previous) recent file of the armed switcher.
-    pub fn cycle_recent(&mut self, delta: isize) {
-        let Some(switcher) = &self.switcher else {
-            return;
-        };
-        let files = &switcher.files;
-        if files.is_empty() {
-            self.notify("No recent files");
-            return;
-        }
-        let current = self
-            .doc()
-            .path
-            .as_ref()
-            .and_then(|path| files.iter().position(|file| file == path));
-        let next = match current {
-            Some(index) => (index as isize + delta).rem_euclid(files.len() as isize) as usize,
-            None => 0,
-        };
-        let path = files[next].clone();
-        self.show_file(&path);
     }
 }
 

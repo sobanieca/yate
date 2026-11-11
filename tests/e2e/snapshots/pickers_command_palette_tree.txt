@@ -7,8 +7,8 @@
 # keys: esc ctrl+t t ctrl+h
 # 80x16, cursor at column 7, row 3
 ┌────────────────────────────────────────────────────────────────────────────────┐
-│ PROJECT                  1  Call render() to draw.                             │
-│ [ ] changed [ ] ignored  2                                                     │
+│ PROJECT                 README.md ×                                            │
+│ [ ] changed [ ] ignored  1  Call render() to draw.                             │
 │ ▸ ╭─ Commands (tree) ────────────────────────────────────────────── 46/46 ─╮   │
 │ ▸ │ ❯                                                                      │   │
 │   │────────────────────────────────────────────────────────────────────────│   │

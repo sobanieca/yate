@@ -11,5 +11,6 @@ mod pickers;
 mod plugins;
 mod settings;
 mod split;
+mod tabs;
 mod tree;
 mod update;

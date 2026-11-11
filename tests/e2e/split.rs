@@ -19,7 +19,7 @@ fn project_of_size(width: u16, height: u16) -> Harness {
 }
 
 fn project() -> Harness {
-    project_of_size(70, 10)
+    project_of_size(70, 11)
 }
 
 fn open(e: &mut Harness, file: &str) {
@@ -69,7 +69,7 @@ fn a_horizontal_split_stacks_the_panes() {
     e.keys("ctrl+w s");
     open(&mut e, "two.txt");
     e.snapshot("split_stacked");
-    e.click(10, 2);
+    e.click(10, 3);
     assert_eq!(e.app().doc().name(), "one.txt");
     assert_eq!(e.app().doc().cursor_line(), 1);
 }
@@ -93,7 +93,7 @@ fn panes_split_the_same_way_share_the_space_evenly() {
 
 #[test]
 fn a_pane_of_a_split_can_be_split_the_other_way() {
-    let mut e = project_of_size(80, 16);
+    let mut e = project_of_size(80, 17);
     e.keys("ctrl+w v");
     open(&mut e, "two.txt");
     e.keys("ctrl+w s");
@@ -110,7 +110,7 @@ fn a_pane_of_a_split_can_be_split_the_other_way() {
 
 #[test]
 fn alt_h_j_k_l_focus_the_pane_on_that_side() {
-    let mut e = project_of_size(80, 16);
+    let mut e = project_of_size(80, 17);
     e.keys("ctrl+w v");
     open(&mut e, "two.txt");
     e.keys("ctrl+w s");
@@ -128,7 +128,7 @@ fn alt_h_j_k_l_focus_the_pane_on_that_side() {
 
 #[test]
 fn a_pane_is_resized_by_typing_columns_and_rows() {
-    let mut e = project_of_size(80, 16);
+    let mut e = project_of_size(80, 17);
     e.keys("ctrl+w v");
     open(&mut e, "two.txt");
     e.keys("ctrl+w s ctrl+w r");
@@ -162,10 +162,10 @@ fn a_split_needs_room_for_the_new_pane() {
     e.keys("ctrl+w s");
     e.assert_screen_contains("No room for another pane");
     assert_eq!(e.app().panes.ids().len(), 3);
-    e.resize(70, 8);
+    e.resize(70, 9);
     assert_eq!(pane_sizes(&e), [(70, 7)]);
     e.assert_screen_lacks("two 1");
-    e.resize(70, 10);
+    e.resize(70, 11);
     assert_eq!(pane_sizes(&e).len(), 3);
 }
 
@@ -215,7 +215,7 @@ fn the_wheel_scrolls_the_pane_under_the_mouse() {
     let mut e = project();
     e.keys("ctrl+w v");
     open(&mut e, "two.txt");
-    e.scroll(10, 3, 1);
+    e.scroll(10, 4, 1);
     e.assert_screen_contains("one 4");
     e.assert_screen_contains("two 1 ");
     assert_eq!(e.app().doc().name(), "two.txt");
@@ -226,10 +226,10 @@ fn clicking_another_pane_focuses_it() {
     let mut e = project();
     e.keys("ctrl+w v");
     open(&mut e, "two.txt");
-    e.click(10, 3);
+    e.click(10, 4);
     assert_eq!(e.app().doc().name(), "one.txt");
     assert_eq!(e.app().doc().cursor_line(), 2);
-    e.click(50, 0);
+    e.click(50, 1);
     assert_eq!(e.app().doc().name(), "two.txt");
 }
 
@@ -251,7 +251,7 @@ fn closing_a_pane_asks_about_unsaved_changes() {
 
 #[test]
 fn closing_the_other_panes_asks_about_each_unsaved_file() {
-    let mut e = project_of_size(80, 16);
+    let mut e = project_of_size(80, 17);
     e.keys("ctrl+w v");
     open(&mut e, "two.txt");
     e.type_text("x").keys("ctrl+w s");

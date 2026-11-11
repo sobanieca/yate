@@ -1,12 +1,12 @@
 # plugins_options
 # start: yate a.js
 # type: "if (x) {\ny();"
-# 50x8, cursor at column 10, row 1
+# 50x8, cursor at column 10, row 2
 ┌──────────────────────────────────────────────────┐
+│ a.js ●                                           │
 │  if (x) {                                        │
 │  ▏   y();                                        │
 │  }                                               │
-│                                                  │
 │                                                  │
 │                                                  │
 │                                                  │

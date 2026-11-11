@@ -2,7 +2,7 @@
 # start: yate a.txt
 # 100x12, cursor at column 5, row 9
 ┌────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│  ╭─ Error ──────────────────────────────────────────────────────────────────────────────────────╮  │
+│ a╭─ Error ──────────────────────────────────────────────────────────────────────────────────────╮  │
 │  │ yate.json: theme.preset: unknown preset "solarized" (known: tokyonight-storm,                │  │
 │  │ tokyonight-night, tokyonight-moon, tokyonight-day, gruvbox-dark, gruvbox-light, nord,        │  │
 │  │ solarized-light)                                                                             │  │

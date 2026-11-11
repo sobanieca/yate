@@ -16,7 +16,7 @@ The whole suite takes about a second. It needs `git` installed.
 ## Writing a test
 
 Tests are grouped by area in `editing.rs`, `tree.rs`, `pickers.rs`, `find.rs`, `git.rs`,
-`split.rs`, `keys.rs`, `definitions.rs`, `plugins.rs`, `settings.rs` and
+`split.rs`, `tabs.rs`, `keys.rs`, `definitions.rs`, `plugins.rs`, `settings.rs` and
 `update.rs`. A test describes a project, starts yate in it and drives it:
 
 ```rust

@@ -1,33 +1,35 @@
 # settings_theme_nord
 # start: yate a.js
-# 40x5, cursor at column 5, row 0
+# 40x5, cursor at column 5, row 1
 ┌────────────────────────────────────────┐
+│ a.js ×                                 │
 │  1  // greeting                        │
 │  2  const name = "yate";               │
 │  3                                     │
-│                                        │
 │ EDIT …  javascript  utf-8  LF  0%  1:1 │
 └────────────────────────────────────────┘
 
 styles
 ┌────────────────────────────────────────┐
-│aabaaccaccccccccaaaaaaaaaaaaaaaaaaaaaaaa│
-│ddeddfffffdggggdhdiiiiiihddddddddddddddd│
-│ddeddddddddddddddddddddddddddddddddddddd│
-│dddddddddddddddddddddddddddddddddddddddd│
-│jkkkkjlmmnnnnnnnnnnmmnnnnnmmnnmmnnmjkkkj│
+│abbbbacadddddddddddddddddddddddddddddddd│
+│eefeeggeggggggggeeeeeeeeeeeeeeeeeeeeeeee│
+│aahaaiiiiiajjjjakallllllkaaaaaaaaaaaaaaa│
+│aahaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
+│mnnnnmoddppppppppppddpppppddppddppdmnnnm│
 └────────────────────────────────────────┘
-a  bg BG_HIGHLIGHT #3b4252
-b  fg ORANGE #d08770, bg BG_HIGHLIGHT #3b4252, bold
-c  fg COMMENT #616e88, bg BG_HIGHLIGHT #3b4252, italic
-d  bg BG #2e3440
-e  fg FG_GUTTER #4c566a, bg BG #2e3440
-f  fg BLUE5 #81a1c1, bg BG #2e3440, italic
-g  fg FG #d8dee9, bg BG #2e3440
-h  fg BLUE5 #81a1c1, bg BG #2e3440
-i  fg GREEN #a3be8c, bg BG #2e3440
-j  bg BLUE #88c0d0
-k  fg BG_DARK #272c36, bg BLUE #88c0d0, bold
-l  fg FG #d8dee9, bg BG_DARK #272c36
-m  bg BG_DARK #272c36
-n  fg FG_DARK #b8c0cd, bg BG_DARK #272c36
+a  bg BG #2e3440
+b  fg FG #d8dee9, bg BG #2e3440, bold
+c  fg DARK5 #7b88a1, bg BG #2e3440
+d  bg BG_DARK #272c36
+e  bg BG_HIGHLIGHT #3b4252
+f  fg ORANGE #d08770, bg BG_HIGHLIGHT #3b4252, bold
+g  fg COMMENT #616e88, bg BG_HIGHLIGHT #3b4252, italic
+h  fg FG_GUTTER #4c566a, bg BG #2e3440
+i  fg BLUE5 #81a1c1, bg BG #2e3440, italic
+j  fg FG #d8dee9, bg BG #2e3440
+k  fg BLUE5 #81a1c1, bg BG #2e3440
+l  fg GREEN #a3be8c, bg BG #2e3440
+m  bg BLUE #88c0d0
+n  fg BG_DARK #272c36, bg BLUE #88c0d0, bold
+o  fg FG #d8dee9, bg BG_DARK #272c36
+p  fg FG_DARK #b8c0cd, bg BG_DARK #272c36

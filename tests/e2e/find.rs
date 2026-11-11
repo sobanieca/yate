@@ -108,7 +108,7 @@ fn go_to_line() {
     let mut e = editor();
     e.keys("ctrl+g l").type_text("3").keys("enter");
     assert_eq!(e.app().doc().cursor_line(), 2);
-    assert_eq!(e.screen().cursor, Some((7, 2)));
+    assert_eq!(e.screen().cursor, Some((7, 3)));
 }
 
 #[test]
