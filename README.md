@@ -1,8 +1,10 @@
 # yate
 
-**Yet another text editor**: a modeless terminal editor that works like a basic VS Code,
-not like vim. No modes and no language servers. It is made for quick, comfortable edits in a
-terminal or a tmux pane.
+**Yet another text editor**: a terminal editor somewhere between nano and neovim. Simple to
+use like nano: no modes, type and the text goes in, and the keys you need are on screen. Enough
+to work on a project like neovim: a file tree, a fuzzy file finder, live grep, split view, go
+to definition and JavaScript plugins, with no language servers and nothing to set up. It is
+made for quick, comfortable edits in a terminal or a tmux pane.
 
 Website and manual: https://sobanieca.github.io/yate/
 

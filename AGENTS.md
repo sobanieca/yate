@@ -5,9 +5,9 @@ Guidance for AI coding agents (Claude Code and others) working in this repositor
 ## Project
 
 yate (yet another text editor) is a modeless terminal text editor written in Rust and
-shipped as one binary. It behaves like a basic VS Code: a file tree, Ctrl+P, live grep,
-split view, go to definition without a language server, and JavaScript plugins
-in QuickJS.
+shipped as one binary. It sits between nano and neovim: simple to use like nano (no modes,
+keys shown on screen), with project tools like neovim: a file tree, Ctrl+P, live grep, split
+view, go to definition without a language server, and JavaScript plugins in QuickJS.
 
 The current version is 0.5.0, an early release. The 0.x series is still settling, so prefer
 the better design over compatibility: change keys, options or the plugin API when needed,
