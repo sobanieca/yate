@@ -40,7 +40,7 @@ fn no_message_when_yate_is_up_to_date() {
 #[test]
 fn yate_json_turns_the_update_check_off() {
     let e = Harness::builder()
-        .home_file("yate.json", r#"{ "options": { "updateCheck": false } }"#)
+        .config("yate.json", r#"{ "options": { "updateCheck": false } }"#)
         .start();
     assert!(!e.app().options.update_check);
 }

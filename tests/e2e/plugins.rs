@@ -4,7 +4,7 @@ use yate::testing::Harness;
 fn a_plugin_switched_on_in_yate_json_registers_a_command_with_a_key() {
     let mut e = Harness::builder()
         .size(60, 8)
-        .home_file("yate.jsonc", r#"{ "plugins": { "shout": true } }"#)
+        .config("yate.jsonc", r#"{ "plugins": { "shout": true } }"#)
         .config(
             "plugins/shout.js",
             r#"
@@ -27,7 +27,7 @@ fn a_plugin_switched_on_in_yate_json_registers_a_command_with_a_key() {
 fn options_from_a_plugin_apply() {
     let mut e = Harness::builder()
         .size(50, 8)
-        .home_file("yate.json", r#"{ "plugins": { "settings": true } }"#)
+        .config("yate.json", r#"{ "plugins": { "settings": true } }"#)
         .config(
             "plugins/settings.js",
             r#"yate.setOption("tabSize", 4); yate.setOption("lineNumbers", false);"#,
@@ -44,7 +44,7 @@ fn options_from_a_plugin_apply() {
 fn prompts_and_events_reach_plugins() {
     let mut e = Harness::builder()
         .size(80, 8)
-        .home_file("yate.json", r#"{ "plugins": { "greet": true } }"#)
+        .config("yate.json", r#"{ "plugins": { "greet": true } }"#)
         .config(
             "plugins/greet.js",
             r#"
@@ -69,7 +69,7 @@ fn prompts_and_events_reach_plugins() {
 fn a_message_that_fits_the_status_line_stays_there() {
     let mut e = Harness::builder()
         .size(60, 6)
-        .home_file("yate.json", r#"{ "plugins": { "say": true } }"#)
+        .config("yate.json", r#"{ "plugins": { "say": true } }"#)
         .config(
             "plugins/say.js",
             r#"
@@ -93,7 +93,7 @@ fn a_message_that_fits_the_status_line_stays_there() {
 fn a_message_too_long_for_the_status_line_opens_a_dialog() {
     let mut e = Harness::builder()
         .size(60, 10)
-        .home_file("yate.json", r#"{ "plugins": { "say": true } }"#)
+        .config("yate.json", r#"{ "plugins": { "say": true } }"#)
         .config(
             "plugins/say.js",
             r#"
@@ -125,7 +125,7 @@ fn a_message_too_long_for_the_status_line_opens_a_dialog() {
 fn a_plugin_shows_a_dialog_that_scrolls_and_closes_on_a_click() {
     let mut e = Harness::builder()
         .size(50, 10)
-        .home_file("yate.json", r#"{ "plugins": { "list": true } }"#)
+        .config("yate.json", r#"{ "plugins": { "list": true } }"#)
         .config(
             "plugins/list.js",
             r#"
@@ -176,7 +176,7 @@ fn git_blame_shows_the_commit_of_the_line_in_a_dialog() {
 fn plugin_errors_show_in_a_dialog() {
     Harness::builder()
         .size(110, 8)
-        .home_file("yate.json", r#"{ "plugins": { "broken": true } }"#)
+        .config("yate.json", r#"{ "plugins": { "broken": true } }"#)
         .config(
             "plugins/broken.js",
             "yate.setOption('tabSize', 'wide');\nundefinedFunction();",
@@ -190,7 +190,7 @@ fn plugin_errors_show_in_a_dialog() {
 #[test]
 fn plugins_not_switched_on_do_not_load_and_bundled_ones_can_be_switched_off() {
     let e = Harness::builder()
-        .home_file("yate.json", r#"{ "plugins": { "git": false } }"#)
+        .config("yate.json", r#"{ "plugins": { "git": false } }"#)
         .config("plugins/idle.js", "yate.registerCommand('idle', () => {});")
         .file("a.txt", "")
         .open("a.txt")

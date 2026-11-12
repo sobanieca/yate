@@ -7,7 +7,7 @@ fn project(width: u16) -> Harness {
         .file("b.js", "let b = 2;\n")
         .file("c.js", "let c = 3;\n")
         .file("lib/a.js", "export const a = 4;\n")
-        .home_file("yate.json", r#"{ "options": { "keyHintDelay": 0 } }"#)
+        .config("yate.json", r#"{ "options": { "keyHintDelay": 0 } }"#)
         .open("a.js")
         .start()
 }
@@ -109,7 +109,7 @@ fn ctrl_o_numbers_the_tabs() {
         .size(60, 8)
         .file("a.js", "")
         .file("b.js", "")
-        .home_file("yate.json", r#"{ "options": { "keyHintDelay": 60000 } }"#)
+        .config("yate.json", r#"{ "options": { "keyHintDelay": 60000 } }"#)
         .open("a.js")
         .start();
     open(&mut e, "b.js");

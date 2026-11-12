@@ -4,7 +4,7 @@
 use super::surface::{Rect, Style, Surface};
 use super::theme::Theme;
 use crate::app::{App, Overlay};
-use crate::picker::{Picker, PickerKind};
+use crate::picker::{Picker, PickerItem, PickerKind};
 use crate::text;
 use unicode_segmentation::UnicodeSegmentation;
 
@@ -58,6 +58,9 @@ pub fn render(app: &mut App, surface: &mut Surface) -> Option<(u16, u16)> {
     let (list_box, preview_box) = split(width, height, picker.kind);
     let rows = list_area(width, height, picker.kind);
     picker.ensure_visible(rows.h as usize);
+    if picker.kind == PickerKind::Commands {
+        scroll_commands(picker, rows);
+    }
     let panel = Style::new().fg(t.fg).bg(t.bg_dark);
     let border = Style::new().fg(t.blue).bg(t.bg_dark);
     surface.fill(list_box, panel);
@@ -170,9 +173,187 @@ fn group_column_width(picker: &Picker, rows: Rect) -> u16 {
     }
 }
 
+/// Columns a command label gets at least beside its keys; with less, the
+/// keys go on a line of their own below the label.
+const LABEL_BESIDE_KEYS_MIN_WIDTH: usize = 16;
+
+/// The rows of one command in the palette: its label broken into lines
+/// (each with the char index where it starts) and the row of its keys.
+struct CommandLayout {
+    lines: Vec<(usize, String)>,
+    keys_row: usize,
+}
+
+impl CommandLayout {
+    fn new(item: &PickerItem, width: usize) -> CommandLayout {
+        let keys = text::str_width(&item.detail);
+        let label = text::str_width(&item.label);
+        let (label_width, keys_below) = if keys == 0 || label + 2 + keys <= width {
+            (width, false)
+        } else if width >= keys + 2 + LABEL_BESIDE_KEYS_MIN_WIDTH {
+            (width - keys - 2, false)
+        } else {
+            (width, true)
+        };
+        let mut from = 0;
+        let lines: Vec<(usize, String)> = text::wrap(&item.label, label_width)
+            .into_iter()
+            .map(|line| {
+                let at = item.label[from..].find(&line).map_or(from, |i| from + i);
+                from = at + line.len();
+                (item.label[..at].chars().count(), line)
+            })
+            .collect();
+        let last = lines.len().saturating_sub(1);
+        let last_width = lines.last().map_or(0, |(_, line)| text::str_width(line));
+        let keys_row = if !keys_below {
+            0
+        } else if last_width + 2 + keys <= width {
+            last
+        } else {
+            lines.len()
+        };
+        CommandLayout { lines, keys_row }
+    }
+
+    fn height(&self) -> usize {
+        self.lines.len().max(self.keys_row + 1)
+    }
+}
+
+/// The columns a command label can take in the list `rows`.
+fn command_text_width(picker: &Picker, rows: Rect) -> usize {
+    rows.w.saturating_sub(4 + group_column_width(picker, rows)) as usize
+}
+
+fn command_height(picker: &Picker, shown: usize, width: usize) -> usize {
+    CommandLayout::new(&picker.items[picker.shown[shown].0], width).height()
+}
+
+/// Scrolls the palette so the whole selected command shows, now that a
+/// command can take more than one row.
+fn scroll_commands(picker: &mut Picker, rows: Rect) {
+    let width = command_text_width(picker, rows);
+    while picker.scroll < picker.selected
+        && (picker.scroll..=picker.selected)
+            .map(|shown| command_height(picker, shown, width))
+            .sum::<usize>()
+            > rows.h as usize
+    {
+        picker.scroll += 1;
+    }
+}
+
+/// The index in `picker.shown` of the result drawn at a screen cell.
+pub fn item_at(picker: &Picker, width: u16, height: u16, column: u16, row: u16) -> Option<usize> {
+    let rows = list_area(width, height, picker.kind);
+    if !rows.contains(column, row) {
+        return None;
+    }
+    let offset = (row - rows.y) as usize;
+    if picker.kind != PickerKind::Commands {
+        let index = picker.scroll + offset;
+        return (index < picker.shown.len()).then_some(index);
+    }
+    let text_width = command_text_width(picker, rows);
+    let mut bottom = 0;
+    for shown in picker.scroll..picker.shown.len() {
+        bottom += command_height(picker, shown, text_width);
+        if offset < bottom {
+            return Some(shown);
+        }
+    }
+    None
+}
+
 fn render_rows(picker: &Picker, surface: &mut Surface, rows: Rect, t: &Theme) {
+    if picker.kind == PickerKind::Commands {
+        render_commands(picker, surface, rows, t);
+    } else {
+        render_results(picker, surface, rows, t);
+    }
+    if picker.shown.is_empty() {
+        let message = if picker.searching {
+            "Searching…"
+        } else if picker.kind == PickerKind::Grep && picker.input.text.is_empty() {
+            "Type to search the project"
+        } else {
+            "No results"
+        };
+        surface.put_str(
+            rows.x + 2,
+            rows.y,
+            message,
+            Style::new().fg(t.dark5).bg(t.bg_dark),
+            rows.right(),
+        );
+    }
+}
+
+fn render_commands(picker: &Picker, surface: &mut Surface, rows: Rect, t: &Theme) {
     let group_width = group_column_width(picker, rows);
+    let text_width = command_text_width(picker, rows);
     let filtered = !picker.input.text.trim().is_empty();
+    let right = rows.right().saturating_sub(1);
+    let mut y = rows.y;
+    for (row, (index, matched)) in picker.shown.iter().enumerate().skip(picker.scroll) {
+        if y >= rows.bottom() {
+            break;
+        }
+        let item = &picker.items[*index];
+        let layout = CommandLayout::new(item, text_width);
+        let height = (layout.height() as u16).min(rows.bottom() - y);
+        let selected = row == picker.selected;
+        let bg = if selected { t.bg_highlight } else { t.bg_dark };
+        surface.fill(Rect::new(rows.x, y, rows.w, height), Style::new().bg(bg));
+        if selected {
+            for marker_y in y..y + height {
+                surface.set_symbol(rows.x, marker_y, "▌", Style::new().fg(t.magenta));
+            }
+        }
+        let x = rows.x + 2;
+        if group_width > 0 {
+            let starts_group =
+                row == picker.scroll || picker.items[picker.shown[row - 1].0].group != item.group;
+            if filtered || starts_group {
+                let mut group_x = x;
+                for (i, c) in item.group.chars().enumerate() {
+                    let style = if matched.binary_search(&(i as u32)).is_ok() {
+                        Style::new().fg(t.orange).bg(bg).bold()
+                    } else {
+                        Style::new().fg(t.blue).bg(bg)
+                    };
+                    group_x = surface.put_str(group_x, y, &c.to_string(), style, right);
+                }
+            }
+        }
+        let label_x = x + group_width;
+        let label_offset = item.label_offset();
+        for (line_y, (start, line)) in (y..y + height).zip(&layout.lines) {
+            let mut line_x = label_x;
+            let mut char_index = *start;
+            for grapheme in line.graphemes(true) {
+                let len = grapheme.chars().count();
+                let is_match = (char_index..char_index + len)
+                    .any(|c| matched.binary_search(&((c + label_offset) as u32)).is_ok());
+                let style = if is_match {
+                    Style::new().fg(t.orange).bg(bg).bold()
+                } else {
+                    Style::new().fg(t.fg).bg(bg)
+                };
+                line_x = surface.put_str(line_x, line_y, grapheme, style, right);
+                char_index += len;
+            }
+        }
+        let keys_y = y + layout.keys_row as u16;
+        if !item.detail.is_empty() && keys_y < y + height {
+            surface.put_str_right(right, keys_y, &item.detail, Style::new().fg(t.dark5).bg(bg));
+        }
+        y += height;
+    }
+}
+
+fn render_results(picker: &Picker, surface: &mut Surface, rows: Rect, t: &Theme) {
     for (row, (index, matched)) in picker
         .shown
         .iter()
@@ -190,22 +371,6 @@ fn render_rows(picker: &Picker, surface: &mut Surface, rows: Rect, t: &Theme) {
         }
         let mut x = rows.x + 2;
         let right = rows.right().saturating_sub(1);
-        if group_width > 0 {
-            let starts_group =
-                row == picker.scroll || picker.items[picker.shown[row - 1].0].group != item.group;
-            if filtered || starts_group {
-                let mut group_x = x;
-                for (i, c) in item.group.chars().enumerate() {
-                    let style = if matched.binary_search(&(i as u32)).is_ok() {
-                        Style::new().fg(t.orange).bg(bg).bold()
-                    } else {
-                        Style::new().fg(t.blue).bg(bg)
-                    };
-                    group_x = surface.put_str(group_x, y, &c.to_string(), style, right);
-                }
-            }
-            x += group_width;
-        }
         let label_offset = item.label_offset();
         let max_label = match picker.kind {
             PickerKind::Grep | PickerKind::Bookmarks | PickerKind::Definitions
@@ -213,20 +378,22 @@ fn render_rows(picker: &Picker, surface: &mut Surface, rows: Rect, t: &Theme) {
             {
                 rows.w.saturating_sub(4) as usize / 2
             }
-            _ => rows.w.saturating_sub(4 + group_width) as usize,
+            _ => rows.w.saturating_sub(4) as usize,
         };
-        let chars: Vec<char> = item.label.chars().collect();
-        let widths: Vec<usize> = chars
-            .iter()
-            .map(|c| text::str_width(&c.to_string()))
-            .collect();
-        let total: usize = widths.iter().sum();
+        let mut graphemes = Vec::new();
+        let mut char_index = 0;
+        for grapheme in item.label.graphemes(true) {
+            let len = grapheme.chars().count();
+            graphemes.push((char_index, len, grapheme, text::grapheme_width(grapheme)));
+            char_index += len;
+        }
+        let total: usize = graphemes.iter().map(|g| g.3).sum();
         let mut skip = 0;
         if total > max_label {
             let mut used = 1;
-            skip = chars.len();
-            while skip > 0 && used + widths[skip - 1] <= max_label {
-                used += widths[skip - 1];
+            skip = graphemes.len();
+            while skip > 0 && used + graphemes[skip - 1].3 <= max_label {
+                used += graphemes[skip - 1].3;
                 skip -= 1;
             }
             x = surface.put_str(x, y, "…", Style::new().fg(t.dark5).bg(bg), right);
@@ -239,8 +406,9 @@ fn render_rows(picker: &Picker, surface: &mut Surface, rows: Rect, t: &Theme) {
         } else {
             usize::MAX
         };
-        for (i, c) in chars.iter().enumerate().skip(skip) {
-            let is_match = matched.binary_search(&((i + label_offset) as u32)).is_ok();
+        for &(i, len, grapheme, _) in graphemes.iter().skip(skip) {
+            let is_match =
+                (i..i + len).any(|c| matched.binary_search(&((c + label_offset) as u32)).is_ok());
             let base_fg = match picker.kind {
                 PickerKind::Grep | PickerKind::Bookmarks | PickerKind::Definitions => t.cyan,
                 _ if i >= name_start => t.fg,
@@ -252,54 +420,31 @@ fn render_rows(picker: &Picker, surface: &mut Surface, rows: Rect, t: &Theme) {
             } else {
                 Style::new().fg(base_fg).bg(bg)
             };
-            x = surface.put_str(x, y, &c.to_string(), style, right);
+            x = surface.put_str(x, y, grapheme, style, right);
         }
         if item.detail.is_empty() {
             continue;
         }
-        match picker.kind {
-            PickerKind::Commands => {
-                surface.put_str_right(right, y, &item.detail, Style::new().fg(t.dark5).bg(bg));
-            }
-            _ => {
-                let detail = item.detail.trim_start();
-                let trimmed = item.detail.len() - detail.len();
-                let mut dx = x + 2;
-                let mut byte = trimmed;
-                for grapheme in detail.graphemes(true) {
-                    let emphasized = item
-                        .detail_match
-                        .is_some_and(|(s, e)| byte >= s && byte < e);
-                    let style = if emphasized {
-                        Style::new().fg(t.orange).bg(bg).bold()
-                    } else {
-                        Style::new().fg(t.fg_dark).bg(bg)
-                    };
-                    let shown = if grapheme == "\t" { " " } else { grapheme };
-                    dx = surface.put_str(dx, y, shown, style, right);
-                    byte += grapheme.len();
-                    if dx >= right {
-                        break;
-                    }
-                }
+        let detail = item.detail.trim_start();
+        let trimmed = item.detail.len() - detail.len();
+        let mut dx = x + 2;
+        let mut byte = trimmed;
+        for grapheme in detail.graphemes(true) {
+            let emphasized = item
+                .detail_match
+                .is_some_and(|(s, e)| byte >= s && byte < e);
+            let style = if emphasized {
+                Style::new().fg(t.orange).bg(bg).bold()
+            } else {
+                Style::new().fg(t.fg_dark).bg(bg)
+            };
+            let shown = if grapheme == "\t" { " " } else { grapheme };
+            dx = surface.put_str(dx, y, shown, style, right);
+            byte += grapheme.len();
+            if dx >= right {
+                break;
             }
         }
-    }
-    if picker.shown.is_empty() {
-        let message = if picker.searching {
-            "Searching…"
-        } else if picker.kind == PickerKind::Grep && picker.input.text.is_empty() {
-            "Type to search the project"
-        } else {
-            "No results"
-        };
-        surface.put_str(
-            rows.x + 2,
-            rows.y,
-            message,
-            Style::new().fg(t.dark5).bg(t.bg_dark),
-            rows.right(),
-        );
     }
 }
 

@@ -12,7 +12,7 @@ together, where a name is defined, what the agent changed. yate is made for that
 project in the file tree, jump with Ctrl+P, live grep and go to definition, see the changed
 lines in the gutter, fix a line by hand, and go back to the agent in the next tmux pane.
 
-Website and manual: https://sobanieca.github.io/yate/
+Website and manual: https://adam.sobaniec.com/yate/
 
 > **Status:** version 0.6.0, an early release. Keys, options and the plugin API may still
 > change between versions.
@@ -57,14 +57,16 @@ Website and manual: https://sobanieca.github.io/yate/
   status line label and the focused panel title take the color of the focus area: blue for
   the editor, green for the tree, yellow for find.
 - **UTF-8 only.** LF and CRLF line endings are kept. Files that are not valid UTF-8 open
-  read-only.
+  read-only. Wide characters and emoji take two columns, and the cursor, Backspace and Delete
+  treat an emoji made of several code points (👨‍👩‍👧, 🇵🇱, 👍🏽) as one character. **Insert
+  emoji** in the command palette picks one by name.
 
 ## Install
 
 Linux and macOS (x64, arm64):
 
 ```bash
-curl -fsSL sobanieca.github.io/yate/install.sh | bash
+curl -fsSL adam.sobaniec.com/yate/install.sh | bash
 ```
 
 This installs yate to `/usr/local/bin`. If you can't write there, run the script with `sudo`
@@ -92,6 +94,9 @@ yate                  open the current folder (file tree)
 yate <folder>         open a folder
 yate <file>[:line]    open a file; the project is its git repository
 yate update           install the latest release
+yate init             create ./yate.jsonc listing every setting, commented out
+yate skill            print instructions for AI agents that edit yate.json
+yate skill --init     create a /yate skill for AI agents
 yate --help           list the keys
 yate --version        show the version
 ```
@@ -166,27 +171,39 @@ everywhere.
 ## Configuration
 
 `yate.json` (or `yate.jsonc`) holds the theme, options, key bindings and plugins.
-`~/yate.json` applies everywhere, and any `yate.json` on the way down to the working folder
-overrides it, the closest one winning. Comments and trailing commas are allowed. The command
-**Open yate.json** creates `~/yate.jsonc` with every key binding listed, ready to edit. See
+`~/.yate/yate.json` applies everywhere, and any `yate.json` on the way down to the working
+folder overrides it, the closest one winning. Comments and trailing commas are allowed. The
+command **Open yate.json** creates `~/.yate/yate.jsonc`, and `yate init` creates `./yate.jsonc` for a
+project: both list every palette color, syntax scope, option, key binding and bundled plugin
+with its default value and what it does, commented out; remove the `//` to change one. See
 [docs/configuration.md](docs/configuration.md) and [examples/yate.jsonc](examples/yate.jsonc).
+Everything yate keeps is in `~/.yate`: settings, plugins, the log and bookmarks (`YATE_HOME`
+moves it).
+
+A coding agent can configure yate for you: have it run `yate skill`, which prints
+instructions for agents, the configuration reference, the plugin API and every setting with
+its default. `yate skill --init` makes it a skill: it writes `SKILL.md` to
+`.agents/skills/yate/` (Codex, Cursor) and `.claude/skills/yate/` (Claude Code, Cursor) at
+the git root, or in your home folder outside a git repository, so agents see it in every
+project. Then ask, for example, `/yate use the gruvbox-dark theme and bind ctrl+e to go to
+definition`.
 
 ```jsonc
 {
   "theme": { "preset": "tokyonight-night", "colors": { "bg": "#1e1e2e" }, "syntax": { "keyword": "magenta" } },
   "options": { "tabSize": 4 },
   "keys": { "editor": { "ctrl+y": "tree.toggle", "alt+d": "date.insert" } },
-  "plugins": { "date": true }   // ~/.config/yate/plugins/date.js
+  "plugins": { "date": true }   // ~/.yate/plugins/date.js
 }
 ```
 
 ## Plugins
 
-Plugins are JavaScript files in `~/.config/yate/plugins`, loaded when `yate.json` switches
+Plugins are JavaScript files in `~/.yate/plugins`, loaded when `yate.json` switches
 them on by name. yate never loads plugins from the opened project.
 
 ```js
-// ~/.config/yate/plugins/date.js
+// ~/.yate/plugins/date.js
 yate.registerCommand("date.insert", "Insert today's date", () =>
   yate.editor.replaceSelection(new Date().toISOString().slice(0, 10)),
 );

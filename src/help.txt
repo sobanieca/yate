@@ -5,6 +5,10 @@ Usage:
   yate <folder>         open a folder
   yate <file>[:line]    open a file; the project is its git repository
   yate update           install the latest release (./update opens a file named update)
+  yate init             create ./yate.jsonc listing every setting, commented out
+  yate skill            print instructions for AI agents that edit yate.json
+  yate skill --init     create a /yate skill for AI agents (.claude/skills, .agents/skills)
+                        in the git repository, or in ~ outside one
 
 Options:
   -h, --help            show this help
@@ -31,6 +35,7 @@ Keys (Ctrl keys only, no modes; ctrl+h in yate lists the commands with their key
   ctrl+/                toggle comment             tab / shift+tab  indent / outdent
   ctrl+left / right     10 characters (jumpChars)  ctrl+up / down  5 lines (jumpLines)
   ctrl+click            go to definition, or to the file of the path under the cursor
+  "Insert emoji" in the command palette picks an emoji by name
 
 Menus: a key, then the key of a command.
   ctrl+g  go to         l line, d the definition, or the file of the path or import under
@@ -71,11 +76,13 @@ File tree: enter open, left/right fold, f find file in the folder, g live grep i
            [ ] ignored (git-ignored files too); up from the first file reaches them,
            left / right move, space or enter ticks, down goes back to the files.
 
-Settings: ~/yate.json, overridden by yate.json files closer to the working directory
-          (theme, options, keys, plugins); yate.jsonc works too. "Open yate.json" in
-          the palette creates ~/yate.jsonc listing every key binding, ready to edit.
-Plugins:  ~/.config/yate/plugins/<name>.js (JavaScript), loaded when yate.json has
+Settings: ~/.yate/yate.json, overridden by yate.json files closer to the working
+          directory (theme, options, keys, plugins); yate.jsonc works too. "Open
+          yate.json" in the palette creates ~/.yate/yate.jsonc, and yate init ./yate.jsonc: every
+          color, syntax scope, option, key binding and plugin with its default,
+          commented out; remove the // in front of a line to change it.
+Plugins:  ~/.yate/plugins/<name>.js (JavaScript), loaded when yate.json has
           "plugins": { "<name>": true }.
-Log:      ~/.local/state/yate/yate.log
+Log:      ~/.yate/yate.log (~/.yate also keeps the bookmarks; YATE_HOME moves it)
 Updates:  checked once a day; "updateCheck": false in options or YATE_NO_UPDATE_CHECK=1
           turns the check off.

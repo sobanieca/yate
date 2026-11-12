@@ -92,7 +92,6 @@ fn git(dir: &Path, args: &[&str]) -> String {
 pub struct Builder {
     files: Vec<(String, String)>,
     config: Vec<(String, String)>,
-    home: Vec<(String, String)>,
     working_dir: Option<String>,
     git: bool,
     size: (u16, u16),
@@ -106,15 +105,10 @@ impl Builder {
         self
     }
 
-    /// A file in the config folder (`~/.config/yate`), e.g. `plugins/sort.js`.
+    /// A file in the yate folder (`~/.yate`), e.g. `yate.json` or
+    /// `plugins/sort.js`.
     pub fn config(mut self, path: &str, content: &str) -> Self {
         self.config.push((path.to_string(), content.to_string()));
-        self
-    }
-
-    /// A file in the home folder, e.g. the global `yate.json`.
-    pub fn home_file(mut self, path: &str, content: &str) -> Self {
-        self.home.push((path.to_string(), content.to_string()));
         self
     }
 
@@ -149,8 +143,7 @@ impl Builder {
         let temp = temp_dir();
         let root = temp.0.join("project");
         let paths = Paths {
-            config_dir: temp.0.join("config"),
-            state_dir: temp.0.join("state"),
+            dir: temp.0.join("home/.yate"),
             home: Some(temp.0.join("home")),
             cwd: root.join(self.working_dir.as_deref().unwrap_or("")),
             ceiling: Some(temp.0.clone()),
@@ -160,10 +153,7 @@ impl Builder {
             write(&root.join(path), content);
         }
         for (path, content) in &self.config {
-            write(&paths.config_dir.join(path), content);
-        }
-        for (path, content) in &self.home {
-            write(&temp.0.join("home").join(path), content);
+            write(&paths.dir.join(path), content);
         }
         std::fs::create_dir_all(&paths.cwd).expect("create the working directory of the test");
         if self.git {
@@ -222,7 +212,6 @@ impl Harness {
         Builder {
             files: Vec::new(),
             config: Vec::new(),
-            home: Vec::new(),
             working_dir: None,
             git: false,
             size: (80, 20),

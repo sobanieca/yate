@@ -454,7 +454,7 @@ pub struct App {
 
 impl App {
     fn new(root: PathBuf, tx: Sender<AppEvent>, paths: config::Paths, clipboard: Clipboard) -> App {
-        let bookmarks = Bookmarks::load(Some(bookmarks::file_for(&paths.state_dir, &root)));
+        let bookmarks = Bookmarks::load(Some(bookmarks::file_for(&paths.dir, &root)));
         App {
             paths,
             theme: crate::ui::theme::Theme::default(),
@@ -547,7 +547,7 @@ impl App {
 
     pub fn error(&mut self, text: impl Into<String>) {
         let text = text.into();
-        crate::log::write_to(&self.paths.state_dir, &text);
+        crate::log::write_to(&self.paths.dir, &text);
         self.set_message(text, true, false);
     }
 
@@ -1260,10 +1260,10 @@ impl App {
         match PluginHost::new() {
             Ok(host) => {
                 self.plugins = Some(host);
-                let config_dir = self.paths.config_dir.clone();
+                let yate_dir = self.paths.dir.clone();
                 let mut errors = Vec::new();
                 let result = self.with_plugins(|host| {
-                    errors = host.load_all(&config_dir, &plugin_switches);
+                    errors = host.load_all(&yate_dir, &plugin_switches);
                     Ok(())
                 });
                 if let Err(err) = result {

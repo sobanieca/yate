@@ -91,25 +91,36 @@ impl OptionValue {
     }
 }
 
-pub const OPTION_NAMES: &[&str] = &[
-    "tabSize",
-    "insertSpaces",
-    "scrollOff",
-    "indentGuides",
-    "autoPairs",
-    "lineNumbers",
-    "cursorLine",
-    "colorize",
-    "nerdIcons",
-    "showIgnored",
-    "treeFollow",
-    "treeAutoCloseWidth",
-    "treeWidth",
-    "mouseScrollLines",
-    "jumpChars",
-    "jumpLines",
-    "updateCheck",
-    "keyHintDelay",
+/// The options by name, as in `yate.json` and `yate.setOption`, with what
+/// they change.
+pub const OPTIONS: &[(&str, &str)] = &[
+    ("tabSize", "columns of an indent level and of a tab"),
+    ("insertSpaces", "tab inserts spaces"),
+    (
+        "scrollOff",
+        "lines kept around the cursor; 999 keeps it centered",
+    ),
+    ("indentGuides", "show indent guides"),
+    ("autoPairs", "close brackets and quotes as you type"),
+    ("lineNumbers", "show line numbers"),
+    ("cursorLine", "highlight the cursor line"),
+    ("colorize", "show #rrggbb colors in their color"),
+    ("nerdIcons", "Nerd Font icons in the file tree"),
+    ("showIgnored", "show git-ignored files in the file tree"),
+    ("treeFollow", "the file tree follows the current file"),
+    (
+        "treeAutoCloseWidth",
+        "close the tree after opening a file below this width",
+    ),
+    ("treeWidth", "columns of the file tree; 0 fits the names"),
+    ("mouseScrollLines", "lines a mouse wheel step scrolls"),
+    ("jumpChars", "characters ctrl+left and ctrl+right move"),
+    ("jumpLines", "lines ctrl+up and ctrl+down move"),
+    ("updateCheck", "check once a day for a new release"),
+    (
+        "keyHintDelay",
+        "milliseconds before the popup of a menu shows",
+    ),
 ];
 
 impl Options {
@@ -136,11 +147,41 @@ impl Options {
             _ => {
                 return Err(format!(
                     "unknown option {name} (known: {})",
-                    OPTION_NAMES.join(", ")
+                    OPTIONS
+                        .iter()
+                        .map(|(name, _)| *name)
+                        .collect::<Vec<_>>()
+                        .join(", ")
                 ));
             }
         }
         Ok(())
+    }
+
+    /// The value of an option as written in `yate.json`: `2`, `true`.
+    pub fn json_value(&self, name: &str) -> Option<String> {
+        let value = match name {
+            "tabSize" => self.tab_size.to_string(),
+            "insertSpaces" => self.insert_spaces.to_string(),
+            "scrollOff" => self.scroll_off.to_string(),
+            "indentGuides" => self.indent_guides.to_string(),
+            "autoPairs" => self.auto_pairs.to_string(),
+            "lineNumbers" => self.line_numbers.to_string(),
+            "cursorLine" => self.cursor_line.to_string(),
+            "colorize" => self.colorize.to_string(),
+            "nerdIcons" => self.nerd_icons.to_string(),
+            "showIgnored" => self.show_ignored.to_string(),
+            "treeFollow" => self.tree_follow.to_string(),
+            "treeAutoCloseWidth" => self.tree_auto_close_width.to_string(),
+            "treeWidth" => self.tree_width.to_string(),
+            "mouseScrollLines" => self.mouse_scroll_lines.to_string(),
+            "jumpChars" => self.jump_chars.to_string(),
+            "jumpLines" => self.jump_lines.to_string(),
+            "updateCheck" => self.update_check.to_string(),
+            "keyHintDelay" => self.key_hint_delay.to_string(),
+            _ => return None,
+        };
+        Some(value)
     }
 }
 
@@ -150,21 +191,14 @@ fn home() -> PathBuf {
         .unwrap_or_else(|| PathBuf::from("."))
 }
 
-fn xdg(variable: &str, fallback: &str) -> PathBuf {
-    std::env::var_os(variable)
-        .map(PathBuf::from)
-        .filter(|path| path.is_absolute())
-        .unwrap_or_else(|| home().join(fallback))
-        .join("yate")
-}
-
 /// Where yate reads its configuration and keeps its state. Tests use
 /// their own folders.
 #[derive(Clone, Debug)]
 pub struct Paths {
-    pub config_dir: PathBuf,
-    pub state_dir: PathBuf,
-    /// Holds the global `yate.json`.
+    /// The yate folder (`dir()`): the global `yate.json`, plugins, log,
+    /// bookmarks.
+    pub dir: PathBuf,
+    /// For `~` in paths and messages; `yate.json` files above it are ignored.
     pub home: Option<PathBuf>,
     /// The working directory: `yate.json` files on the way to it apply.
     pub cwd: PathBuf,
@@ -175,8 +209,7 @@ pub struct Paths {
 impl Paths {
     pub fn from_env() -> Paths {
         Paths {
-            config_dir: config_dir(),
-            state_dir: state_dir(),
+            dir: dir(),
             home: std::env::var_os("HOME").map(PathBuf::from),
             cwd: std::env::current_dir().unwrap_or_else(|_| PathBuf::from(".")),
             ceiling: None,
@@ -184,14 +217,14 @@ impl Paths {
     }
 }
 
-/// `~/.config/yate`: the plugins, `plugins/<name>.js`.
-pub fn config_dir() -> PathBuf {
-    xdg("XDG_CONFIG_HOME", ".config")
-}
-
-/// `~/.local/state/yate`: the log and the bookmarks.
-pub fn state_dir() -> PathBuf {
-    xdg("XDG_STATE_HOME", ".local/state")
+/// `~/.yate`, or `$YATE_HOME` when it is an absolute path: the global
+/// `yate.json`, `plugins/<name>.js`, `yate.log`, `bookmarks/` and the
+/// update check's `latest-version`.
+pub fn dir() -> PathBuf {
+    std::env::var_os("YATE_HOME")
+        .map(PathBuf::from)
+        .filter(|path| path.is_absolute())
+        .unwrap_or_else(|| home().join(".yate"))
 }
 
 #[cfg(test)]
@@ -205,5 +238,13 @@ mod tests {
         assert_eq!(options.tab_size, 4);
         assert!(options.set("tabSize", &OptionValue::Bool(true)).is_err());
         assert!(options.set("nope", &OptionValue::Bool(true)).is_err());
+    }
+
+    #[test]
+    fn every_option_has_a_value() {
+        let options = Options::default();
+        for (name, _) in OPTIONS {
+            assert!(options.json_value(name).is_some(), "{name}");
+        }
     }
 }

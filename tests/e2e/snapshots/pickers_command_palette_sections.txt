@@ -9,7 +9,7 @@
 │                                                                                │
 │                                                                                │
 │                                                                                │
-│   ╭─ Commands (editor) ──────────────────────────────────────────── 67/67 ─╮   │
+│   ╭─ Commands (editor) ──────────────────────────────────────────── 68/68 ─╮   │
 │   │ ❯                                                                      │   │
 │   │────────────────────────────────────────────────────────────────────────│   │
 │   │▌ File       Save                                                ctrl+s │   │
@@ -32,6 +32,7 @@
 │   │             Delete line                                       ctrl+l k │   │
 │   │             Indent lines                                      ctrl+l → │   │
 │   │             Outdent lines                                     ctrl+l ← │   │
+│   │             Insert emoji…                                              │   │
 │   │  Search     Find in file                                        ctrl+f │   │
 │   │             Replace in file                                            │   │
 │   │             Find file                                           ctrl+p │   │
@@ -52,11 +53,10 @@
 │   │  Plugins    Git: Blame current line                                    │   │
 │   │             Format document with Prettier                              │   │
 │   │             TypeScript: Add // @ts-nocheck                             │   │
-│   │  yate       Open yate.json (the closest one, or a new ~/yate.jsonc)    │   │
+│   │  yate       Open yate.json (the closest one, or a new global one)      │   │
 │   │             Reload yate.json and plugins                               │   │
 │   │             Open the log                                               │   │
 │   │             Quit                                                ctrl+q │   │
-│   │  Keys       Switch: focus the file tree                       ctrl+o 1 │   │
 │   ╰────────────────────────────────────────────────────────────────────────╯   │
 │                                                                                │
 │                                                                                │

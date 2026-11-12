@@ -283,6 +283,7 @@ commands! {
     });
     "edit.outdent", "Outdent lines", Edit, Editor => |app| edit(app, ops::outdent);
     "edit.lineMenu", "Move, indent, duplicate or delete lines…", Edit, Editor => |app| open_menu(app, &LINE_MENU);
+    "edit.insertEmoji", "Insert emoji…", Edit, Editor => open_emoji_picker;
     "find.open", "Find in file", Search, Editor => |app| open_find(app, false);
     "find.replace", "Replace in file", Search, Editor => |app| open_find(app, true);
     "find.next", "Find next", Search, Editor => |app| find_step(app, true);
@@ -369,14 +370,14 @@ commands! {
         app.notify("File tree: automatic width");
     };
     "picker.commands", "Command palette and keys", App, Anywhere => open_commands_picker;
-    "settings.open", "Open yate.json (the closest one, or a new ~/yate.jsonc)", App, Anywhere => open_settings;
+    "settings.open", "Open yate.json (the closest one, or a new global one)", App, Anywhere => open_settings;
     "config.reload", "Reload yate.json and plugins", App, Anywhere => |app| {
         if app.load_config() {
             app.notify("Reloaded settings and plugins");
         }
     };
     "app.log", "Open the log", App, Anywhere => |app| {
-        let path = app.paths.state_dir.join("yate.log");
+        let path = app.paths.dir.join("yate.log");
         app.open(&path, None);
     };
     "app.quit", "Quit", App, Anywhere => quit;
@@ -509,13 +510,11 @@ pub fn edit(
 }
 
 fn open_settings(app: &mut App) {
-    let path = app.settings_files.last().cloned().unwrap_or_else(|| {
-        app.paths
-            .home
-            .clone()
-            .unwrap_or_else(|| app.paths.cwd.clone())
-            .join(crate::settings::NEW_FILE_NAME)
-    });
+    let path = app
+        .settings_files
+        .last()
+        .cloned()
+        .unwrap_or_else(|| app.paths.dir.join(crate::settings::NEW_FILE_NAME));
     let exists = path.exists();
     if app.open(&path, None) && !exists && app.doc().rope.len_chars() == 0 {
         app.doc_mut().set_text(&crate::settings::template());
@@ -559,7 +558,7 @@ pub fn save(app: &mut App) {
             app.notify(format!("Saved {name}"));
             let saved = app.doc().path.clone().unwrap_or_default();
             let is_config = crate::settings::is_settings_file(&saved)
-                || saved.starts_with(&app.paths.config_dir);
+                || saved.starts_with(app.paths.dir.join("plugins"));
             if is_config && app.load_config() {
                 app.notify(format!("Saved {name}, settings reloaded"));
             }
@@ -869,6 +868,19 @@ fn open_language_picker(app: &mut App) {
     set_picker(app, Picker::new(PickerKind::Commands, "Language", items));
 }
 
+fn open_emoji_picker(app: &mut App) {
+    let items = crate::emoji::all()
+        .into_iter()
+        .map(|emoji| PickerItem {
+            label: format!("{} {}", emoji.symbol, emoji.name),
+            group: emoji.group.to_string(),
+            data: format!("emoji:{}", emoji.symbol),
+            ..PickerItem::default()
+        })
+        .collect();
+    set_picker(app, Picker::new(PickerKind::Commands, "Emoji", items));
+}
+
 fn open_bookmarks_picker(app: &mut App) {
     let items = app
         .bookmarks
@@ -938,6 +950,8 @@ pub fn accept_picker(app: &mut App, picker: Box<Picker>) {
             if let Some(name) = item.data.strip_prefix("language:") {
                 let language = languages::by_name(name);
                 app.doc_mut().set_language(language);
+            } else if let Some(emoji) = item.data.strip_prefix("emoji:") {
+                edit(app, |doc, _| ops::insert_text(doc, emoji, EditKind::Other));
             } else {
                 app.run_command(&item.data);
             }

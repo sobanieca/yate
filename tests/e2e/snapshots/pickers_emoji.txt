@@ -1,0 +1,19 @@
+# pickers_emoji
+# start: yate notes.md
+# keys: end
+# command: edit.insertEmoji
+# 60x12, cursor at column 7, row 1
+┌────────────────────────────────────────────────────────────┐
+│ no╭─ Emoji ──────────────────────────────── 1898/1898 ─╮   │
+│  1│ ❯                                                  │   │
+│  2│────────────────────────────────────────────────────│   │
+│   │▌ Smileys     😀 grinning face                      │   │
+│   │              😃 grinning face with big eyes        │   │
+│   │              😄 grinning face with smiling eyes    │   │
+│   │              😁 beaming face with smiling eyes     │   │
+│   │              😆 grinning squinting face            │   │
+│   │              😅 grinning face with sweat           │   │
+│   │              🤣 rolling on the floor laughing      │   │
+│   │              😂 face with tears of joy             │   │
+│ PI╰────────────────────────────────────────────────────╯:6 │
+└────────────────────────────────────────────────────────────┘

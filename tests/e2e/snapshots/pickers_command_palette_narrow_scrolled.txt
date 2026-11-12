@@ -1,0 +1,44 @@
+# pickers_command_palette_narrow_scrolled
+# start: yate README.md
+# keys: ctrl+t t ctrl+h
+# type: "lock"
+# keys: ctrl+u
+# keys: down
+# keys: down
+# keys: down
+# keys: down
+# keys: down
+# keys: down
+# keys: down
+# keys: down
+# keys: down
+# keys: down
+# keys: down
+# keys: down
+# 28x24, cursor at column 4, row 3
+┌────────────────────────────┐
+│ PROJECT              READM │
+│ [ ] changed          1  Cal│
+│╭─ Commands (tree)  45/45 ─╮│
+││ ❯                        ││
+││──────────────────────────││
+││  Copy relative path    y ││
+││  Toggle         ctrl+t t ││
+││  Reveal current file     ││
+││                 ctrl+t r ││
+││  Lock / unlock           ││
+││  following the current   ││
+││  file           ctrl+t l ││
+││  Show / hide             ││
+││  git-ignored files       ││
+││  Show only changed       ││
+││  files                   ││
+││  Refresh         shift+r ││
+││  Narrower              [ ││
+││  Wider                 ] ││
+││▌ Automatic width         ││
+│╰──────────────────────────╯│
+│                            │
+│                            │
+│ markdown  utf-8  LF  0 1:1 │
+└────────────────────────────┘

@@ -2,6 +2,7 @@
 
 use crate::text;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+use unicode_segmentation::UnicodeSegmentation;
 
 #[derive(Clone, Default, Debug)]
 pub struct LineInput {
@@ -94,16 +95,16 @@ impl LineInput {
                     return Some(false);
                 }
                 let start = self.byte(self.cursor);
-                let end = self.byte(self.cursor + 1);
+                let end = self.byte(text::next_grapheme(&self.text, self.cursor));
                 self.text.replace_range(start..end, "");
                 Some(true)
             }
             KeyCode::Left => {
-                self.cursor = self.cursor.saturating_sub(1);
+                self.cursor = text::prev_grapheme(&self.text, self.cursor);
                 Some(false)
             }
             KeyCode::Right => {
-                self.cursor = (self.cursor + 1).min(chars.len());
+                self.cursor = text::next_grapheme(&self.text, self.cursor);
                 Some(false)
             }
             KeyCode::Home => {
@@ -122,10 +123,11 @@ impl LineInput {
         if self.cursor == 0 {
             return Some(false);
         }
-        let start = self.byte(self.cursor - 1);
+        let previous = text::prev_grapheme(&self.text, self.cursor);
+        let start = self.byte(previous);
         let end = self.byte(self.cursor);
         self.text.replace_range(start..end, "");
-        self.cursor -= 1;
+        self.cursor = previous;
         Some(true)
     }
 
@@ -135,23 +137,37 @@ impl LineInput {
         text::str_width(&prefix)
     }
 
-    fn chars_scrolled(&self, width: usize) -> usize {
-        (self.cursor_col() + 1).saturating_sub(width)
+    /// The chars scrolled out on the left so that the cursor fits in
+    /// `width` columns, and their display width.
+    fn scrolled(&self, width: usize) -> (usize, usize) {
+        let mut col = self.cursor_col();
+        let mut chars = 0;
+        let mut columns = 0;
+        for grapheme in self.text.graphemes(true) {
+            if col < width || chars >= self.cursor {
+                break;
+            }
+            let grapheme_width = text::grapheme_width(grapheme);
+            col -= grapheme_width;
+            columns += grapheme_width;
+            chars += grapheme.chars().count();
+        }
+        (chars, columns)
     }
 
     /// The text that fits in `width` columns with the cursor in view, and
     /// the column of the cursor in it.
     pub fn visible(&self, width: usize) -> (String, usize) {
-        let skipped = self.chars_scrolled(width);
+        let (skipped, columns) = self.scrolled(width);
         let shown = self.text.chars().skip(skipped).collect();
-        let cursor = self.cursor_col().min(width.saturating_sub(1));
-        (shown, cursor)
+        (shown, self.cursor_col() - columns)
     }
 
     /// Puts the cursor at a clicked column of a field `width` columns wide.
     pub fn click(&mut self, col: usize, width: usize) {
-        let at = self.chars_scrolled(width) + col;
-        self.cursor = at.min(self.text.chars().count());
+        let (skipped, _) = self.scrolled(width);
+        let shown: String = self.text.chars().skip(skipped).collect();
+        self.cursor = skipped + text::display_col_to_char(&shown, col, 1);
         self.selected = false;
     }
 }
@@ -176,6 +192,26 @@ mod tests {
         assert_eq!(input.cursor, 1);
         input.handle(KeyEvent::new(KeyCode::Char('u'), KeyModifiers::CONTROL));
         assert_eq!(input.text, "");
+    }
+
+    #[test]
+    fn editing_keys_work_on_whole_emoji() {
+        let mut input = LineInput::with_text("a👍🏽👨‍👩‍👧b");
+        input.handle(key(KeyCode::Left));
+        input.handle(key(KeyCode::Backspace));
+        assert_eq!(input.text, "a👍🏽b");
+        input.handle(key(KeyCode::Left));
+        input.handle(key(KeyCode::Delete));
+        assert_eq!(input.text, "ab");
+        assert_eq!(input.cursor, 1);
+    }
+
+    #[test]
+    fn wide_text_scrolls_by_columns() {
+        let mut input = LineInput::with_text("🎉🎉🎉🎉");
+        assert_eq!(input.visible(6), ("🎉🎉".to_string(), 4));
+        input.click(2, 6);
+        assert_eq!(input.cursor, 3);
     }
 
     #[test]

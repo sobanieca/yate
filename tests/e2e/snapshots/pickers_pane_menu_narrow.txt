@@ -1,0 +1,30 @@
+# pickers_pane_menu_narrow
+# start: yate README.md
+# keys: ctrl+w
+# 28x24, cursor hidden
+┌────────────────────────────┐
+│ README.md ×                │
+│ ╭─ Panes and tabs ───────╮ │
+│ │ v    Split: side by    │ │
+│ │      side              │ │
+│ │ s    Split: one above  │ │
+│ │      the other         │ │
+│ │ h ←  Focus left        │ │
+│ │ j ↓  Focus below       │ │
+│ │ k ↑  Focus above       │ │
+│ │ l →  Focus right       │ │
+│ │ w    Focus the next    │ │
+│ │      pane              │ │
+│ │ r    Resize this pane… │ │
+│ │ =    Equal sizes       │ │
+│ │ c    Close this pane   │ │
+│ │ o    Close the other   │ │
+│ │      panes             │ │
+│ │ x    Close this tab    │ │
+│ │ t    Close the tabs    │ │
+│ │      not on screen     │ │
+│ │ y    Scroll together   │ │
+│ │      (on / off)        │ │
+│ ╰────────────────────────╯ │
+│ markdown  utf-8  LF  0 1:1 │
+└────────────────────────────┘

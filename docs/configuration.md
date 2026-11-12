@@ -6,24 +6,36 @@ so other editors expect the comments too.
 
 ## Where yate looks
 
-1. `~/yate.json`, the global settings.
-2. Every `yate.json` in the folders from `/` down to the working directory (and down to the
-   opened project folder when it is below the working directory), skipping folders above
-   your home folder.
+1. `~/.yate/yate.json`, the global settings.
+2. Every `yate.json` in the folders below your home folder down to the working directory
+   (and down to the opened project folder when it is below the working directory).
 
 In each folder, `yate.jsonc` is read after `yate.json`, so it wins when both exist.
 
 Files closer to the working directory override farther ones, key by key: a project can set
 `"options": { "tabSize": 4 }` and keep your global theme. A project `yate.json` is data
 only, so it is safe to commit: its `plugins` section only picks plugins by name, and their
-code comes from `~/.config/yate/plugins`. Plugins run after `yate.json` is applied, so they
+code comes from `~/.yate/plugins`. Plugins run after `yate.json` is applied, so they
 can override it.
 
 The command **Open yate.json** (command palette, Ctrl+H) opens the closest file, or creates
-`~/yate.jsonc` from a commented template that lists every default key binding with its
-command id and title, so keys can be changed in place. Saving a `yate.json` or `yate.jsonc` (or a file in `~/.config/yate`)
+`~/.yate/yate.jsonc`; `yate init` creates `yate.jsonc` in the current folder, for a project. Both
+start from a template that lists every setting with its default value, commented out: the
+preset, every palette color with what it colors, every syntax scope, every option with what
+it changes, every key binding with its command title, the commands without a key and the
+bundled plugins. The file changes nothing until you remove the `//` in front of a line. Saving a `yate.json` or `yate.jsonc` (or a plugin in `~/.yate/plugins`)
 applies it at once; **Reload yate.json and plugins** does the same by hand. Mistakes show in the status
-line and in `~/.local/state/yate/yate.log`, with the file, line and column.
+line and in `~/.yate/yate.log`, with the file, line and column.
+
+AI agents can edit the settings for you. `yate skill` prints instructions for them,
+followed by this reference, the plugin API and the template with every setting.
+`yate skill --init` installs the instructions as a `/yate` skill: `SKILL.md` in
+`.agents/skills/yate/` (Codex, Cursor) and `.claude/skills/yate/` (Claude Code, Cursor), at
+the git root of the working directory, or in the home folder outside a git repository.
+
+Everything yate keeps lives in `~/.yate`: the global `yate.json`, `plugins/`, `yate.log`,
+`bookmarks/` (per project) and `latest-version` (the daily update check). Set `YATE_HOME` to
+an absolute path to use another folder.
 
 ## Example
 
@@ -53,7 +65,7 @@ line and in `~/.local/state/yate/yate.log`, with the file, line and column.
     "global": { "ctrl+q": "" }   // "" or null removes a binding
   },
   "plugins": {
-    "sort-lines": true,           // ~/.config/yate/plugins/sort-lines.js
+    "sort-lines": true,           // ~/.yate/plugins/sort-lines.js
     "format": false               // a bundled plugin turned off
   }
 }
@@ -124,7 +136,7 @@ message when there is one; `yate update` installs it. The environment variable
 Bindings per context: `global` (everywhere), `editor` and `tree`. A context
 binding wins over a global one. Values are command ids: the command palette (Ctrl+H) shows
 the commands of the focused panel with their keys, and the template of **Open yate.json**
-lists all default bindings and the commands without a key. Key names are like
+and `yate init` lists all default bindings and the commands without a key. Key names are like
 `ctrl+p`, `alt+shift+down`, `alt+tab`, `ctrl+\\`, `ctrl+/`; a single letter like `"c"` binds
 a key of the tree. A key can run a plugin command too.
 
@@ -156,8 +168,8 @@ Ctrl+I, Ctrl+M and Ctrl+[ cannot be bound: terminals send them as Tab, Enter and
 ## plugins
 
 Plugins by name, `true` to load and `false` to skip. A name is the file name of a plugin in
-`~/.config/yate/plugins` without `.js`: `"sort-lines": true` loads
-`~/.config/yate/plugins/sort-lines.js`. A plugin file that no `yate.json` switches on is not
+`~/.yate/plugins` without `.js`: `"sort-lines": true` loads
+`~/.yate/plugins/sort-lines.js`. A plugin file that no `yate.json` switches on is not
 loaded. The bundled plugins `git` and `format` load unless set to `false`. Like
 every other section, closer files win, so a project can switch a plugin you installed on or
 off. See [plugins.md](plugins.md) for writing one.

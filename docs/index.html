@@ -333,7 +333,7 @@ img { max-width: 100%; }
       <p class="lede">Simple to use like nano: no modes, type and the text goes in, and the keys show on screen. Ready for a whole project like neovim: a file tree, Ctrl+P, live grep, split view, go to definition and JavaScript plugins, with nothing to set up. One binary with no runtime dependencies, for quick, comfortable edits in a terminal or a tmux pane.</p>
       <p class="lede">An editor for the age of coding agents. Agents write most of the code now, but now and then you still need to open it, read it and see the bigger picture: how the files fit together, where a name is defined, what the agent changed. Walk the project in the file tree, jump with Ctrl+P, live grep and go to definition, see the changed lines in the gutter, fix a line by hand, and go back to the agent in the next tmux pane.</p>
       <div class="install">
-        <div class="cmd"><span class="sh">$</span><code id="install-cmd">curl -fsSL sobanieca.github.io/yate/install.sh | bash</code><button class="copy" type="button" data-copy="install-cmd">Copy</button></div>
+        <div class="cmd"><span class="sh">$</span><code id="install-cmd">curl -fsSL adam.sobaniec.com/yate/install.sh | bash</code><button class="copy" type="button" data-copy="install-cmd">Copy</button></div>
       </div>
       <div class="hero-facts">
         <span><b>Linux and macOS</b> · x64 and arm64</span>
@@ -412,8 +412,8 @@ img { max-width: 100%; }
             <h2>Install and update</h2>
             <p>The install script downloads the release binary for your system to <code>/usr/local/bin</code>. If you can't write there, pipe it to <code>sudo bash</code>, or pick another folder on your <code>PATH</code>:</p>
             <pre class="code"><span class="c"># Linux and macOS, x64 and arm64</span>
-curl -fsSL sobanieca.github.io/yate/install.sh | bash
-curl -fsSL sobanieca.github.io/yate/install.sh | INSTALL_DIR=~/.local/bin bash</pre>
+curl -fsSL adam.sobaniec.com/yate/install.sh | bash
+curl -fsSL adam.sobaniec.com/yate/install.sh | INSTALL_DIR=~/.local/bin bash</pre>
             <p>Binaries for every version are on the <a href="https://github.com/sobanieca/yate/releases">releases page</a>. yate checks for a new release once a day and shows a message when one is out, also after you quit. Install it with:</p>
             <pre class="code">yate update        <span class="c"># sudo yate update when the binary is in a system folder</span></pre>
             <p>Turn the check off with <code>"updateCheck": false</code> in the <code>options</code> of <code>yate.json</code>, or set <code>YATE_NO_UPDATE_CHECK=1</code>.</p>
@@ -433,11 +433,14 @@ cargo dist              <span class="c"># static binary in dist/yate</span></pre
                 <tr><td class="id">yate &lt;folder&gt;</td><td>That folder as the project.</td></tr>
                 <tr><td class="id">yate &lt;file&gt;[:line]</td><td>The file, at a line if you give one. The project is the file's git repository.</td></tr>
                 <tr><td class="id">yate update</td><td>Installs the latest release. Use <code>./update</code> to open a file named update.</td></tr>
+                <tr><td class="id">yate init</td><td>Creates <code>./yate.jsonc</code> listing every setting with its default, commented out.</td></tr>
+                <tr><td class="id">yate skill</td><td>Prints instructions for AI agents that edit <code>yate.json</code>: the configuration reference, the plugin API and every setting with its default.</td></tr>
+                <tr><td class="id">yate skill --init</td><td>Creates a <code>/yate</code> skill for AI agents in <code>.claude/skills</code> and <code>.agents/skills</code>, at the git root or in your home folder outside a repository.</td></tr>
                 <tr><td class="id">yate --help / -v</td><td>The key list, or the version.</td></tr>
               </tbody>
             </table></div>
             <p>Paths everywhere in yate are shown relative to the project root. git is optional: without it you lose the git status colors and gutter signs, and everything else works.</p>
-            <p>yate edits UTF-8 only and keeps LF or CRLF line endings as they are. A file that is not valid UTF-8 opens read-only. When a file changes on disk, yate reloads it, or warns you when the file has unsaved changes.</p>
+            <p>yate edits UTF-8 only and keeps LF or CRLF line endings as they are. A file that is not valid UTF-8 opens read-only. Wide characters and emoji take two columns, and an emoji made of several code points (a family, a flag, a skin tone) moves and deletes as one character; <b>Insert emoji</b> in the palette picks one by name. When a file changes on disk, yate reloads it, or warns you when the file has unsaved changes.</p>
           </article>
 
           <article class="chapter" id="screen">
@@ -579,7 +582,7 @@ cargo dist              <span class="c"># static binary in dist/yate</span></pre
 
           <article class="chapter" id="keys">
             <h2>Key reference</h2>
-            <p>Every default binding with its command id. Use the id to rebind a key in <code>yate.json</code> or call it from a plugin. Rows marked palette have no key; run them from <span class="k" data-k="ctrl+h"></span>, which shows the commands with your own bindings, and <b>Open yate.json</b> creates a <code>~/yate.jsonc</code> that lists every binding, ready to edit.</p>
+            <p>Every default binding with its command id. Use the id to rebind a key in <code>yate.json</code> or call it from a plugin. Rows marked palette have no key; run them from <span class="k" data-k="ctrl+h"></span>, which shows the commands with your own bindings, and <b>Open yate.json</b> (or <code>yate init</code>) creates a <code>yate.jsonc</code> that lists every binding, ready to edit.</p>
             <div class="ref-tools wide">
               <input id="ref-search" type="search" placeholder="Search keys, actions or ids, e.g. grep, alt, tree." aria-label="Search the key reference">
               <div class="chips" id="ref-chips" role="group" aria-label="Filter by context"></div>
@@ -592,8 +595,9 @@ cargo dist              <span class="c"># static binary in dist/yate</span></pre
 
           <article class="chapter" id="config">
             <h2>Configuration</h2>
-            <p><code>yate.json</code> holds the theme, options, key bindings and plugins. It is JSONC: comments and trailing commas are allowed, and the file can be named <code>yate.jsonc</code> too. yate reads <code>~/yate.json</code> first, then every <code>yate.json</code> from <code>/</code> down to the working directory; in each folder <code>yate.jsonc</code> comes after <code>yate.json</code>. Closer files win, key by key, so a project can set <code>tabSize</code> and keep your theme. A project <code>yate.json</code> is data only and safe to commit.</p>
-            <p><b>Open yate.json</b> in the palette opens the closest file or creates <code>~/yate.jsonc</code> from a commented template. Saving it applies the change at once. Mistakes show with file, line and column in the status line, or in a dialog when there are several.</p>
+            <p><code>yate.json</code> holds the theme, options, key bindings and plugins. It is JSONC: comments and trailing commas are allowed, and the file can be named <code>yate.jsonc</code> too. yate reads <code>~/.yate/yate.json</code> first, then every <code>yate.json</code> below your home folder down to the working directory; in each folder <code>yate.jsonc</code> comes after <code>yate.json</code>. Closer files win, key by key, so a project can set <code>tabSize</code> and keep your theme. A project <code>yate.json</code> is data only and safe to commit.</p>
+            <p><b>Open yate.json</b> in the palette opens the closest file or creates <code>~/.yate/yate.jsonc</code>; <code>yate init</code> creates <code>./yate.jsonc</code> for a project. Both list every palette color with what it colors, every syntax scope, option, key binding and bundled plugin with its default, commented out: remove the <code>//</code> in front of a line to change it. Saving it applies the change at once. Mistakes show with file, line and column in the status line, or in a dialog when there are several.</p>
+            <p>A coding agent can do it for you: <code>yate skill</code> prints instructions for agents with the whole reference, and <code>yate skill --init</code> installs them as a <code>/yate</code> skill (Claude Code, Codex, Cursor), so you can ask <code>/yate use the gruvbox-dark theme and a tab size of 4</code>.</p>
             <pre class="code wide">{
   <span class="pr">"theme"</span>: {
     <span class="pr">"preset"</span>: <span class="s">"tokyonight-night"</span>,
@@ -639,15 +643,15 @@ cargo dist              <span class="c"># static binary in dist/yate</span></pre
             <h3>Keys</h3>
             <p>Bindings are grouped by context: <code>global</code>, <code>editor</code> and <code>tree</code>. A context binding wins over a global one. Key names look like <code>ctrl+p</code>, <code>alt+shift+down</code>, <code>f5</code> or <code>ctrl+/</code>; values are command ids from the <a href="#keys">key reference</a> or from plugins.</p>
             <h3>Plugins</h3>
-            <p><code>"date": true</code> loads <code>~/.config/yate/plugins/date.js</code>; a plugin file that no <code>yate.json</code> switches on is not loaded. The bundled <code>git</code> and <code>format</code> load unless set to <code>false</code>. See <a href="#plugins">Plugins</a>.</p>
+            <p><code>"date": true</code> loads <code>~/.yate/plugins/date.js</code>; a plugin file that no <code>yate.json</code> switches on is not loaded. The bundled <code>git</code> and <code>format</code> load unless set to <code>false</code>. See <a href="#plugins">Plugins</a>.</p>
             <p>The full reference, with every palette color, is <a href="https://github.com/sobanieca/yate/blob/main/docs/configuration.md">docs/configuration.md</a>.</p>
           </article>
 
           <article class="chapter" id="plugins">
             <h2>Plugins</h2>
-            <p>yate runs JavaScript in an embedded QuickJS engine. There is no Node.js and no npm: a plugin is one <code>.js</code> file in <code>~/.config/yate/plugins</code> with a global <code>yate</code> object. It loads when the <code>plugins</code> section of <code>yate.json</code> names it: <code>"date": true</code> loads <code>date.js</code>. yate loads the bundled plugins first, then yours in name order. Saving a plugin reloads everything.</p>
-            <div class="note">Plugins load only from your config folder, never from the opened project. A plugin can run programs, and opening a repository must not run its code.</div>
-            <pre class="code wide"><span class="c">// ~/.config/yate/plugins/date.js, on with "plugins": { "date": true }</span>
+            <p>yate runs JavaScript in an embedded QuickJS engine. There is no Node.js and no npm: a plugin is one <code>.js</code> file in <code>~/.yate/plugins</code> with a global <code>yate</code> object. It loads when the <code>plugins</code> section of <code>yate.json</code> names it: <code>"date": true</code> loads <code>date.js</code>. yate loads the bundled plugins first, then yours in name order. Saving a plugin reloads everything.</p>
+            <div class="note">Plugins load only from <code>~/.yate/plugins</code>, never from the opened project. A plugin can run programs, and opening a repository must not run its code.</div>
+            <pre class="code wide"><span class="c">// ~/.yate/plugins/date.js, on with "plugins": { "date": true }</span>
 
 <span class="c">// A command shows in the palette and can be bound to a key.</span>
 yate.<span class="fn">registerCommand</span>(<span class="s">"date.insert"</span>, <span class="s">"Insert today's date"</span>, () <span class="kw">=&gt;</span>
@@ -695,10 +699,12 @@ yate.<span class="fn">on</span>(<span class="s">"beforeSave"</span>, () <span cl
           <article class="chapter" id="files">
             <h2>Files yate uses</h2>
             <dl class="paths">
-              <dt>~/yate.json</dt><dd>Global theme, options, keys and plugins (<code>yate.jsonc</code> works too)</dd>
+              <dt>~/.yate/yate.json</dt><dd>Global theme, options, keys and plugins (<code>yate.jsonc</code> works too)</dd>
               <dt>./yate.json</dt><dd>Project settings, closer files win</dd>
-              <dt>~/.config/yate/plugins/*.js</dt><dd>Plugins, loaded when <code>yate.json</code> switches them on; <code>$XDG_CONFIG_HOME</code> replaces <code>~/.config</code></dd>
-              <dt>~/.local/state/yate/yate.log</dt><dd>Errors from settings and plugins (<b>Open the yate log</b> in the palette)</dd>
+              <dt>~/.yate/plugins/*.js</dt><dd>Plugins, loaded when <code>yate.json</code> switches them on</dd>
+              <dt>~/.yate/yate.log</dt><dd>Errors from settings and plugins (<b>Open the log</b> in the palette)</dd>
+              <dt>~/.yate/bookmarks/</dt><dd>Line bookmarks, one file per project</dd>
+              <dt>$YATE_HOME</dt><dd>Another folder instead of <code>~/.yate</code> (an absolute path)</dd>
             </dl>
           </article>
         </div>
@@ -1016,9 +1022,10 @@ yate.<span class="fn">on</span>(<span class="s">"beforeSave"</span>, () <span cl
     ["", "Toggle indent guides", "Palette", "view.toggleIndentGuides"],
     ["", "Toggle line numbers", "Palette", "view.toggleLineNumbers"],
     ["", "Set language of file", "Palette", "language.choose"],
-    ["", "Open yate.json (lists every key binding)", "Palette", "settings.open"],
+    ["", "Insert emoji (search by name)", "Palette", "edit.insertEmoji"],
+    ["", "Open yate.json (lists every setting)", "Palette", "settings.open"],
     ["", "Reload yate.json and plugins", "Palette", "config.reload"],
-    ["", "Open the yate log", "Palette", "app.log"],
+    ["", "Open the log", "Palette", "app.log"],
     ["", "Git: Blame current line", "Palette", "git.blame"],
     ["", "Format document with Prettier", "Palette", "format.prettier"],
     ["", "TypeScript: Add // @ts-nocheck", "Palette", "ts.noCheck"],

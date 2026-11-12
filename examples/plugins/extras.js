@@ -1,4 +1,4 @@
-// Example plugin: ~/.config/yate/plugins/extras.js
+// Example plugin: ~/.yate/plugins/extras.js
 // Switch it on with "plugins": { "extras": true } in yate.json.
 
 // Format TypeScript and JavaScript with Prettier on save.

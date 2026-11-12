@@ -12,7 +12,7 @@ NC='\033[0m' # No Color
 REPO="sobanieca/yate"
 DEFAULT_INSTALL_DIR="/usr/local/bin"
 BINARY_NAME="yate"
-SCRIPT_URL="sobanieca.github.io/yate/install.sh"
+SCRIPT_URL="adam.sobaniec.com/yate/install.sh"
 
 usage() {
   cat <<USAGE

@@ -183,7 +183,7 @@ fn ctrl_arrows_jump_by_characters_and_lines() {
     let mut e = Harness::builder()
         .size(60, 10)
         .file("a.txt", &line.repeat(30))
-        .home_file(
+        .config(
             "yate.json",
             r#"{ "options": { "jumpChars": 3, "jumpLines": 12 } }"#,
         )
@@ -241,4 +241,18 @@ fn a_file_opens_again_where_the_cursor_was() {
     assert_eq!(e.app().doc().cursor_line(), 2);
     e.type_text("x");
     assert_eq!(e.editor_text(), "one\ntwo\ntxhree\n");
+}
+
+#[test]
+fn emoji_sequences_are_one_character() {
+    let mut e = Harness::builder()
+        .size(40, 6)
+        .file("e.txt", "a👨‍👩‍👧b 🇵🇱 👍🏽 ❤️\n")
+        .open("e.txt")
+        .start();
+    e.snapshot("editing_emoji_sequences");
+    e.keys("right right");
+    assert_eq!(e.screen().cursor, Some((8, 1)));
+    e.keys("backspace");
+    assert_eq!(e.editor_text(), "ab 🇵🇱 👍🏽 ❤️\n");
 }

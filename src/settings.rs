@@ -1,12 +1,12 @@
 //! `yate.json` settings: theme, options, key bindings and plugins.
 //!
-//! yate reads `~/yate.json`, then every `yate.json` in the folders from the
-//! top down to the working directory (and the project root, when it is below
+//! yate reads `~/.yate/yate.json`, then every `yate.json` in the folders below
+//! the home folder down to the working directory (and the project root, when it is below
 //! the working directory). `yate.jsonc` is read too, after `yate.json` in the
 //! same folder. Later files override earlier ones key by key, so the file
 //! closest to where yate runs wins. The files are data only: they never run
 //! code, so a project can ship one safely. The `plugins` section only picks
-//! plugins by name; their code comes from the config folder.
+//! plugins by name; their code comes from `~/.yate/plugins`.
 
 use crate::config::{OptionValue, Paths};
 use crate::json::{self, Json};
@@ -15,41 +15,78 @@ use std::path::{Path, PathBuf};
 
 pub const FILE_NAMES: [&str; 2] = ["yate.json", "yate.jsonc"];
 
-/// The file that "Open yate.json" creates when there is none.
+/// The file that "Open yate.json" and `yate init` create.
 pub const NEW_FILE_NAME: &str = "yate.jsonc";
 
-const TEMPLATE_START: &str = r##"{
-  // yate settings. A yate.json or yate.jsonc closer to the working directory
-  // overrides this file key by key. Comments and trailing commas are allowed.
-  "theme": {
-    // tokyonight-storm, tokyonight-night, tokyonight-moon, tokyonight-day,
-    // gruvbox-dark, gruvbox-light, nord or solarized-light
-    "preset": "tokyonight-storm",
-    // Palette colors: "bg": "#1a1b26", "blue": "#7aa2f7"...
-    "colors": {},
-    // Syntax scopes: "keyword": "magenta", "comment": { "fg": "#565f89", "italic": true }
-    "syntax": {}
-  },
-  // Same names as yate.setOption: "tabSize": 4, "nerdIcons": true, "keyHintDelay": 500...
-  "options": {},
-  // Every key binding, by context: global (everywhere), editor and tree.
-  // A context binding wins over a global one. Change a key or a command id here;
-  // "" removes a key. Some keys open a menu of commands (ctrl+g, ctrl+w...);
-  // binding one of those commands to a key of its own skips the menu.
-  "keys": {
-"##;
+const TEMPLATE_HEADER: &str = "{
+  // yate settings. Every setting is listed with its default value, commented
+  // out: remove the // in front of a line to change it. A yate.json or
+  // yate.jsonc closer to the working directory overrides this file key by key.
+  // Comments and trailing commas are allowed.
+";
 
-const TEMPLATE_END: &str = r##"  },
-  // Plugins by name: true loads ~/.config/yate/plugins/<name>.js; false turns
-  // one off, also the bundled git and format.
-  "plugins": {}
-}
-"##;
-
-/// The commented `yate.json` that "Open yate.json" creates, with every
-/// default key binding listed so it can be changed in place.
+/// The commented `yate.json` that "Open yate.json" and `yate init` create:
+/// every theme color, syntax scope, option, key binding and bundled plugin,
+/// with its default, commented out so the file changes nothing until edited.
 pub fn template() -> String {
-    let mut text = TEMPLATE_START.to_string();
+    let mut text = TEMPLATE_HEADER.to_string();
+    let theme = crate::ui::theme::Theme::default();
+    text.push_str("  \"theme\": {\n");
+    text.push_str(&wrap_comment(
+        "    // ",
+        &format!(
+            "The starting point: {}.",
+            crate::ui::theme::PRESETS.join(", ")
+        ),
+    ));
+    entries(
+        &mut text,
+        "    ",
+        vec![(format!("\"preset\": \"{}\",", theme.name), "")],
+    );
+    text.push_str(&wrap_comment(
+        "    // ",
+        "Palette colors, with the values of the default preset: #rrggbb, #rgb or the name of another palette color.",
+    ));
+    text.push_str("    \"colors\": {\n");
+    let colors = crate::ui::theme::COLOR_USES
+        .iter()
+        .filter_map(|(name, uses)| {
+            let color = theme.color(name)?;
+            let hex = format!("#{:02x}{:02x}{:02x}", color.0, color.1, color.2);
+            Some((format!("\"{name}\": \"{hex}\","), *uses))
+        })
+        .collect();
+    entries(&mut text, "      ", colors);
+    text.push_str("    },\n");
+    text.push_str(&wrap_comment(
+        "    // ",
+        "Syntax styles by tree-sitter capture scope: a color, or an object with fg, bg, bold, italic and underline. The longest matching scope wins: \"function\" styles \"function.method.call\" unless \"function.method\" has a style.",
+    ));
+    text.push_str("    \"syntax\": {\n");
+    let syntax = crate::ui::theme::default_syntax_json()
+        .into_iter()
+        .map(|(scope, value)| (format!("\"{scope}\": {value},"), ""))
+        .collect();
+    entries(&mut text, "      ", syntax);
+    text.push_str("    }\n  },\n");
+    text.push_str("  // The same names as yate.setOption in plugins.\n");
+    text.push_str("  \"options\": {\n");
+    let options = crate::config::Options::default();
+    let option_entries = crate::config::OPTIONS
+        .iter()
+        .map(|(name, about)| {
+            let value = options.json_value(name).unwrap_or_default();
+            (format!("\"{name}\": {value},"), *about)
+        })
+        .collect();
+    entries(&mut text, "    ", option_entries);
+    text.push_str("  },\n");
+    text.push_str(&wrap_comment(
+        "  // ",
+        "Every key binding, by context: global (everywhere), editor and tree. A context binding wins over a global one. Change a key or a command id; \"\" removes a key. Some keys open a menu of commands (ctrl+g, ctrl+w...); binding one of those commands to a key of its own skips the menu.",
+    ));
+    text.push_str("  \"keys\": {\n");
     let commands = crate::app::builtin_commands();
     let title = |id: &str| {
         commands
@@ -58,41 +95,90 @@ pub fn template() -> String {
             .map(|(_, title)| title.trim_end_matches('…'))
             .unwrap_or("")
     };
-    let keymap = crate::keymap::Keymap::defaults();
-    for (i, context) in Context::ALL.iter().enumerate() {
+    for context in Context::ALL {
         text.push_str(&format!("    \"{}\": {{\n", context.name()));
-        let bindings: Vec<_> = crate::keymap::DEFAULTS
+        let bindings = crate::keymap::DEFAULTS
             .iter()
-            .filter(|(c, _, _)| c == context)
+            .filter(|(c, _, _)| *c == context)
+            .map(|(_, key, command)| {
+                let binding = format!("\"{}\": \"{command}\",", json_escape(key));
+                (binding, title(command))
+            })
             .collect();
-        for (j, (_, key, command)) in bindings.iter().enumerate() {
-            let comma = if j + 1 < bindings.len() { "," } else { "" };
-            let entry = format!("\"{}\": \"{command}\"{comma}", json_escape(key));
-            text.push_str(&format!("      {entry:<44} // {}\n", title(command)));
-        }
-        let comma = if i + 1 < Context::ALL.len() { "," } else { "" };
-        text.push_str(&format!("    }}{comma}\n"));
+        entries(&mut text, "      ", bindings);
+        text.push_str("    },\n");
     }
+    let keymap = crate::keymap::Keymap::defaults();
     let unbound: Vec<&str> = commands
         .iter()
         .map(|(id, _)| *id)
         .filter(|id| keymap.keys_for(id).is_empty())
         .collect();
-    text.push_str("    // Commands without a key:\n");
-    let mut line = String::from("    //");
-    for id in unbound {
-        if line.len() + id.len() + 1 > 88 {
-            text.push_str(&line);
-            text.push('\n');
-            line = String::from("    //");
+    text.push_str(&wrap_comment(
+        "    // ",
+        &format!("Commands without a key: {}", unbound.join(" ")),
+    ));
+    text.push_str("  },\n");
+    text.push_str(&wrap_comment(
+        "  // ",
+        "Plugins by name: true loads ~/.yate/plugins/<name>.js; false turns one off. The bundled ones load unless set to false.",
+    ));
+    text.push_str("  \"plugins\": {\n");
+    let plugins = crate::plugins::BUNDLED
+        .iter()
+        .map(|(name, _)| (format!("\"{name}\": true,"), "bundled"))
+        .collect();
+    entries(&mut text, "    ", plugins);
+    text.push_str("  }\n}\n");
+    text
+}
+
+/// Commented-out entries with their notes lined up after them.
+fn entries(text: &mut String, indent: &str, entries: Vec<(String, &str)>) {
+    let width = entries
+        .iter()
+        .map(|(entry, _)| entry.len())
+        .max()
+        .unwrap_or(0);
+    for (entry, note) in entries {
+        if note.is_empty() {
+            text.push_str(&format!("{indent}// {entry}\n"));
+        } else {
+            text.push_str(&format!("{indent}// {entry:<width$}  // {note}\n"));
+        }
+    }
+}
+
+fn wrap_comment(prefix: &str, text: &str) -> String {
+    let mut out = String::new();
+    let mut line = prefix.trim_end().to_string();
+    for word in text.split(' ') {
+        if line.len() > prefix.trim_end().len() && line.len() + word.len() + 1 > 88 {
+            out.push_str(&line);
+            out.push('\n');
+            line = prefix.trim_end().to_string();
         }
         line.push(' ');
-        line.push_str(id);
+        line.push_str(word);
     }
-    text.push_str(&line);
-    text.push('\n');
-    text.push_str(TEMPLATE_END);
-    text
+    out.push_str(&line);
+    out.push('\n');
+    out
+}
+
+/// Writes the template to `yate.jsonc` in `dir` (`yate init`). Refuses
+/// when the folder already has a `yate.json` or `yate.jsonc`.
+pub fn init(dir: &Path) -> Result<PathBuf, String> {
+    if let Some(existing) = FILE_NAMES
+        .iter()
+        .map(|name| dir.join(name))
+        .find(|p| p.exists())
+    {
+        return Err(format!("{} already exists", existing.display()));
+    }
+    let path = dir.join(NEW_FILE_NAME);
+    std::fs::write(&path, template()).map_err(|err| format!("{}: {err}", path.display()))?;
+    Ok(path)
 }
 
 fn json_escape(text: &str) -> String {
@@ -129,7 +215,7 @@ pub fn files(paths: &Paths, root: &Path) -> Vec<PathBuf> {
     }
     dirs.sort_by_key(|dir| dir.components().count());
     let mut files: Vec<PathBuf> = Vec::new();
-    for dir in paths.home.iter().chain(&dirs) {
+    for dir in std::iter::once(&paths.dir).chain(&dirs) {
         for name in FILE_NAMES {
             let file = dir.join(name);
             if !files.contains(&file) {
@@ -251,7 +337,7 @@ impl Settings {
                     .all(|c| c.is_alphanumeric() || matches!(c, '-' | '_'));
             match value {
                 _ if !plain_name => errors.push(format!(
-                    "plugins.{name}: a plugin name is a file name in ~/.config/yate/plugins without .js"
+                    "plugins.{name}: a plugin name is a file name in ~/.yate/plugins without .js"
                 )),
                 Json::Bool(enabled) => plugins.push((name.clone(), *enabled)),
                 other => errors.push(format!(
@@ -292,9 +378,9 @@ mod tests {
             std::env::temp_dir().join(format!("yate-settings-{name}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&base);
         std::fs::create_dir_all(base.join("home/code/project/app")).unwrap();
+        std::fs::create_dir_all(base.join("home/.yate")).unwrap();
         let paths = Paths {
-            config_dir: base.join("config"),
-            state_dir: base.join("state"),
+            dir: base.join("home/.yate"),
             home: Some(base.join("home")),
             cwd: base.join("home/code/project/app"),
             ceiling: Some(base.clone()),
@@ -307,7 +393,7 @@ mod tests {
         let (dirs, paths) = setup("cascade");
         let home = dirs.0.join("home");
         std::fs::write(
-            home.join("yate.json"),
+            home.join(".yate/yate.json"),
             r#"{"options": {"tabSize": 2, "colorize": false}}"#,
         )
         .unwrap();
@@ -323,7 +409,7 @@ mod tests {
         .unwrap();
         let settings = load(&paths, &paths.cwd);
         assert_eq!(settings.files.len(), 3);
-        assert!(settings.files[0].ends_with("home/yate.json"));
+        assert!(settings.files[0].ends_with("home/.yate/yate.json"));
         let mut errors = Vec::new();
         let options = settings.options(&mut errors);
         let option = |name: &str| {
@@ -342,6 +428,15 @@ mod tests {
     }
 
     #[test]
+    fn the_global_settings_live_in_the_yate_folder_not_in_home() {
+        let (dirs, paths) = setup("global");
+        let home = dirs.0.join("home");
+        std::fs::write(home.join("yate.json"), "{}").unwrap();
+        std::fs::write(home.join(".yate/yate.jsonc"), "{}").unwrap();
+        assert_eq!(files(&paths, &paths.cwd), [home.join(".yate/yate.jsonc")]);
+    }
+
+    #[test]
     fn a_project_root_below_the_working_directory_counts_too() {
         let (dirs, mut paths) = setup("root");
         let home = dirs.0.join("home");
@@ -356,7 +451,11 @@ mod tests {
     fn yate_jsonc_is_read_after_yate_json_in_the_same_folder() {
         let (dirs, paths) = setup("jsonc");
         let home = dirs.0.join("home");
-        std::fs::write(home.join("yate.jsonc"), r#"{"options": {"tabSize": 3}}"#).unwrap();
+        std::fs::write(
+            home.join(".yate/yate.jsonc"),
+            r#"{"options": {"tabSize": 3}}"#,
+        )
+        .unwrap();
         std::fs::write(
             home.join("code/project/yate.json"),
             r#"{"options": {"tabSize": 4}}"#,
@@ -371,7 +470,7 @@ mod tests {
         assert_eq!(
             settings.files,
             [
-                home.join("yate.jsonc"),
+                home.join(".yate/yate.jsonc"),
                 home.join("code/project/yate.json"),
                 home.join("code/project/yate.jsonc"),
             ]
@@ -401,7 +500,7 @@ mod tests {
         assert_eq!(
             errors,
             [
-                "plugins.../evil: a plugin name is a file name in ~/.config/yate/plugins without .js",
+                "plugins.../evil: a plugin name is a file name in ~/.yate/plugins without .js",
                 "plugins.x: expected true or false, not a number",
             ]
         );
@@ -410,31 +509,88 @@ mod tests {
     #[test]
     fn broken_files_are_reported_with_their_path() {
         let (dirs, paths) = setup("broken");
-        std::fs::write(dirs.0.join("home/yate.json"), "{\n  \"theme\": \n}").unwrap();
+        std::fs::write(dirs.0.join("home/.yate/yate.json"), "{\n  \"theme\": \n}").unwrap();
         let settings = load(&paths, &paths.cwd);
         assert!(settings.files.is_empty());
         assert_eq!(
             settings.errors,
             [
-                "~/yate.json: line 3, column 1: expected a value (string, number, true, false, null, object or array)"
+                "~/.yate/yate.json: line 3, column 1: expected a value (string, number, true, false, null, object or array)"
             ]
         );
     }
 
-    #[test]
-    fn the_template_is_valid() {
-        let template = json::parse(&template()).unwrap();
+    fn assert_valid(text: &str) -> Settings {
         let settings = Settings {
             files: Vec::new(),
-            merged: template,
+            merged: json::parse(text).unwrap(),
             errors: Vec::new(),
         };
         let mut errors = Vec::new();
         settings.keys(&mut errors);
         settings.options(&mut errors);
         settings.plugins(&mut errors);
-        assert!(errors.is_empty() && settings.unknown_sections().is_empty());
+        assert!(errors.is_empty(), "{errors:?}");
+        assert!(settings.unknown_sections().is_empty());
         let (_, theme_errors) = crate::ui::theme::Theme::from_json(settings.merged.get("theme"));
         assert!(theme_errors.is_empty(), "{theme_errors:?}");
+        settings
+    }
+
+    #[test]
+    fn the_template_is_valid_and_sets_nothing() {
+        let settings = assert_valid(&template());
+        for section in ["colors", "syntax"] {
+            let theme = settings.merged.get("theme").unwrap();
+            assert!(theme.get(section).unwrap().entries().is_empty());
+        }
+        for section in ["options", "keys", "plugins"] {
+            let entries = settings.merged.get(section).unwrap().entries();
+            assert!(entries.iter().all(|(_, value)| value.entries().is_empty()));
+        }
+    }
+
+    #[test]
+    fn the_template_uncommented_is_valid_and_lists_everything() {
+        let uncommented: String = template()
+            .lines()
+            .map(|line| match line.trim_start().strip_prefix("// \"") {
+                Some(rest) if rest.contains("\": ") => format!("\"{rest}\n"),
+                _ => format!("{line}\n"),
+            })
+            .collect();
+        let settings = assert_valid(&uncommented);
+        let theme = settings.merged.get("theme").unwrap();
+        assert_eq!(
+            theme.get("colors").unwrap().entries().len(),
+            crate::ui::theme::COLOR_NAMES.len()
+        );
+        assert_eq!(
+            settings.merged.get("options").unwrap().entries().len(),
+            crate::config::OPTIONS.len()
+        );
+        let bindings: usize = settings
+            .merged
+            .get("keys")
+            .unwrap()
+            .entries()
+            .iter()
+            .map(|(_, context)| context.entries().len())
+            .sum();
+        assert_eq!(bindings, crate::keymap::DEFAULTS.len());
+    }
+
+    #[test]
+    fn init_writes_the_template_once() {
+        let dir = std::env::temp_dir().join(format!("yate-init-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = init(&dir).unwrap();
+        assert_eq!(std::fs::read_to_string(&path).unwrap(), template());
+        assert!(
+            init(&dir)
+                .unwrap_err()
+                .ends_with("yate.jsonc already exists")
+        );
+        std::fs::remove_dir_all(&dir).unwrap();
     }
 }

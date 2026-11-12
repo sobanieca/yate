@@ -4,13 +4,13 @@ yate runs JavaScript in an embedded [QuickJS](https://bellard.org/quickjs/) engi
 no Node.js and no npm: a plugin is one `.js` file, evaluated as an ES module (its top-level
 names stay private), with a global `yate` object.
 
-A plugin lives in `~/.config/yate/plugins/<name>.js` and loads when the `plugins` section of
+A plugin lives in `~/.yate/plugins/<name>.js` and loads when the `plugins` section of
 `yate.json` switches it on (see [configuration.md](configuration.md#plugins)):
 
 ```jsonc
 {
   "plugins": {
-    "sort-lines": true,   // ~/.config/yate/plugins/sort-lines.js
+    "sort-lines": true,   // ~/.yate/plugins/sort-lines.js
     "git": false          // a bundled plugin turned off
   }
 }
@@ -22,12 +22,12 @@ yate loads, in this order:
    `false`
 2. the plugins set to `true`, in name order
 
-`$XDG_CONFIG_HOME` replaces `~/.config` when set. Plugins run after `yate.json`, so they can
-override its options and keys. Saving a file in the config folder reloads everything; so
+`$YATE_HOME` replaces `~/.yate` when set. Plugins run after `yate.json`, so they can
+override its options and keys. Saving a plugin reloads everything; so
 does the command **Reload yate.json and plugins**. Errors show in the status line, or in a
-dialog when they do not fit there, and in `~/.local/state/yate/yate.log`.
+dialog when they do not fit there, and in `~/.yate/yate.log`.
 
-Plugins are only loaded from your config folder, never from the opened project: a plugin can
+Plugins are only loaded from `~/.yate/plugins`, never from the opened project: a plugin can
 run programs with `yate.exec`, and opening a repository must not run its code.
 
 ## How a call works

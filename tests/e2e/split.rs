@@ -10,7 +10,7 @@ fn project_of_size(width: u16, height: u16) -> Harness {
         .file("one.txt", &numbered(60, "one"))
         .file("two.txt", &numbered(60, "two"))
         .file("three.txt", &numbered(60, "three"))
-        .home_file(
+        .config(
             "yate.json",
             r#"{ "options": { "scrollOff": 0, "keyHintDelay": 0 } }"#,
         )

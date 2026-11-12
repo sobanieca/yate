@@ -27,8 +27,8 @@ fn comment_toggle() {
     let mut e = Harness::builder()
         .size(60, 12)                            // terminal size, 80x20 by default
         .file("app.js", "let a = 1;\n")          // project files
-        .config("plugins/sort.js", "yate.registerCommand('sort', () => {});") // ~/.config/yate files
-        .home_file("yate.json", r#"{ "plugins": { "sort": true } }"#) // files in ~
+        .config("plugins/sort.js", "yate.registerCommand('sort', () => {});") // files in ~/.yate
+        .config("yate.json", r#"{ "plugins": { "sort": true } }"#) // the global yate.json
         .working_dir("src")                      // run from a project folder (default: the root)
         .git()                                   // git repository, branch main, all committed
         .open("app.js")                          // like `yate app.js`; omit to start in the folder

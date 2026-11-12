@@ -40,7 +40,7 @@ git (the tests create git repositories).
 | `docs/index.html`          | landing page and manual (GitHub Pages)                            |
 | `docs/plugins.md`, `docs/configuration.md` | plugin API and `yate.json` reference              |
 | `examples/`                | an example `yate.jsonc` and example plugins                       |
-| `install.sh`               | the installer served at `sobanieca.github.io/yate/install.sh`     |
+| `install.sh`               | the installer served at `adam.sobaniec.com/yate/install.sh`     |
 | `xtask/`                   | development tasks behind the cargo aliases                        |
 | `.github/workflows/`       | `publish.yml` (checks, binaries, release), `pages.yml` (site)     |
 
@@ -48,7 +48,7 @@ git (the tests create git repositories).
 
 | Module                           | Job                                                                 |
 | -------------------------------- | ------------------------------------------------------------------- |
-| `src/main.rs`, `src/help.txt`    | arguments, `--help`, `--version`, `yate update`                     |
+| `src/main.rs`, `src/help.txt`    | arguments, `--help`, `--version`, `yate update`, `yate init`, `yate skill` |
 | `src/lib.rs`                     | the library, used by `main.rs` and the end-to-end tests             |
 | `src/testing.rs`                 | the end-to-end test harness (`Harness`) and snapshot comparison     |
 | `src/app/mod.rs`                 | `App` state, the event loop, plugin calls, opening files            |
@@ -67,13 +67,15 @@ git (the tests create git repositories).
 | `src/picker.rs`                  | picker model and fuzzy matching (nucleo)                            |
 | `src/plugins/`                   | QuickJS host, `prelude.js` (the `yate` API), bundled plugins in `builtin/` |
 | `src/keymap.rs`                  | key names, default bindings, per-context lookup                     |
-| `src/config.rs`                  | editor options and the directories yate reads and writes            |
+| `src/config.rs`                  | editor options and the yate folder (`~/.yate`, or `$YATE_HOME`)    |
+| `src/skill/`                     | `yate skill`: instructions for AI agents (`docs/configuration.md`, `docs/plugins.md`, the template) and the `/yate` skill (`SKILL.md`) |
 | `src/settings.rs`, `src/json.rs` | `yate.json`/`yate.jsonc` lookup and merge; the JSONC parser         |
-| `src/bookmarks.rs`               | line bookmarks, per project, in `~/.local/state/yate/bookmarks`     |
+| `src/bookmarks.rs`               | line bookmarks, per project, in `~/.yate/bookmarks`     |
 | `src/clipboard.rs`               | tmux buffers, OSC 52                                                |
 | `src/update.rs`                  | `yate update` (self-update from GitHub releases), daily update check |
-| `src/log.rs`                     | append-only error log in `~/.local/state/yate/yate.log`             |
+| `src/log.rs`                     | append-only error log in `~/.yate/yate.log`             |
 | `src/text.rs`                    | display widths, grapheme boundaries and words                       |
+| `src/emoji.rs`, `src/emoji.txt`  | the emoji of the emoji picker, from Unicode `emoji-test.txt`        |
 | `src/ui/theme.rs`                | `Theme`: palette, presets, capture styles, `yate.json` theme section |
 | `src/ui/`                        | `Surface` (cell grid), theme, one module per view                   |
 | `src/terminal.rs`                | raw mode, alternate screen, diffed frame flush                      |
@@ -109,7 +111,7 @@ How the pieces fit:
   every color from `app.theme`; never hard-code a color. Syntax highlighting gets per-capture
   styles from `Theme::capture_styles` at draw time, so a theme change needs no reparse.
 - **Plugins** see a snapshot of the text in the editor and queue `Action`s that the app applies after the
-  call. Plugins are loaded only from `~/.config/yate/plugins`, never from the opened project;
+  call. Plugins are loaded only from `~/.yate/plugins`, never from the opened project;
   `yate.json` only names them.
 
 ### Adding a language
@@ -176,7 +178,7 @@ query. Update the language count and list in `README.md` and `docs/index.html` (
 
 ## Landing page
 
-The landing page and manual live in `docs/index.html`, served at `sobanieca.github.io/yate/`.
+The landing page and manual live in `docs/index.html`, served at `adam.sobaniec.com/yate/`.
 Every time you add a feature or change keys, commands, options or the plugin API, update the
 landing page too (the key reference table is the `REF` list in its script), so it always
 reflects the current feature set.
@@ -197,7 +199,7 @@ a new release, bump `version` in `Cargo.toml` (and `Cargo.lock`, by building) an
 pill in `docs/index.html`.
 
 `.github/workflows/pages.yml` publishes `docs/` (the landing page), `install.sh` and
-`src/help.txt` to `sobanieca.github.io/yate/`. Each release has gzipped binaries
+`src/help.txt` to `adam.sobaniec.com/yate/`. Each release has gzipped binaries
 (`yate-linux-x64.gz`, `yate-linux-arm64.gz`, `yate-macos-x64.gz`, `yate-macos-arm64.gz`, about
 7 MB each instead of 55 MB). `install.sh` and `yate update` download them, so their names must
 not change.

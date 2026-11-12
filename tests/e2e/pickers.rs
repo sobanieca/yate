@@ -14,7 +14,7 @@ fn project() -> Harness {
         )
         .file("test/view.test.ts", "render({ lines: [] });\n")
         .file("README.md", "Call render() to draw.\n")
-        .home_file("yate.json", r#"{ "options": { "keyHintDelay": 0 } }"#)
+        .config("yate.json", r#"{ "options": { "keyHintDelay": 0 } }"#)
         .open("README.md")
         .start()
 }
@@ -191,4 +191,55 @@ fn the_command_palette_lists_only_what_can_be_done_now() {
     e.assert_screen_contains("Edit       Undo");
     e.keys("esc ctrl+h").type_text("palette");
     e.assert_screen_lacks("Command palette");
+}
+
+#[test]
+fn the_emoji_picker_inserts_the_chosen_emoji() {
+    let mut e = Harness::builder()
+        .size(60, 12)
+        .file("notes.md", "Done \n")
+        .open("notes.md")
+        .start();
+    e.keys("end");
+    e.command("edit.insertEmoji");
+    e.snapshot("pickers_emoji");
+    e.type_text("party popper");
+    e.snapshot("pickers_emoji_filtered");
+    e.keys("enter");
+    assert_eq!(e.editor_text(), "Done 🎉\n");
+}
+
+#[test]
+fn on_a_narrow_screen_palette_rows_wrap_and_keep_their_keys() {
+    let mut e = Harness::builder()
+        .size(28, 24)
+        .file("README.md", "Call render() to draw.\n")
+        .config("yate.json", r#"{ "options": { "keyHintDelay": 0 } }"#)
+        .open("README.md")
+        .start();
+    e.keys("ctrl+t t ctrl+h");
+    e.snapshot("pickers_command_palette_narrow");
+    e.type_text("lock");
+    e.assert_screen_contains("ctrl+t l");
+    e.keys("ctrl+u");
+    for _ in 0..12 {
+        e.keys("down");
+    }
+    e.snapshot("pickers_command_palette_narrow_scrolled");
+    e.keys("esc ctrl+h").click(10, 13);
+    assert!(e.app().tree.locked);
+}
+
+#[test]
+fn on_a_narrow_screen_menu_titles_wrap() {
+    let mut e = Harness::builder()
+        .size(28, 24)
+        .file("README.md", "Call render() to draw.\n")
+        .config("yate.json", r#"{ "options": { "keyHintDelay": 0 } }"#)
+        .open("README.md")
+        .start();
+    e.keys("ctrl+w");
+    e.snapshot("pickers_pane_menu_narrow");
+    e.click(10, 3);
+    assert!(e.app().panes.is_split());
 }

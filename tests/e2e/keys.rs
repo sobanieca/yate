@@ -6,7 +6,7 @@ fn project(delay_ms: u64) -> Harness {
         .file("a.js", "let a = 1;\n")
         .file("b.js", "let b = 2;\n")
         .file("c.js", "let c = 3;\n")
-        .home_file(
+        .config(
             "yate.json",
             &format!(r#"{{ "options": {{ "keyHintDelay": {delay_ms} }} }}"#),
         )
@@ -61,7 +61,7 @@ fn ctrl_t_groups_the_file_tree_commands() {
 fn a_menu_key_bound_to_another_key_still_runs_its_command_twice() {
     let mut e = Harness::builder()
         .file("a.js", "let a = 1;\n")
-        .home_file(
+        .config(
             "yate.json",
             r#"{ "keys": { "global": { "ctrl+e": "tree.menu", "ctrl+t": "" } } }"#,
         )

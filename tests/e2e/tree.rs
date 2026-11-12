@@ -207,7 +207,7 @@ fn tree_width_is_an_option() {
     let mut e = Harness::builder()
         .size(70, 6)
         .file("a.txt", "a\n")
-        .home_file("yate.json", r#"{ "options": { "treeWidth": 30 } }"#)
+        .config("yate.json", r#"{ "options": { "treeWidth": 30 } }"#)
         .start();
     assert_eq!(tree_width(&mut e), 30);
 }

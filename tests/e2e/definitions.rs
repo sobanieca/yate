@@ -32,7 +32,7 @@ fn project() -> Harness {
         .file("lib/legacy.js", "// old\nfunction render() {}\n")
         .file("test/helpers.ts", "\nexport const render = () => null;\n")
         .file("README.md", "See src/editor/view.ts:2 for the details.\n")
-        .home_file("yate.json", r#"{ "options": { "keyHintDelay": 0 } }"#)
+        .config("yate.json", r#"{ "options": { "keyHintDelay": 0 } }"#)
         .open("src/app.ts")
         .start()
 }

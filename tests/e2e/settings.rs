@@ -6,7 +6,7 @@ const CODE: &str = "// greeting\nconst name = \"yate\";\n";
 fn home_yate_json_sets_theme_colors_and_syntax() {
     let mut e = Harness::builder()
         .size(40, 5)
-        .home_file(
+        .config(
             "yate.json",
             r##"{
               // night preset, with a custom keyword color
@@ -28,7 +28,7 @@ fn home_yate_json_sets_theme_colors_and_syntax() {
 fn a_closer_yate_json_overrides_farther_ones() {
     let mut e = Harness::builder()
         .size(50, 6)
-        .home_file(
+        .config(
             "yate.json",
             r#"{ "options": { "tabSize": 8, "lineNumbers": false } }"#,
         )
@@ -106,7 +106,7 @@ fn saving_a_yate_json_applies_it() {
 fn the_nord_preset_colors_the_editor() {
     let mut e = Harness::builder()
         .size(40, 5)
-        .home_file("yate.json", r#"{ "theme": { "preset": "nord" } }"#)
+        .config("yate.json", r#"{ "theme": { "preset": "nord" } }"#)
         .file("a.js", CODE)
         .open("a.js")
         .start();

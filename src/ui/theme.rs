@@ -9,7 +9,7 @@ use crate::syntax::languages::LanguageConfig;
 use std::collections::HashMap;
 
 macro_rules! palette {
-    ($($field:ident),* $(,)?) => {
+    ($($field:ident: $uses:literal),* $(,)?) => {
         #[derive(Clone, Debug)]
         pub struct Theme {
             pub name: String,
@@ -19,6 +19,9 @@ macro_rules! palette {
 
         /// The color names of the palette, as written in `yate.json`.
         pub const COLOR_NAMES: &[&str] = &[$(stringify!($field)),*];
+
+        /// The palette colors with what the views draw in them.
+        pub const COLOR_USES: &[(&str, &str)] = &[$((stringify!($field), $uses)),*];
 
         impl Theme {
             pub fn color(&self, name: &str) -> Option<Rgb> {
@@ -40,34 +43,34 @@ macro_rules! palette {
 }
 
 palette!(
-    bg,
-    bg_dark,
-    bg_inactive,
-    bg_highlight,
-    bg_visual,
-    bg_search,
-    fg,
-    fg_dark,
-    fg_gutter,
-    dark3,
-    dark5,
-    comment,
-    blue,
-    blue1,
-    blue5,
-    blue6,
-    cyan,
-    magenta,
-    purple,
-    orange,
-    yellow,
-    green,
-    green1,
-    red,
-    red1,
-    git_add,
-    git_change,
-    git_delete,
+    bg: "editor background",
+    bg_dark: "tree, tab bar, status bar, pickers, prompts",
+    bg_inactive: "editor background while the terminal has no focus",
+    bg_highlight: "cursor line, selected rows in lists",
+    bg_visual: "selection",
+    bg_search: "find and grep matches",
+    fg: "text",
+    fg_dark: "dimmer text: tree, tabs, counts",
+    fg_gutter: "line numbers, indent guides, separators",
+    dark3: "hints, ignored files, placeholders",
+    dark5: "dim labels, other tabs; syntax: doc comments",
+    comment: "syntax: comments",
+    blue: "accents: borders, folders, editor label; syntax: functions",
+    blue1: "syntax: built-in functions, types",
+    blue5: "syntax: operators, punctuation",
+    blue6: "syntax: regexes, special strings",
+    cyan: "picker, menu and info labels, current tab; syntax: modules",
+    magenta: "picker prompt and matches; syntax: control keywords",
+    purple: "syntax: keywords",
+    orange: "keys in menus, prompts, modified marker; syntax: numbers",
+    yellow: "find label, modified files, bookmarks; syntax: parameters",
+    green: "tree label, new files; syntax: strings",
+    green1: "messages; syntax: properties",
+    red: "errors, deleted files; syntax: tags",
+    red1: "merge conflicts; syntax: errors",
+    git_add: "gutter: added lines",
+    git_change: "gutter: changed lines",
+    git_delete: "gutter: deleted lines",
 );
 
 pub const PRESETS: &[&str] = &[
@@ -152,6 +155,29 @@ const DEFAULT_SYNTAX: &[(&str, &str, &str)] = &[
     ("diff.minus|text.diff.delete|error", "red1", ""),
     ("diff.delta", "git_change", ""),
 ];
+
+/// The default style of every capture scope as `yate.json` values, in
+/// the order of `DEFAULT_SYNTAX`: `("comment", "{ \"fg\": \"comment\", \"italic\": true }")`.
+pub fn default_syntax_json() -> Vec<(&'static str, String)> {
+    let mut entries = Vec::new();
+    for (scopes, color, flags) in DEFAULT_SYNTAX {
+        let mut fields: Vec<String> = Vec::new();
+        if !color.is_empty() {
+            fields.push(format!("\"fg\": \"{color}\""));
+        }
+        for flag in flags.split_whitespace() {
+            fields.push(format!("\"{flag}\": true"));
+        }
+        let value = match (color.is_empty(), flags.is_empty()) {
+            (false, true) => format!("\"{color}\""),
+            _ => format!("{{ {} }}", fields.join(", ")),
+        };
+        for scope in scopes.split('|') {
+            entries.push((scope, value.clone()));
+        }
+    }
+    entries
+}
 
 fn rgb(value: u32) -> Rgb {
     Rgb::hex(value)

@@ -829,11 +829,9 @@ impl App {
             return;
         }
         let spec = menu.spec;
-        let area = crate::ui::menu_area(spec, &self.layout);
-        let row = mouse.row.wrapping_sub(area.y + 1) as usize;
-        let inside = area.contains(mouse.column, mouse.row);
+        let index = crate::ui::menu_item_at(spec, &self.layout, mouse.column, mouse.row);
         self.overlay = None;
-        if let Some(item) = spec.items.get(row).filter(|_| inside) {
+        if let Some(item) = index.and_then(|index| spec.items.get(index)) {
             self.run_command(item.command);
         }
     }
@@ -888,21 +886,19 @@ impl App {
             MouseEventKind::ScrollUp => picker.move_selection(-1),
             MouseEventKind::ScrollDown => picker.move_selection(1),
             MouseEventKind::Down(MouseButton::Left) => {
-                let area = crate::ui::picker_view::list_area(
+                if let Some(index) = crate::ui::picker_view::item_at(
+                    picker,
                     self.layout.status.w,
                     self.layout.status.y + 1,
-                    picker.kind,
-                );
-                if area.contains(mouse.column, mouse.row) {
-                    let index = picker.scroll + (mouse.row - area.y) as usize;
-                    if index < picker.shown.len() {
-                        picker.selected = index;
-                        if let Some(Overlay::Picker(picker)) = self.overlay.take() {
-                            self.preview = None;
-                            commands::accept_picker(self, picker);
-                        }
-                        return;
+                    mouse.column,
+                    mouse.row,
+                ) {
+                    picker.selected = index;
+                    if let Some(Overlay::Picker(picker)) = self.overlay.take() {
+                        self.preview = None;
+                        commands::accept_picker(self, picker);
                     }
+                    return;
                 }
             }
             _ => {}

@@ -1,5 +1,5 @@
 //! Line bookmarks (like bookmarks.nvim), kept per project in
-//! `~/.local/state/yate/bookmarks` as `path<TAB>line` lines.
+//! `~/.yate/bookmarks` as `path<TAB>line` lines.
 
 use std::path::{Path, PathBuf};
 
@@ -123,13 +123,13 @@ fn parse(text: &str) -> Vec<Bookmark> {
 }
 
 /// The bookmarks file of a project: one file per project root.
-pub fn file_for(state_dir: &Path, root: &Path) -> PathBuf {
+pub fn file_for(yate_dir: &Path, root: &Path) -> PathBuf {
     let name: String = root
         .to_string_lossy()
         .chars()
         .map(|c| if c.is_alphanumeric() { c } else { '_' })
         .collect();
-    state_dir.join("bookmarks").join(name)
+    yate_dir.join("bookmarks").join(name)
 }
 
 #[cfg(test)]

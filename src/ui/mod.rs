@@ -439,14 +439,35 @@ fn menu_rows(spec: &MenuSpec) -> Vec<(String, String)> {
         .collect()
 }
 
-/// Where the popup of a menu is drawn, for drawing and for mouse clicks.
-pub fn menu_area(spec: &MenuSpec, layout: &Layout) -> Rect {
-    key_popup_area(layout, &menu_rows(spec))
+/// The item of a menu drawn at a screen cell; a long title takes more
+/// than one row on a narrow screen.
+pub fn menu_item_at(spec: &MenuSpec, layout: &Layout, column: u16, row: u16) -> Option<usize> {
+    let rows = menu_rows(spec);
+    let area = key_popup_area(layout, &rows);
+    if !area.contains(column, row) {
+        return None;
+    }
+    let mut y = area.y + 1;
+    for (i, lines) in key_popup_lines(area, &rows).iter().enumerate() {
+        y += lines.len() as u16;
+        if row < y {
+            return Some(i);
+        }
+    }
+    None
 }
 
 fn key_column_width(rows: &[(String, String)]) -> usize {
     let widths = rows.iter().map(|(keys, _)| text::str_width(keys));
     widths.max().unwrap_or(1)
+}
+
+/// The label of every row of a key popup in `area`, broken into lines.
+fn key_popup_lines(area: Rect, rows: &[(String, String)]) -> Vec<Vec<String>> {
+    let width = (area.w as usize).saturating_sub(key_column_width(rows) + 6);
+    rows.iter()
+        .map(|(_, label)| text::wrap(label, width))
+        .collect()
 }
 
 fn key_popup_area(layout: &Layout, rows: &[(String, String)]) -> Rect {
@@ -459,13 +480,13 @@ fn key_popup_area(layout: &Layout, rows: &[(String, String)]) -> Rect {
         .unwrap_or(20)
         .max(24)
         .min(screen.w.saturating_sub(2) as usize) as u16;
-    let height = (rows.len() as u16 + 2).min(screen.h.saturating_sub(2));
-    Rect::new(
-        screen.x + screen.w.saturating_sub(width) / 2,
-        screen.y + 1,
-        width,
-        height,
-    )
+    let x = screen.x + screen.w.saturating_sub(width) / 2;
+    let lines: usize = key_popup_lines(Rect::new(x, 0, width, 0), rows)
+        .iter()
+        .map(Vec::len)
+        .sum();
+    let height = (lines as u16 + 2).min(screen.h.saturating_sub(2));
+    Rect::new(x, screen.y + 1, width, height)
 }
 
 /// A bordered popup of rows chosen with the key in front of each.
@@ -480,9 +501,10 @@ fn render_key_popup(
     surface.fill(area, Style::new().fg(t.fg).bg(t.bg_dark));
     surface.border(area, Style::new().fg(t.blue).bg(t.bg_dark), Some(title));
     let keys = key_column_width(rows) as u16;
-    for (i, (key, label)) in rows.iter().enumerate() {
-        let y = area.y + 1 + i as u16;
-        if y + 1 >= area.bottom() {
+    let bottom = area.bottom().saturating_sub(1);
+    let mut y = area.y + 1;
+    for (i, ((key, _), lines)) in rows.iter().zip(key_popup_lines(area, rows)).enumerate() {
+        if y >= bottom {
             break;
         }
         let bg = if current == Some(i) {
@@ -490,12 +512,22 @@ fn render_key_popup(
         } else {
             t.bg_dark
         };
-        let row = Rect::new(area.x + 1, y, area.w.saturating_sub(2), 1);
+        let height = (lines.len() as u16).min(bottom - y);
+        let row = Rect::new(area.x + 1, y, area.w.saturating_sub(2), height);
         surface.fill(row, Style::new().bg(bg));
         let key_style = Style::new().fg(t.orange).bg(bg).bold();
         surface.put_str(row.x + 1, y, key, key_style, row.right());
         let label_x = row.x + 1 + keys + 2;
-        surface.put_str(label_x, y, label, Style::new().fg(t.fg).bg(bg), row.right());
+        for (line_y, line) in (y..y + height).zip(&lines) {
+            surface.put_str(
+                label_x,
+                line_y,
+                line,
+                Style::new().fg(t.fg).bg(bg),
+                row.right(),
+            );
+        }
+        y += height;
     }
 }
 

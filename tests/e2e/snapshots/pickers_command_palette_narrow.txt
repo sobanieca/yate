@@ -1,0 +1,30 @@
+# pickers_command_palette_narrow
+# start: yate README.md
+# keys: ctrl+t t ctrl+h
+# 28x24, cursor at column 4, row 3
+┌────────────────────────────┐
+│ PROJECT              READM │
+│ [ ] changed          1  Cal│
+│╭─ Commands (tree)  45/45 ─╮│
+││ ❯                        ││
+││──────────────────────────││
+││▌ New file…        ctrl+n ││
+││  Rename…               r ││
+││  Delete…               d ││
+││  Copy relative path    y ││
+││  Toggle         ctrl+t t ││
+││  Reveal current file     ││
+││                 ctrl+t r ││
+││  Lock / unlock           ││
+││  following the current   ││
+││  file           ctrl+t l ││
+││  Show / hide             ││
+││  git-ignored files       ││
+││  Show only changed       ││
+││  files                   ││
+││  Refresh         shift+r ││
+│╰──────────────────────────╯│
+│                            │
+│                            │
+│ markdown  utf-8  LF  0 1:1 │
+└────────────────────────────┘

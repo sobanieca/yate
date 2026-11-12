@@ -1,0 +1,12 @@
+yate - instructions for AI agents
+
+  Run 'yate skill --init' to create a skill so you can invoke it with
+  /yate (Claude Code, Cursor) or $yate (Codex). Inside a git repository
+  the skill is created in the repository, otherwise in the home directory.
+
+  yate is configured with yate.json files (JSONC). Personal settings go to
+  ~/.yate/yate.json or ~/.yate/yate.jsonc; a yate.json in a project
+  overrides them key by key. Change only the keys asked for and keep the comments.
+
+  Full reference follows: the yate.json reference, the plugin API, and the
+  template of 'yate init' with every setting and its default.

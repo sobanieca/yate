@@ -1,10 +1,10 @@
-//! A small append-only log in `~/.local/state/yate/yate.log`, for errors that
+//! A small append-only log in `~/.yate/yate.log`, for errors that
 //! should not interrupt editing (plugin failures, query errors).
 
 use std::io::Write;
 
 pub fn write(message: &str) {
-    write_to(&crate::config::state_dir(), message);
+    write_to(&crate::config::dir(), message);
 }
 
 pub fn write_to(dir: &std::path::Path, message: &str) {

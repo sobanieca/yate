@@ -113,10 +113,10 @@ impl PluginHost {
     }
 
     /// Loads the plugins that `yate.json` switches on: the bundled ones
-    /// unless set to `false`, then `plugins/<name>.js` from the config
-    /// directory for every name set to `true`, in name order. Returns the
+    /// unless set to `false`, then `plugins/<name>.js` from the yate
+    /// folder for every name set to `true`, in name order. Returns the
     /// errors of plugins that failed.
-    pub fn load_all(&mut self, config_dir: &Path, switches: &[(String, bool)]) -> Vec<String> {
+    pub fn load_all(&mut self, yate_dir: &Path, switches: &[(String, bool)]) -> Vec<String> {
         let enabled = |name: &str| {
             switches
                 .iter()
@@ -143,10 +143,10 @@ impl PluginHost {
         names.dedup();
         for name in names {
             let file = format!("plugins/{name}.js");
-            let result = std::fs::read_to_string(config_dir.join(&file))
+            let result = std::fs::read_to_string(yate_dir.join(&file))
                 .map_err(|err| match err.kind() {
                     std::io::ErrorKind::NotFound => {
-                        format!("{file} not found in the config folder")
+                        format!("{file} not found in ~/.yate")
                     }
                     _ => err.to_string(),
                 })
@@ -556,10 +556,7 @@ mod tests {
         ];
         let errors = host.load_all(&dir, &switches);
         let _ = std::fs::remove_dir_all(&dir);
-        assert_eq!(
-            errors,
-            ["missing: plugins/missing.js not found in the config folder"]
-        );
+        assert_eq!(errors, ["missing: plugins/missing.js not found in ~/.yate"]);
         let bridge = host.bridge.borrow();
         let ids: Vec<&str> = bridge.commands.iter().map(|(id, _)| id.as_str()).collect();
         assert!(

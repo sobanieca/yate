@@ -164,11 +164,7 @@ fn install(temp: &Path, exe: &Path, binary: &[u8], version: &str) -> Result<(), 
 }
 
 fn cache_file() -> Option<PathBuf> {
-    let base = std::env::var_os("XDG_CACHE_HOME")
-        .map(PathBuf::from)
-        .filter(|dir| dir.is_absolute())
-        .or_else(|| std::env::var_os("HOME").map(|home| PathBuf::from(home).join(".cache")))?;
-    Some(base.join("yate").join("latest-version"))
+    Some(crate::config::dir().join("latest-version"))
 }
 
 fn now() -> u64 {

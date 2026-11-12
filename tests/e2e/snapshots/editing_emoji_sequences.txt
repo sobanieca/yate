@@ -1,0 +1,11 @@
+# editing_emoji_sequences
+# start: yate e.txt
+# 40x6, cursor at column 5, row 1
+┌────────────────────────────────────────┐
+│ e.txt ×                                │
+│  1  a👨‍👩‍👧b 🇵🇱 👍🏽 ❤️                      │
+│  2                                     │
+│                                        │
+│                                        │
+│ EDIT  e.txt   text  utf-8  LF  0%  1:1 │
+└────────────────────────────────────────┘
