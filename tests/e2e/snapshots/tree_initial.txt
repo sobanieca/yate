@@ -9,7 +9,7 @@
 │   .gitignore             find file                         ctrl+p    │
 │   README.md              live grep                         ctrl+r    │
 │                          file tree                         ctrl+t    │
-│                          switch: tree, files               ctrl+o    │
+│                          switch tab                        ctrl+o    │
 │                          commands and keys                 ctrl+h    │
 │                          quit                              ctrl+q    │
 │                                                                      │

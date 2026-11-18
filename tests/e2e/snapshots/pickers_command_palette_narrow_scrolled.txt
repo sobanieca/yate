@@ -19,7 +19,7 @@
 ┌────────────────────────────┐
 │ PROJECT              READM │
 │ [ ] changed          1  Cal│
-│╭─ Commands (tree)  45/45 ─╮│
+│╭─ Commands (tree)  44/44 ─╮│
 ││ ❯                        ││
 ││──────────────────────────││
 ││  Copy relative path    y ││

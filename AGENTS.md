@@ -85,15 +85,17 @@ How the pieces fit:
 - **One thread owns the state.** Background threads (input, file index, git status, live
   grep) send `AppEvent`s over one channel. The loop renders a frame, waits for an event and
   handles it.
-- **One file per pane, tabs without buffers.** `App::docs` holds only the documents on screen: one
-  per file the panes of a split show (`App::panes`; the cursor and scroll of the focused pane
-  live in its document, the other panes keep theirs in `Pane`). `App::open` shows a file in place of the one in the
-  focused pane; a document no pane shows is dropped (`drop_hidden_docs`), and only its path,
-  cursor and scroll stay in `App::recent` (Ctrl+P order). `App::tabs` lists the paths of the
-  opened files for the tab bar and the Ctrl+O switcher; a tab is only a path, so showing a
-  tab is opening its file. Anything that
-  takes a file off the screen first calls `App::may_leave` (or `may_drop`), which asks to
-  save or discard unsaved changes and then runs the action again.
+- **One file per pane; only unsaved files stay hidden.** `App::docs` holds the documents on
+  screen, one per file the panes of a split show (`App::panes`; the cursor and scroll of the
+  focused pane live in its document, the other panes keep theirs in `Pane`), plus the files
+  with unsaved changes that no pane shows. `App::open` shows a file in place of the one in the
+  focused pane; a saved document no pane shows is dropped (`drop_hidden_docs`), and only its
+  path, cursor and scroll stay in `App::recent` (Ctrl+P order). `App::tabs` lists the paths
+  of the opened files for the tab bar and the Ctrl+O switcher; showing a tab opens its file,
+  or brings back its unsaved document. `App::on_screen` and `App::is_unsaved` answer for a
+  path. Unsaved changes are asked about only where they would be lost: closing their tab
+  (`may_drop`), untitled text leaving the screen (`may_leave`) and quitting. The prompt
+  runs the action again once they are saved or discarded.
 - **All text changes go through `Document::apply`**, which records undo history and feeds
   tree-sitter `InputEdit`s, so the syntax tree is reparsed incrementally before the next frame.
 - **Highlighting is computed per frame for the visible bytes only** with a `QueryCursor`

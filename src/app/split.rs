@@ -8,10 +8,11 @@
 //! other panes by the same number of lines and columns.
 //!
 //! Each pane shows one file. A file that leaves the screen is forgotten,
-//! except for its tab and its path and cursor in the recent files.
+//! except for its tab and its path and cursor in the recent files; a file
+//! with unsaved changes stays in memory until it is saved or its tab closes.
 //!
-//! Ctrl+O arms the switcher: a digit then focuses the file tree (1) or shows
-//! a tab (2-9), and every further Ctrl+O shows the next tab. The tabs show
+//! Ctrl+O arms the switcher: a digit then shows a tab (1-9), and every
+//! further Ctrl+O shows the next tab. The tabs show
 //! their numbers while it is armed, and the numbered targets pop up after
 //! `keyHintDelay` milliseconds.
 
@@ -123,9 +124,12 @@ impl App {
             let others = self.panes.others();
             let views = others.iter().filter(|p| p.doc_id == doc_id).count();
             let leaves_the_screen = doc_id != focused_doc && views == 1;
-            let index = self.docs.iter().position(|d| d.id == doc_id);
+            let unnamed = self
+                .docs
+                .iter()
+                .position(|d| d.id == doc_id && d.path.is_none());
             if leaves_the_screen
-                && let Some(index) = index
+                && let Some(index) = unnamed
                 && !self.may_drop(index, App::close_other_panes)
             {
                 break;
@@ -148,6 +152,10 @@ impl App {
     }
 
     pub fn focus_next_pane(&mut self) {
+        if self.focus == Focus::Tree {
+            self.focus = Focus::Editor;
+            return;
+        }
         if self.needs_split() {
             return;
         }
@@ -158,14 +166,22 @@ impl App {
     }
 
     /// Focuses the pane that touches the focused one on `side`, level with
-    /// the cursor.
+    /// the cursor. The file tree is left of the panes: left of the leftmost
+    /// pane focuses it, and right of it focuses the editor.
     pub fn focus_pane_on(&mut self, side: Side) {
-        if self.needs_split() {
+        if self.focus == Focus::Tree {
+            match side {
+                Side::Right => self.focus = Focus::Editor,
+                _ => self.notify("No pane on that side"),
+            }
             return;
         }
         let near = self.cursor_cell();
-        match panes::neighbor(&self.layout.panes, self.panes.focused, side, near) {
+        let neighbor = panes::neighbor(&self.layout.panes, self.panes.focused, side, near);
+        match neighbor {
             Some(id) => self.focus_pane(id),
+            None if side == Side::Left && self.tree_visible => self.focus_tree(),
+            None if self.needs_split() => {}
             None => self.notify("No pane on that side"),
         }
     }
@@ -270,8 +286,11 @@ impl App {
             self.panes.remove(id);
         }
         self.docs.retain(|doc| doc.id != doc_id);
-        if self.docs.is_empty() {
-            let scratch = Document::scratch(0);
+        let focused_doc = self.panes.pane(self.panes.focused).map(|pane| pane.doc_id);
+        let shown = focused_doc.is_some_and(|id| self.docs.iter().any(|doc| doc.id == id));
+        if !shown {
+            let scratch = Document::scratch(self.next_doc_id);
+            self.next_doc_id += 1;
             if let Some(pane) = self.panes.pane_mut(self.panes.focused) {
                 pane.doc_id = scratch.id;
                 pane.selection = scratch.selection;
@@ -334,14 +353,13 @@ impl App {
     }
 
     pub fn start_switcher(&mut self) {
+        if self.tabs.is_empty() {
+            self.notify("No tabs: open a file with ctrl+p or the file tree");
+            return;
+        }
         self.switcher = Some(Switcher {
             started: Instant::now(),
-            files: self
-                .tabs
-                .iter()
-                .take(MAX_SWITCH_TARGETS - 1)
-                .cloned()
-                .collect(),
+            files: self.tabs.iter().take(MAX_SWITCH_TARGETS).cloned().collect(),
         });
     }
 
@@ -374,28 +392,26 @@ impl App {
         }
     }
 
-    /// The numbered targets of the switcher: the file tree, then the tabs.
+    /// The numbered targets of the switcher: the tabs, with a `●` when
+    /// the file has unsaved changes.
     pub fn switch_targets(&self) -> Vec<String> {
-        let first = "File tree".to_string();
-        let files = self.switcher.iter().flat_map(|s| &s.files).map(|path| {
-            let modified = self
-                .docs
-                .iter()
-                .any(|d| d.path.as_ref() == Some(path) && d.is_modified());
-            let marker = if modified { " ●" } else { "" };
-            format!("{}{marker}", self.relative(path))
-        });
-        std::iter::once(first).chain(files).collect()
+        let files = self.switcher.iter().flat_map(|s| &s.files);
+        files
+            .map(|path| {
+                let marker = if self.is_unsaved(path) { " ●" } else { "" };
+                format!("{}{marker}", self.relative(path))
+            })
+            .collect()
     }
 
-    /// The switcher target that has the focus.
+    /// The switcher target of the focused pane.
     pub fn switch_target_focused(&self) -> Option<usize> {
         if self.focus == Focus::Tree {
-            return Some(0);
+            return None;
         }
         let path = self.doc().path.as_ref()?;
         let files = &self.switcher.as_ref()?.files;
-        files.iter().position(|file| file == path).map(|i| i + 1)
+        files.iter().position(|file| file == path)
     }
 
     /// Keys while the switcher is armed. Returns false when the key leaves
@@ -426,14 +442,9 @@ impl App {
         }
     }
 
-    /// Focuses switcher target `number`: 1 is the file tree, the others
-    /// are `files`.
+    /// Shows tab `number` of `files`, counted from 1.
     fn switch_to(&mut self, number: usize, files: &[PathBuf]) {
-        if number == 1 {
-            self.focus_tree();
-            return;
-        }
-        match files.get(number - 2) {
+        match files.get(number - 1) {
             Some(path) => self.show_file(path),
             None => self.notify(format!("No tab {number}")),
         }

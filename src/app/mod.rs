@@ -110,6 +110,21 @@ const SAVE_CHOICES: &[Choice] = &[
     },
 ];
 
+const QUIT_CHOICES: &[Choice] = &[
+    Choice {
+        label: "Save and quit",
+        answer: "s",
+    },
+    Choice {
+        label: "Quit",
+        answer: "q",
+    },
+    Choice {
+        label: "Cancel",
+        answer: "n",
+    },
+];
+
 const YES_NO_CHOICES: &[Choice] = &[
     Choice {
         label: "Yes",
@@ -133,11 +148,13 @@ impl Prompt {
         }
     }
 
-    /// A prompt answered with a button: Save focused first, or No.
+    /// A prompt answered with a button: Save focused first, or the last
+    /// one (No, Cancel).
     pub fn confirm(title: impl Into<String>, kind: PromptKind) -> Prompt {
         let choice = match kind {
             PromptKind::LeaveUnsaved { .. } => 0,
-            _ => 1,
+            PromptKind::QuitUnsaved => QUIT_CHOICES.len() - 1,
+            _ => YES_NO_CHOICES.len() - 1,
         };
         Prompt {
             title: title.into(),
@@ -151,6 +168,7 @@ impl Prompt {
     pub fn choices(&self) -> &'static [Choice] {
         match self.kind {
             PromptKind::LeaveUnsaved { .. } => SAVE_CHOICES,
+            PromptKind::QuitUnsaved => QUIT_CHOICES,
             _ => YES_NO_CHOICES,
         }
     }
@@ -687,7 +705,7 @@ impl App {
         let mut doc = match Document::open(id, path) {
             Ok(doc) => doc,
             Err(err) => {
-                self.error(format!("{}: {err}", self.relative(path)));
+                self.error(open_error(&self.relative(path), path, &err));
                 return false;
             }
         };
@@ -709,14 +727,42 @@ impl App {
         true
     }
 
-    /// Forgets the documents no pane shows; the recent files keep their
-    /// cursor and scroll.
+    /// The ids of the documents the panes show.
+    pub(crate) fn shown_doc_ids(&self) -> Vec<usize> {
+        let others = self.panes.others().into_iter().map(|pane| pane.doc_id);
+        std::iter::once(self.doc().id).chain(others).collect()
+    }
+
+    /// Whether a pane shows the file `path`.
+    pub fn on_screen(&self, path: &Path) -> bool {
+        let shown = self.shown_doc_ids();
+        self.docs
+            .iter()
+            .any(|doc| doc.path.as_deref() == Some(path) && shown.contains(&doc.id))
+    }
+
+    /// The document of the file `path`, on screen or kept for its unsaved
+    /// changes.
+    pub fn doc_of(&self, path: &Path) -> Option<&Document> {
+        self.docs
+            .iter()
+            .find(|doc| doc.path.as_deref() == Some(path))
+    }
+
+    /// Whether the file `path` has unsaved changes.
+    pub fn is_unsaved(&self, path: &Path) -> bool {
+        self.doc_of(path).is_some_and(Document::is_modified)
+    }
+
+    /// Forgets the documents no pane shows, except files with unsaved
+    /// changes; the recent files keep the cursor and scroll of the others.
     pub(crate) fn drop_hidden_docs(&mut self) {
         let focused = self.doc().id;
-        let others: Vec<usize> = self.panes.others().iter().map(|p| p.doc_id).collect();
-        let (shown, hidden): (Vec<Document>, Vec<Document>) = std::mem::take(&mut self.docs)
-            .into_iter()
-            .partition(|doc| doc.id == focused || others.contains(&doc.id));
+        let shown = self.shown_doc_ids();
+        let kept =
+            |doc: &Document| shown.contains(&doc.id) || (doc.path.is_some() && doc.is_modified());
+        let (shown, hidden): (Vec<Document>, Vec<Document>) =
+            std::mem::take(&mut self.docs).into_iter().partition(kept);
         self.docs = shown;
         self.active = self
             .docs
@@ -733,6 +779,21 @@ impl App {
                 recent.view = doc.view;
             }
         }
+    }
+
+    /// Forgets document `doc_id` and its unsaved changes when no pane shows
+    /// it.
+    pub(crate) fn discard_hidden(&mut self, doc_id: usize) {
+        if self.shown_doc_ids().contains(&doc_id) {
+            return;
+        }
+        let focused = self.doc().id;
+        self.docs.retain(|doc| doc.id != doc_id);
+        self.active = self
+            .docs
+            .iter()
+            .position(|doc| doc.id == focused)
+            .unwrap_or(0);
     }
 
     /// Moves the file of the focused pane to the front of the recent files
@@ -755,13 +816,17 @@ impl App {
         self.recent.truncate(MAX_RECENT);
     }
 
-    /// True when the file of the focused pane may leave the screen. With
-    /// unsaved changes it asks first, and runs `then` once they are saved or
-    /// discarded.
+    /// True when the document of the focused pane may leave the screen. A
+    /// file with unsaved changes stays in memory with its tab; only text
+    /// without a file name would be lost, so for that it asks first, and runs
+    /// `then` once it is saved or discarded.
     pub fn may_leave(&mut self, then: impl FnOnce(&mut App) + 'static) -> bool {
-        self.in_another_pane(self.active) || self.may_drop(self.active, then)
+        let named = self.doc().path.is_some();
+        named || self.in_another_pane(self.active) || self.may_drop(self.active, then)
     }
 
+    /// True when document `index` may be forgotten. With unsaved changes it
+    /// asks first, and runs `then` once they are saved or discarded.
     pub(crate) fn may_drop(&mut self, index: usize, then: impl FnOnce(&mut App) + 'static) -> bool {
         let doc = &self.docs[index];
         let unsaved = doc.is_modified() && (doc.path.is_some() || doc.rope.len_chars() > 0);
@@ -1326,6 +1391,46 @@ pub fn gutter_width(doc: &Document, options: &Options) -> u16 {
     digits + 3
 }
 
+/// Why the file `path` (shown as `name`) could not be opened; for a
+/// file you may not read, with its permissions.
+fn open_error(name: &str, path: &Path, err: &std::io::Error) -> String {
+    if err.kind() != std::io::ErrorKind::PermissionDenied {
+        return format!("{name}: {err}");
+    }
+    let permissions = std::fs::metadata(path)
+        .map(|metadata| format!(": its permissions are {}", permission_text(&metadata)))
+        .unwrap_or_default();
+    format!(
+        "Cannot open {name}: permission denied\n\
+         You may not read this file{permissions}. Open yate as a user who may read it, or \
+         change its permissions (chmod)."
+    )
+}
+
+#[cfg(unix)]
+fn permission_text(metadata: &std::fs::Metadata) -> String {
+    use std::os::unix::fs::PermissionsExt;
+    let mode = metadata.permissions().mode() & 0o777;
+    let letters: String = (0..9)
+        .map(|bit| {
+            let set = mode & (0o400 >> bit) != 0;
+            match (set, bit % 3) {
+                (false, _) => '-',
+                (true, 0) => 'r',
+                (true, 1) => 'w',
+                (true, _) => 'x',
+            }
+        })
+        .collect();
+    format!("{letters} ({mode:03o})")
+}
+
+#[cfg(not(unix))]
+fn permission_text(metadata: &std::fs::Metadata) -> String {
+    let readonly = metadata.permissions().readonly();
+    if readonly { "read-only" } else { "read-write" }.to_string()
+}
+
 /// Removes `.` and `..` without touching the file system.
 pub fn normalize(path: &Path) -> PathBuf {
     let mut out = PathBuf::new();
@@ -1517,5 +1622,17 @@ mod tests {
         );
         assert_eq!(parse_target("src/a.rs"), ("src/a.rs".to_string(), None));
         assert_eq!(normalize(Path::new("/a/./b/../c")), PathBuf::from("/a/c"));
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn permissions_as_text() {
+        use std::os::unix::fs::PermissionsExt;
+        let file = std::env::temp_dir().join(format!("yate-mode-{}", std::process::id()));
+        std::fs::write(&file, "").unwrap();
+        std::fs::set_permissions(&file, std::fs::Permissions::from_mode(0o640)).unwrap();
+        let metadata = std::fs::metadata(&file).unwrap();
+        assert_eq!(permission_text(&metadata), "rw-r----- (640)");
+        std::fs::remove_file(&file).unwrap();
     }
 }

@@ -3,7 +3,7 @@
 # keys: ctrl+p
 # type: "c.js"
 # keys: enter
-# keys: ctrl+o 2
+# keys: ctrl+o 1
 # keys: ctrl+p
 # type: "b.js"
 # keys: enter

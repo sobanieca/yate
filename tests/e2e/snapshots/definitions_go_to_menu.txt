@@ -7,17 +7,17 @@
 │ app.ts ×                                                                       │
 │  1  import { rend╭─ Go to ─────────────────────────────────╮                   │
 │  2  import { rows│ l  Line…                                │                   │
-│  3  import * as m│ d  Definition or file under the cursor  │                   │
-│  4               │ ←  Back                                 │                   │
-│  5  const app = {│ →  Forward                              │                   │
-│  6  render(app); ╰─────────────────────────────────────────╯                   │
-│  7  model.reset();                                                             │
-│  8                                                                             │
+│  3  import * as m│ ↑  First line                           │                   │
+│  4               │ ↓  Last line                            │                   │
+│  5  const app = {│ d  Definition or file under the cursor  │                   │
+│  6  render(app); │ ←  Back                                 │                   │
+│  7  model.reset()│ →  Forward                              │                   │
+│  8               ╰─────────────────────────────────────────╯                   │
 │                                                                                │
 │                                                                                │
 │                                                                                │
 │                                                                                │
 │                                                                                │
 │                                                                                │
-│ MENU  src/app.ts              Go to: l d ← →   typescript  utf-8  LF  71%  6:1 │
+│ MENU  src/app.ts          Go to: l ↑ ↓ d ← →   typescript  utf-8  LF  71%  6:1 │
 └────────────────────────────────────────────────────────────────────────────────┘

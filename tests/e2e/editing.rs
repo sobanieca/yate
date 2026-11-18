@@ -97,12 +97,13 @@ fn quitting_with_unsaved_changes_asks_first() {
     e.snapshot("editing_quit_prompt");
     e.keys("enter");
     assert!(!e.app().quit);
-    e.keys("ctrl+q n");
+    e.keys("ctrl+q c");
     assert!(!e.app().quit);
     e.keys("ctrl+q left");
     e.snapshot_styles("editing_quit_prompt_yes");
     e.keys("enter");
     assert!(e.app().quit);
+    assert_eq!(e.read_file("app.js"), APP_JS);
 }
 
 #[test]
@@ -202,7 +203,7 @@ fn ctrl_backspace_deletes_one_character() {
 }
 
 #[test]
-fn opening_another_file_with_unsaved_changes_asks_to_save_or_discard() {
+fn opening_another_file_keeps_the_unsaved_changes() {
     let mut e = Harness::builder()
         .size(70, 10)
         .file("a.js", "let a = 1;\n")
@@ -211,20 +212,51 @@ fn opening_another_file_with_unsaved_changes_asks_to_save_or_discard() {
         .start();
     e.type_text("x");
     e.keys("ctrl+p").type_text("b.js").keys("enter");
-    e.snapshot("editing_leave_unsaved_prompt");
-    e.keys("esc");
+    assert_eq!(e.app().doc().name(), "b.js");
+    assert_eq!(e.read_file("a.js"), "let a = 1;\n");
+    e.snapshot("editing_unsaved_in_another_tab");
+
+    e.keys("ctrl+g left");
     assert_eq!(e.app().doc().name(), "a.js");
     assert_eq!(e.editor_text(), "xlet a = 1;\n");
-
-    e.keys("ctrl+p").type_text("b.js").keys("enter enter");
-    assert_eq!(e.app().doc().name(), "b.js");
+    assert!(e.app().doc().is_modified());
+    e.keys("ctrl+s ctrl+g right");
     assert_eq!(e.read_file("a.js"), "xlet a = 1;\n");
-
-    e.type_text("y");
-    e.keys("ctrl+g left right enter");
-    assert_eq!(e.app().doc().name(), "a.js");
-    assert_eq!(e.read_file("b.js"), "let b = 2;\n");
     assert_eq!(e.app().docs.len(), 1);
+}
+
+#[test]
+fn opening_a_file_over_untitled_text_asks_to_save_or_discard() {
+    let mut e = Harness::builder()
+        .size(70, 10)
+        .file("a.js", "let a = 1;\n")
+        .start();
+    e.keys("esc").type_text("notes");
+    e.keys("ctrl+p").type_text("a.js").keys("enter");
+    e.snapshot("editing_leave_unsaved_prompt");
+    e.keys("esc");
+    assert_eq!(e.editor_text(), "notes");
+    e.keys("ctrl+p").type_text("a.js").keys("enter d");
+    assert_eq!(e.app().doc().name(), "a.js");
+    assert_eq!(e.app().docs.len(), 1);
+}
+
+#[test]
+fn quitting_can_save_every_unsaved_file() {
+    let mut e = Harness::builder()
+        .size(70, 10)
+        .file("a.js", "let a = 1;\n")
+        .file("b.js", "let b = 2;\n")
+        .open("a.js")
+        .start();
+    e.type_text("x");
+    e.keys("ctrl+p").type_text("b.js").keys("enter");
+    e.type_text("y").keys("ctrl+q");
+    e.assert_screen_contains("Quit with unsaved changes: a.js, b.js");
+    e.keys("s");
+    assert!(e.app().quit);
+    assert_eq!(e.read_file("a.js"), "xlet a = 1;\n");
+    assert_eq!(e.read_file("b.js"), "ylet b = 2;\n");
 }
 
 #[test]
@@ -255,4 +287,36 @@ fn emoji_sequences_are_one_character() {
     assert_eq!(e.screen().cursor, Some((8, 1)));
     e.keys("backspace");
     assert_eq!(e.editor_text(), "ab 🇵🇱 👍🏽 ❤️\n");
+}
+
+#[test]
+fn ctrl_g_goes_to_the_first_and_the_last_line() {
+    let mut e = app_js();
+    e.keys("down down ctrl+g down");
+    assert_eq!(e.app().doc().cursor_line(), 6);
+    e.keys("ctrl+g up");
+    assert_eq!(e.app().doc().cursor_line(), 0);
+    e.keys("ctrl+g left");
+    assert_eq!(e.app().doc().cursor_line(), 6);
+}
+
+#[cfg(unix)]
+#[test]
+fn a_file_without_read_permission_says_why_it_does_not_open() {
+    use std::os::unix::fs::PermissionsExt;
+    let mut e = Harness::builder()
+        .size(70, 10)
+        .file("a.js", "let a = 1;\n")
+        .file("secret.txt", "hidden\n")
+        .open("a.js")
+        .start();
+    let secret = e.root().join("secret.txt");
+    std::fs::set_permissions(&secret, std::fs::Permissions::from_mode(0o000)).unwrap();
+    if std::fs::read(&secret).is_ok() {
+        return;
+    }
+    e.keys("ctrl+p").type_text("secret").keys("enter");
+    e.snapshot("editing_unreadable_file");
+    assert_eq!(e.app().doc().name(), "a.js");
+    std::fs::set_permissions(&secret, std::fs::Permissions::from_mode(0o644)).unwrap();
 }

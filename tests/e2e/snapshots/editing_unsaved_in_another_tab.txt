@@ -1,0 +1,19 @@
+# editing_unsaved_in_another_tab
+# start: yate a.js
+# type: "x"
+# keys: ctrl+p
+# type: "b.js"
+# keys: enter
+# 70x10, cursor at column 5, row 1
+┌──────────────────────────────────────────────────────────────────────┐
+│ a.js ●  b.js ×                                                       │
+│  1  let b = 2;                                                       │
+│  2                                                                   │
+│                                                                      │
+│                                                                      │
+│                                                                      │
+│                                                                      │
+│                                                                      │
+│                                                                      │
+│ EDIT  b.js          ctrl+h commands   javascript  utf-8  LF  0%  1:1 │
+└──────────────────────────────────────────────────────────────────────┘

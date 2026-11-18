@@ -9,7 +9,7 @@
 │                                                                                │
 │                                                                                │
 │                                                                                │
-│   ╭─ Commands (editor) ──────────────────────────────────────────── 68/68 ─╮   │
+│   ╭─ Commands (editor) ──────────────────────────────────────────── 69/69 ─╮   │
 │   │ ❯                                                                      │   │
 │   │────────────────────────────────────────────────────────────────────────│   │
 │   │▌ File       Save                                                ctrl+s │   │
@@ -39,6 +39,8 @@
 │   │             Live grep                                           ctrl+r │   │
 │   │             Live grep in files matching a glob                         │   │
 │   │  Go to      Line…                                             ctrl+g l │   │
+│   │             First line                                        ctrl+g ↑ │   │
+│   │             Last line                                         ctrl+g ↓ │   │
 │   │             Definition or file under the cursor               ctrl+g d │   │
 │   │  Bookmarks  Toggle on this line                               ctrl+k t │   │
 │   │  View       Split vertically (side by side)                   ctrl+w v │   │
@@ -55,8 +57,6 @@
 │   │             TypeScript: Add // @ts-nocheck                             │   │
 │   │  yate       Open yate.json (the closest one, or a new global one)      │   │
 │   │             Reload yate.json and plugins                               │   │
-│   │             Open the log                                               │   │
-│   │             Quit                                                ctrl+q │   │
 │   ╰────────────────────────────────────────────────────────────────────────╯   │
 │                                                                                │
 │                                                                                │

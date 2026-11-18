@@ -24,10 +24,11 @@ Website and manual: https://adam.sobaniec.com/yate/
 - **Project tools:** a file tree with git status, checkboxes for ignored and changed files,
   sideways scrolling for deep names and a width you set (`[` / `]` or drag its edge), a fuzzy file finder (Ctrl+P), live grep with glob
   filters, git signs in the gutter, bookmarks and a jump list.
-- **Tabs without hidden buffers.** Every file you open gets a tab above the editor; click
-  one to show it, click its `×` to close it, or press Ctrl+O and its number. Only the files
-  on screen are loaded, so nothing unsaved hides behind a tab: showing another tab with
-  unsaved changes asks first (save, discard or stay). A file opens again where the cursor
+- **Tabs.** Every file you open gets a tab above the editor; click one to show it, click
+  its `×` to close it, or press Ctrl+O and its number. Switching never asks to save: a file
+  with unsaved changes stays in memory, and a `●` marks it in its tab, in the title of every
+  pane that shows it, in the status line and in the Ctrl+O list. Closing its tab asks to
+  save or discard; quitting offers to save them all. A file opens again where the cursor
   was, and Ctrl+P lists the files you had last on top.
 - **Split view** (Ctrl+W): as many panes as you need, side by side or one above the other,
   showing the same file or different files. Panes share the space evenly; resize one by
@@ -127,12 +128,12 @@ Six keys open a menu; the second key picks the command:
 
 | Menu                | Keys in the menu                                                         |
 | ------------------- | ------------------------------------------------------------------------ |
-| Ctrl+G go to        | `l` line, `d` definition or file under the cursor, ← back, → forward     |
+| Ctrl+G go to        | `l` line, ↑ first line, ↓ last line, `d` definition or file under the cursor, ← back, → forward |
 | Ctrl+K bookmarks    | `t` toggle, ↓ next, ↑ previous, `l` list, `c` clear in this file         |
-| Ctrl+W panes, tabs  | `v` split side by side, `s` split stacked, `h` `j` `k` `l` or arrows focus the pane on that side, `w` next pane, `r` resize, `=` equal sizes, `c` close, `o` close the others, `y` scroll sync, `x` close the tab, `t` close the tabs not on screen |
+| Ctrl+W panes, tabs  | `v` split side by side, `s` split stacked, `h` `j` `k` `l` or arrows focus the pane on that side, `w` next pane, `r` resize, `=` equal sizes, `c` close, `o` close the others, `y` scroll sync, `x` close the tab, `t` close the tabs not on screen (keeps unsaved ones); ← from the leftmost pane focuses the file tree, → from the tree the editor |
 | Ctrl+T file tree    | `t` toggle, `r` reveal current file, `f` focus, `l` lock                 |
 | Ctrl+L lines        | ↑ ↓ move, ← → outdent / indent, `d` duplicate, `k` delete                |
-| Ctrl+O switch       | `1` file tree, `2`-`9` the tabs; Ctrl+O again: the next tab              |
+| Ctrl+O switch       | `1`-`9` the tabs; Ctrl+O again: the next tab                             |
 
 - The second key works with Ctrl still held: Ctrl+W Ctrl+V is Ctrl+W V. Only Ctrl+C differs:
   it closes the menu, like Esc.

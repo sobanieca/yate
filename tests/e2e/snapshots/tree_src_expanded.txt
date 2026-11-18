@@ -10,7 +10,7 @@
 │   ▸ lib                  find file                         ctrl+p    │
 │     app.ts               live grep                         ctrl+r    │
 │   .gitignore             file tree                         ctrl+t    │
-│   README.md              switch: tree, files               ctrl+o    │
+│   README.md              switch tab                        ctrl+o    │
 │                          commands and keys                 ctrl+h    │
 │                          quit                              ctrl+q    │
 │                                                                      │

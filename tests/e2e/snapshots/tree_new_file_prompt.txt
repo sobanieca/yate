@@ -10,7 +10,7 @@
 │   .gitign│ src/                                           │ctrl+p    │
 │   README.╰────────────────────────────────────────────────╯ctrl+r    │
 │                          file tree                         ctrl+t    │
-│                          switch: tree, files               ctrl+o    │
+│                          switch tab                        ctrl+o    │
 │                          commands and keys                 ctrl+h    │
 │                          quit                              ctrl+q    │
 │                                                                      │

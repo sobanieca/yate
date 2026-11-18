@@ -1,9 +1,10 @@
 //! Tabs: the files you opened, in the order you opened them, in a bar
 //! above the editor.
 //!
-//! A tab is a path, not a document: only the files on screen are loaded
-//! (see `drop_hidden_docs`), so a file with unsaved changes asks to save
-//! or discard before another tab takes its place, as when opening a file.
+//! A tab is a path, not a document: only the files on screen and the files
+//! with unsaved changes are loaded (see `drop_hidden_docs`), so showing
+//! another tab never asks anything, and a tab with unsaved changes shows a
+//! `●` until it is saved. Closing such a tab asks to save or discard them.
 //! Every file a pane shows has a tab; a new one goes right of the tab of
 //! the file shown before. Closing a tab shows the tab next to it in the
 //! focused pane; the tab goes away once no pane shows its file.
@@ -35,12 +36,6 @@ impl App {
         self.tabs.iter().position(|tab| tab == path)
     }
 
-    fn on_screen(&self, path: &Path) -> bool {
-        self.docs
-            .iter()
-            .any(|doc| doc.path.as_deref() == Some(path))
-    }
-
     /// Shows the tab `delta` places right (or left) of the current one.
     pub fn step_tab(&mut self, delta: isize) {
         if self.tabs.is_empty() {
@@ -63,26 +58,37 @@ impl App {
         }
     }
 
-    /// Closes the tab of `path`. When the focused pane shows it, the tab
-    /// next to it takes its place, after unsaved changes are saved or
-    /// discarded.
+    /// Closes the tab of `path`, after its unsaved changes are saved or
+    /// discarded. When the focused pane shows it, the tab next to it takes
+    /// its place.
     pub fn close_tab(&mut self, path: &Path) {
         let Some(index) = self.tabs.iter().position(|tab| tab == path) else {
             return;
         };
+        let target = path.to_path_buf();
+        let again = move |app: &mut App| app.close_tab(&target);
         if self.doc().path.as_deref() != Some(path) {
             if self.on_screen(path) {
                 self.show_file(path);
                 if self.doc().path.as_deref() == Some(path) {
                     self.close_tab(path);
                 }
-            } else {
-                self.tabs.remove(index);
+                return;
             }
+            let hidden = self
+                .docs
+                .iter()
+                .position(|d| d.path.as_deref() == Some(path));
+            if let Some(hidden) = hidden
+                && !self.may_drop(hidden, again)
+            {
+                return;
+            }
+            self.tabs.remove(index);
+            self.drop_hidden_docs();
             return;
         }
-        let target = path.to_path_buf();
-        if !self.may_leave(move |app: &mut App| app.close_tab(&target)) {
+        if !self.in_another_pane(self.active) && !self.may_drop(self.active, again) {
             return;
         }
         let neighbor = self
@@ -104,15 +110,26 @@ impl App {
         self.relayout();
     }
 
-    /// Closes the tabs of the files no pane shows.
+    /// Closes the tabs of the files no pane shows, except the ones with
+    /// unsaved changes.
     pub fn close_other_tabs(&mut self) {
-        let shown: Vec<PathBuf> = self.docs.iter().filter_map(|d| d.path.clone()).collect();
-        let before = self.tabs.len();
-        self.tabs.retain(|tab| shown.contains(tab));
-        let closed = before - self.tabs.len();
+        let unsaved = |tab: &PathBuf| !self.on_screen(tab) && self.is_unsaved(tab);
+        let kept_unsaved = self.tabs.iter().filter(|tab| unsaved(tab)).count();
+        let kept: Vec<PathBuf> = self
+            .tabs
+            .iter()
+            .filter(|tab| self.on_screen(tab) || self.is_unsaved(tab))
+            .cloned()
+            .collect();
+        let closed = self.tabs.len() - kept.len();
+        self.tabs = kept;
         self.relayout();
         let plural = if closed == 1 { "" } else { "s" };
-        self.notify(format!("Closed {closed} tab{plural}"));
+        let mut message = format!("Closed {closed} tab{plural}");
+        if kept_unsaved > 0 {
+            message.push_str(&format!("; kept {kept_unsaved} with unsaved changes"));
+        }
+        self.notify(message);
     }
 
     /// Puts an empty, unnamed document in the focused pane.

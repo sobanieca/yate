@@ -371,7 +371,7 @@ fn status_hints(app: &App) -> Vec<String> {
     if app.switcher.is_some() {
         hints.push(Some("esc cancel".to_string()));
         hints.push(hint("switch.next", "next tab"));
-        hints.push(Some("1 tree · 2-9 tab".to_string()));
+        hints.push(Some("1-9 tab".to_string()));
         return hints.into_iter().flatten().collect();
     }
     match app.focus {

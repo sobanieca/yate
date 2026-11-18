@@ -234,51 +234,53 @@ fn clicking_another_pane_focuses_it() {
 }
 
 #[test]
-fn closing_a_pane_asks_about_unsaved_changes() {
+fn closing_a_pane_keeps_its_unsaved_changes_in_the_tab() {
     let mut e = project();
     e.keys("ctrl+w v");
     open(&mut e, "two.txt");
     e.type_text("x").keys("ctrl+w c");
-    e.assert_screen_contains("two.txt has unsaved changes");
-    e.keys("esc");
-    assert!(e.app().panes.is_split());
-    e.keys("ctrl+w c s");
     assert!(!e.app().panes.is_split());
     assert_eq!(e.app().doc().name(), "one.txt");
-    assert_eq!(e.app().docs.len(), 1);
-    assert!(e.read_file("two.txt").starts_with("xtwo 1\n"));
+    assert_eq!(e.read_file("two.txt"), numbered(60, "two"));
+    e.assert_screen_contains("two.txt ●");
+    open(&mut e, "two.txt");
+    assert!(e.editor_text().starts_with("xtwo 1\n"));
 }
 
 #[test]
-fn closing_the_other_panes_asks_about_each_unsaved_file() {
+fn closing_the_other_panes_keeps_the_unsaved_files() {
     let mut e = project_of_size(80, 17);
     e.keys("ctrl+w v");
     open(&mut e, "two.txt");
     e.type_text("x").keys("ctrl+w s");
     open(&mut e, "three.txt");
     e.type_text("y").keys("ctrl+w w ctrl+w o");
-    e.assert_screen_contains("two.txt has unsaved changes");
-    e.keys("d");
-    e.assert_screen_contains("three.txt has unsaved changes");
-    assert_eq!(e.app().panes.ids().len(), 2);
-    e.keys("s");
     assert!(!e.app().panes.is_split());
-    assert_eq!(e.app().doc().name(), "one.txt");
-    assert_eq!(e.app().docs.len(), 1);
-    assert!(e.read_file("two.txt").starts_with("two 1\n"));
-    assert!(e.read_file("three.txt").starts_with("ythree 1\n"));
+    assert_eq!(e.app().docs.len(), 3);
+    e.assert_screen_contains("two.txt ●")
+        .assert_screen_contains("three.txt ●");
 }
 
 #[test]
-fn a_file_shown_in_two_panes_can_be_left_in_one_without_saving() {
+fn closing_a_pane_with_untitled_text_asks_first() {
     let mut e = project();
-    e.keys("ctrl+w v").type_text("x");
-    open(&mut e, "two.txt");
-    assert_eq!(e.app().doc().name(), "two.txt");
-    e.keys("ctrl+w w");
-    assert!(e.editor_text().starts_with("xone 1\n"));
+    e.keys("ctrl+w v ctrl+w x").type_text("notes");
     e.keys("ctrl+w c");
-    e.assert_screen_contains("one.txt has unsaved changes");
+    e.assert_screen_contains("untitled has unsaved changes");
+    e.keys("esc");
+    assert!(e.app().panes.is_split());
+    e.keys("ctrl+w c d");
+    assert!(!e.app().panes.is_split());
+    assert_eq!(e.app().doc().name(), "one.txt");
+}
+
+#[test]
+fn each_pane_title_marks_unsaved_changes() {
+    let mut e = project();
+    e.keys("ctrl+w v");
+    open(&mut e, "two.txt");
+    e.type_text("x");
+    e.snapshot("split_unsaved_marks");
 }
 
 #[test]

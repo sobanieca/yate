@@ -10,7 +10,7 @@
 │ ▾ packages           find file                     ctrl+p  │
 │   ▾ web              live grep                     ctrl+r  │
 │     ▾ src            file tree                     ctrl+t  │
-│       ▾ component    switch: tree, files           ctrl+o  │
+│       ▾ component    switch tab                    ctrl+o  │
 │         ▾ forms      commands and keys             ctrl+h  │
 │           ▾ input    quit                          ctrl+q  │
 │ TREE  untitled                  text  utf-8  LF  100%  1:1 │

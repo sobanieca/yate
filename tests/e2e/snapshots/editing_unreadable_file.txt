@@ -1,0 +1,18 @@
+# editing_unreadable_file
+# start: yate a.js
+# keys: ctrl+p
+# type: "secret"
+# keys: enter
+# 70x10, cursor at column 7, row 6
+┌──────────────────────────────────────────────────────────────────────┐
+│ a.j╭─ Error ───────────────────────────────────────────────────╮     │
+│  1 │ Cannot open secret.txt: permission denied                 │     │
+│  2 │ You may not read this file: its permissions are --------- │     │
+│    │ (000). Open yate as a user who may read it, or change its │     │
+│    │ permissions (chmod).                                      │     │
+│    │                                                           │     │
+│    │  Close                                                    │     │
+│    ╰───────────────────────────────────────────────────────────╯     │
+│                                                                      │
+│ ERROR  a.js               esc close   javascript  utf-8  LF  0%  1:1 │
+└──────────────────────────────────────────────────────────────────────┘

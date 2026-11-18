@@ -14,7 +14,7 @@
 │   ▾ lib •                find file                         ctrl+p    │
 │       util.ts       M    live grep                         ctrl+r    │
 │   new.ts            U    file tree                         ctrl+t    │
-│                          switch: tree, files               ctrl+o    │
+│                          switch tab                        ctrl+o    │
 │                          commands and keys                 ctrl+h    │
 │                          quit                              ctrl+q    │
 │                                                                      │

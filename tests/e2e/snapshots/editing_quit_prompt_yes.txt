@@ -3,15 +3,15 @@
 # type: "x"
 # keys: ctrl+q
 # keys: enter
-# keys: ctrl+q n
+# keys: ctrl+q c
 # keys: ctrl+q left
-# 60x12, cursor at column 8, row 4
+# 60x12, cursor at column 24, row 4
 ┌────────────────────────────────────────────────────────────┐
 │ app.js ●                                                   │
 │  1  xconst colors = {                                      │
 │  2  ▏ bg: "#24283b",                                       │
-│  3  ╭─ Unsaved: app.js. Quit anyway? ────────────────╮     │
-│  4  │  Yes   No                                      │     │
+│  3  ╭─ Quit with unsaved changes: app.js ────────────╮     │
+│  4  │  Save and quit   Quit   Cancel                 │     │
 │  5  ╰────────────────────────────────────────────────╯     │
 │  6  ▏ return `hello ${name}`;                              │
 │  7  }                                                      │
@@ -26,8 +26,8 @@ styles
 │abbbbbbacadddddddddddddddddddddddddddddddddddddddddddddddddd│
 │eefeeggggggeggggggeheieeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee│
 │aajaajakklamlllllllmnaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
-│aajaaoodppppppppdpppppppdppppdpppppppdoooooooooooooooooaaaaa│
-│aajaaodqrssqdetgedddddddddddddddddddddddddddddddddddddoaaaaa│
+│aajaaoodppppdppppdpppppppdppppppppdppppppdoooooooooooooaaaaa│
+│aajaaodeqgggegggeggggedrstttrdeqgggggeddddddddddddddddoaaaaa│
 │aajaaooooooooooooooooooooooooooooooooooooooooooooooooooaaaaa│
 │aajaajauuuuuuammmmmmannllllvmnaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
 │aajaavaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa│
@@ -52,10 +52,10 @@ m  fg GREEN #9ece6a, bg BG #24283b
 n  fg BLUE5 #89ddff, bg BG #24283b
 o  fg BLUE #7aa2f7, bg BG_DARK #1f2335
 p  fg BLUE #7aa2f7, bg BG_DARK #1f2335, bold
-q  bg BLUE #7aa2f7
-r  fg BG_DARK #1f2335, bg BLUE #7aa2f7, bold, underline
-s  fg BG_DARK #1f2335, bg BLUE #7aa2f7, bold
-t  fg FG #c0caf5, bg BG_HIGHLIGHT #292e42, underline
+q  fg FG #c0caf5, bg BG_HIGHLIGHT #292e42, underline
+r  bg BLUE #7aa2f7
+s  fg BG_DARK #1f2335, bg BLUE #7aa2f7, bold, underline
+t  fg BG_DARK #1f2335, bg BLUE #7aa2f7, bold
 u  fg PURPLE #9d7cd8, bg BG #24283b, italic
 v  fg FG_DARK #a9b1d6, bg BG #24283b
 w  bg ORANGE #ff9e64

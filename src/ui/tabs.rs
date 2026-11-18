@@ -54,12 +54,9 @@ fn labels(app: &App) -> Vec<Label> {
         .iter()
         .enumerate()
         .map(|(index, path)| {
-            let modified = app
-                .docs
-                .iter()
-                .any(|doc| doc.path.as_deref() == Some(path) && doc.is_modified());
-            let number = if numbered && index + 1 < MAX_SWITCH_TARGETS {
-                format!("{} ", index + 2)
+            let modified = app.is_unsaved(path);
+            let number = if numbered && index < MAX_SWITCH_TARGETS {
+                format!("{} ", index + 1)
             } else {
                 String::new()
             };
@@ -132,7 +129,7 @@ pub fn render(app: &App, surface: &mut Surface, area: Rect) {
     for cell in &cells {
         let label = &labels[cell.index];
         let path = &app.tabs[cell.index];
-        let on_screen = app.docs.iter().any(|doc| doc.path.as_ref() == Some(path));
+        let on_screen = app.on_screen(path);
         let (fg, bg) = if current == Some(cell.index) {
             (t.fg, background)
         } else if on_screen {

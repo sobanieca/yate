@@ -33,7 +33,7 @@ fn tab_cell(e: &mut Harness, text: &str) -> (u16, u16) {
 fn opened_files_get_tabs_right_of_the_current_one() {
     let mut e = project(60);
     open(&mut e, "c.js");
-    e.keys("ctrl+o 2");
+    e.keys("ctrl+o 1");
     open(&mut e, "b.js");
     assert_eq!(tab_names(&e), ["a.js", "b.js", "c.js"]);
     e.snapshot("tabs_bar");
@@ -93,6 +93,27 @@ fn closing_a_tab_with_unsaved_changes_asks_first() {
 }
 
 #[test]
+fn a_tab_with_unsaved_changes_closes_after_asking() {
+    let mut e = project(60);
+    open(&mut e, "b.js");
+    e.type_text("x");
+    open(&mut e, "c.js");
+    e.assert_screen_contains("b.js ●");
+    e.keys("ctrl+w t");
+    assert_eq!(tab_names(&e), ["b.js", "c.js"]);
+    e.assert_screen_contains("Closed 1 tab; kept 1 with unsaved changes");
+    let (x, y) = tab_cell(&mut e, "b.js ●");
+    e.click(x + 5, y);
+    e.assert_screen_contains("b.js has unsaved changes");
+    e.keys("d");
+    assert_eq!(tab_names(&e), ["c.js"]);
+    assert_eq!(e.app().docs.len(), 1);
+    assert_eq!(e.app().doc().name(), "c.js");
+    open(&mut e, "b.js");
+    assert_eq!(e.editor_text(), "let b = 2;\n");
+}
+
+#[test]
 fn closing_the_tabs_not_on_screen_keeps_the_shown_files() {
     let mut e = project(60);
     open(&mut e, "b.js");
@@ -115,7 +136,7 @@ fn ctrl_o_numbers_the_tabs() {
     open(&mut e, "b.js");
     e.keys("ctrl+o");
     e.snapshot("tabs_numbered");
-    e.keys("2");
+    e.keys("1");
     assert_eq!(e.app().doc().name(), "a.js");
 }
 

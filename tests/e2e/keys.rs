@@ -92,10 +92,10 @@ fn ctrl_o_shows_the_tabs_after_the_delay() {
     open_all(&mut e);
     e.keys("ctrl+o");
     e.snapshot("keys_switcher");
-    e.keys("3");
+    e.keys("2");
     assert_eq!(e.app().doc().name(), "b.js");
     e.assert_screen_lacks("Switch to");
-    e.keys("ctrl+o 4");
+    e.keys("ctrl+o 3");
     assert_eq!(e.app().doc().name(), "c.js");
     assert_eq!(e.app().docs.len(), 1);
 }
@@ -111,12 +111,21 @@ fn the_switcher_waits_before_popping_up() {
 }
 
 #[test]
-fn ctrl_o_1_focuses_the_file_tree() {
+fn ctrl_w_and_an_arrow_move_between_the_file_tree_and_the_editor() {
     let mut e = project(0);
-    e.keys("ctrl+o 1");
+    e.keys("ctrl+w left");
+    assert_eq!(e.app().focus, yate::app::Focus::Editor);
+    e.assert_screen_contains("Not split");
+    e.keys("ctrl+t t ctrl+w left");
     assert_eq!(e.app().focus, yate::app::Focus::Tree);
-    assert!(e.app().tree_visible);
-    e.keys("ctrl+o 2");
+    e.keys("ctrl+w right");
+    assert_eq!(e.app().focus, yate::app::Focus::Editor);
+    e.keys("ctrl+w v ctrl+w left");
+    assert_eq!(e.app().focus, yate::app::Focus::Editor);
+    assert_eq!(e.app().panes.focused, e.app().panes.ids()[0]);
+    e.keys("ctrl+w h");
+    assert_eq!(e.app().focus, yate::app::Focus::Tree);
+    e.keys("ctrl+w ctrl+w");
     assert_eq!(e.app().focus, yate::app::Focus::Editor);
 }
 

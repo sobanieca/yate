@@ -11,7 +11,7 @@
 │ ▸ src                    find file                         ctrl+p    │
 │   .gitignore             live grep                         ctrl+r    │
 │   debug.log              file tree                         ctrl+t    │
-│   README.md              switch: tree, files               ctrl+o    │
+│   README.md              switch tab                        ctrl+o    │
 │                          commands and keys                 ctrl+h    │
 │                          quit                              ctrl+q    │
 │                                                                      │
@@ -29,7 +29,7 @@ styles
 │cjcjjjcccccccccccccccccccckkkkckkkkcccccccccccccccccccccccccllllllcccc│
 │aaammmmmmmmmmaaaaaaaaaaccckkkkckkkkcccccccccccccccccccccccccllllllcccc│
 │aaaiiiiiiiiiaaaaaaaaaaaccckkkkckkkkcccccccccccccccccccccccccllllllcccc│
-│aaammmmmmmmmaaaaaaaaaaaccckkkkkkkckkkkkckkkkkcccccccccccccccllllllcccc│
+│aaammmmmmmmmaaaaaaaaaaaccckkkkkkckkkccccccccccccccccccccccccllllllcccc│
 │aaaaaaaaaaaaaaaaaaaaaaaccckkkkkkkkckkkckkkkcccccccccccccccccllllllcccc│
 │aaaaaaaaaaaaaaaaaaaaaaaccckkkkccccccccccccccccccccccccccccccllllllcccc│
 │aaaaaaaaaaaaaaaaaaaaaaaccccccccccccccccccccccccccccccccccccccccccccccc│

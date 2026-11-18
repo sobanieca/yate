@@ -17,10 +17,7 @@ const MAX_HIGHLIGHT_RANGE: usize = 2 * 1024 * 1024;
 /// Draws the focused pane: the active document. Returns the cursor.
 pub fn render(app: &App, surface: &mut Surface, area: Rect) -> Option<(u16, u16)> {
     let doc = app.doc();
-    let welcome = app.docs.len() == 1
-        && doc.path.is_none()
-        && doc.rope.len_chars() == 0
-        && !app.panes.is_split();
+    let welcome = doc.path.is_none() && doc.rope.len_chars() == 0 && !app.panes.is_split();
     if welcome {
         let t = &app.theme;
         surface.fill(
@@ -264,7 +261,7 @@ const WELCOME: &[(&str, &str)] = &[
     ("picker.files", "find file"),
     ("picker.grep", "live grep"),
     ("tree.menu", "file tree"),
-    ("switch.next", "switch: tree, files"),
+    ("switch.next", "switch tab"),
     ("picker.commands", "commands and keys"),
     ("app.quit", "quit"),
 ];

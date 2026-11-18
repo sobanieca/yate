@@ -144,6 +144,8 @@ const GO_TO_MENU: MenuSpec = MenuSpec {
     again: None,
     items: &[
         once(&["l"], "Line…", "goto.line"),
+        once(&["up"], "First line", "goto.firstLine"),
+        once(&["down"], "Last line", "goto.lastLine"),
         once(
             &["d"],
             "Definition or file under the cursor",
@@ -261,6 +263,9 @@ commands! {
     "file.rename", "Rename…", File, File => rename_prompt;
     "file.delete", "Delete…", File, File => delete_prompt;
     "file.copyPath", "Copy relative path", File, File => copy_path;
+    "file.saveAll", "Save all", File, Anywhere => |app| {
+        save_all(app);
+    };
     "file.reload", "Reload from disk", File, Editor => reload;
     "edit.undo", "Undo", Edit, Editor => |app| edit(app, |doc, _| { doc.undo(); });
     "edit.redo", "Redo", Edit, Editor => |app| edit(app, |doc, _| { doc.redo(); });
@@ -300,8 +305,13 @@ commands! {
     };
     "picker.grepGlob", "Live grep in files matching a glob", Search, Anywhere => |app| open_grep_picker(app, true, None);
     "picker.resume", "Resume last picker", Search, Anywhere => resume_picker;
-    "goto.menu", "Line, definition, back or forward…", GoTo, Editor => |app| open_menu(app, &GO_TO_MENU);
+    "goto.menu", "Line, first or last line, definition, back or forward…", GoTo, Editor => |app| open_menu(app, &GO_TO_MENU);
     "goto.line", "Line…", GoTo, Editor => goto_line_prompt;
+    "goto.firstLine", "First line", GoTo, Editor => |app| go_to_line(app, 0);
+    "goto.lastLine", "Last line", GoTo, Editor => |app| {
+        let line = last_line(app);
+        go_to_line(app, line);
+    };
     "goto.definition", "Definition or file under the cursor", GoTo, Editor => super::goto::goto_definition;
     "jump.back", "Jump back", GoTo, Anywhere => |app| app.jump(true);
     "jump.forward", "Jump forward", GoTo, Anywhere => |app| app.jump(false);
@@ -324,14 +334,14 @@ commands! {
     "view.focusPaneAbove", "Focus the pane above", View, Editor => |app| app.focus_pane_on(Side::Above);
     "view.focusPaneBelow", "Focus the pane below", View, Editor => |app| app.focus_pane_on(Side::Below);
     "view.toggleScrollSync", "Scroll all panes together (sync on / off)", View, Editor => App::toggle_scroll_sync;
-    "switch.next", "Switch to the tree (1) or a tab (2-9); again: next tab", View, Anywhere => |app| {
+    "switch.next", "Switch to a tab (1-9); again: next tab", View, Anywhere => |app| {
         if app.switcher.is_some() {
             app.step_tab(1);
         } else {
             app.start_switcher();
         }
     };
-    "switch.previous", "Switch to the tree or a tab; again: previous tab", View, Anywhere => |app| {
+    "switch.previous", "Switch to a tab; again: previous tab", View, Anywhere => |app| {
         if app.switcher.is_some() {
             app.step_tab(-1);
         } else {
@@ -414,12 +424,12 @@ const LISTED_WHEN: &[(&[&str], Condition)] = &[
         !app.find.input.text.is_empty()
     }),
     (&["picker.resume"], |app| app.last_picker.is_some()),
+    (&["file.saveAll"], |app| !unsaved_docs(app).is_empty()),
     (&["tab.next", "tab.previous"], |app| app.tabs.len() > 1),
     (&["tab.close"], |app| app.current_tab().is_some()),
     (&["tab.closeOthers"], |app| {
-        let shown =
-            |tab: &std::path::PathBuf| app.docs.iter().any(|d| d.path.as_ref() == Some(tab));
-        app.tabs.iter().any(|tab| !shown(tab))
+        let closable = |tab: &&std::path::PathBuf| !app.on_screen(tab) && !app.is_unsaved(tab);
+        app.tabs.iter().any(|tab| closable(&tab))
     }),
     (&["jump.back"], |app| app.jump_index > 0),
     (&["jump.forward"], |app| {
@@ -523,18 +533,51 @@ fn open_settings(app: &mut App) {
     }
 }
 
-fn quit(app: &mut App) {
-    let unsaved: Vec<String> = app
+/// The documents of files with unsaved changes, on screen or not.
+fn unsaved_docs(app: &App) -> Vec<usize> {
+    let unsaved = app
         .docs
         .iter()
-        .filter(|d| d.is_modified() && d.path.is_some())
+        .filter(|d| d.is_modified() && d.path.is_some());
+    unsaved.map(|d| d.id).collect()
+}
+
+/// Saves every file with unsaved changes. Returns false when one could
+/// not be saved.
+fn save_all(app: &mut App) -> bool {
+    let unsaved = unsaved_docs(app);
+    let mut errors = Vec::new();
+    for id in &unsaved {
+        app.message = None;
+        save_doc(app, *id);
+        if let Some(message) = app.message.take_if(|message| message.error) {
+            errors.push(message.text);
+        }
+    }
+    app.drop_hidden_docs();
+    if !errors.is_empty() {
+        app.set_message(errors.join("\n"), true, false);
+        return false;
+    }
+    match unsaved.len() {
+        0 => app.notify("Nothing to save"),
+        1 => {}
+        saved => app.notify(format!("Saved {saved} files")),
+    }
+    true
+}
+
+fn quit(app: &mut App) {
+    let names: Vec<String> = unsaved_docs(app)
+        .iter()
+        .filter_map(|id| app.docs.iter().find(|d| d.id == *id))
         .map(|d| d.name())
         .collect();
-    if unsaved.is_empty() {
+    if names.is_empty() {
         app.quit = true;
         return;
     }
-    let title = format!("Unsaved: {}. Quit anyway?", unsaved.join(", "));
+    let title = format!("Quit with unsaved changes: {}", names.join(", "));
     let prompt = Prompt::confirm(title, PromptKind::QuitUnsaved);
     app.overlay = Some(Overlay::Prompt(prompt));
 }
@@ -608,6 +651,34 @@ fn goto_line_prompt(app: &mut App) {
     let title = format!("Go to line (1-{})", app.doc().line_count());
     let prompt = Prompt::text(title, LineInput::default(), PromptKind::GoToLine);
     app.overlay = Some(Overlay::Prompt(prompt));
+}
+
+/// Puts the cursor at the indent of `line` (from 0), remembering where it
+/// was for jump back.
+fn go_to_line(app: &mut App, line: usize) {
+    app.push_jump();
+    let doc = app.doc_mut();
+    let line = line.min(doc.line_count().saturating_sub(1));
+    let indent = crate::text::leading_whitespace(&doc.line(line))
+        .chars()
+        .count();
+    doc.selection = Selection::point(doc.line_start(line) + indent);
+    doc.view.preferred_col = None;
+    app.scroll_to_cursor();
+}
+
+/// The last line of the file with text: the empty line after a final line
+/// break does not count.
+fn last_line(app: &App) -> usize {
+    let doc = app.doc();
+    let last = doc.line_count().saturating_sub(1);
+    let ends_with_break =
+        doc.rope.len_chars() > 0 && doc.rope.char(doc.rope.len_chars() - 1) == '\n';
+    if ends_with_break {
+        last.saturating_sub(1)
+    } else {
+        last
+    }
 }
 
 /// The files of the project for a picker: the recent ones first, the
@@ -1074,8 +1145,7 @@ fn copy_path(app: &mut App) {
 /// Keys handled by the panels themselves, not bound to commands: the last
 /// section of the palette.
 const BUILT_IN_KEYS: &[(&str, &str)] = &[
-    ("ctrl+o 1", "Switch: focus the file tree"),
-    ("ctrl+o 2-9", "Switch: show tab 1-8"),
+    ("ctrl+o 1-9", "Switch: show tab 1-9"),
     ("ctrl+o ctrl+o", "Switch: next tab"),
     ("ctrl+key", "Menu: the same as the key"),
     ("ctrl+arrow", "Menu: run its arrow command again"),
@@ -1349,16 +1419,7 @@ pub fn answer_prompt(app: &mut App, prompt: Prompt, answer: Option<String>) {
         }
         PromptKind::GoToLine => {
             if let Some(line) = answer.and_then(|a| a.trim().parse::<usize>().ok()) {
-                app.push_jump();
-                let doc = app.doc_mut();
-                let line = line
-                    .saturating_sub(1)
-                    .min(doc.line_count().saturating_sub(1));
-                let indent = crate::text::leading_whitespace(&doc.line(line))
-                    .chars()
-                    .count();
-                doc.selection = Selection::point(doc.line_start(line) + indent);
-                app.scroll_to_cursor();
+                go_to_line(app, line.saturating_sub(1));
             }
         }
         PromptKind::NewFile => {
@@ -1485,11 +1546,11 @@ pub fn answer_prompt(app: &mut App, prompt: Prompt, answer: Option<String>) {
                 app.resize_pane(&answer);
             }
         }
-        PromptKind::QuitUnsaved => {
-            if answer.as_deref() == Some("y") {
-                app.quit = true;
-            }
-        }
+        PromptKind::QuitUnsaved => match answer.as_deref() {
+            Some("s") => app.quit = save_all(app),
+            Some("q") => app.quit = true,
+            _ => {}
+        },
         PromptKind::LeaveUnsaved { doc_id, then } => match answer.as_deref() {
             Some("s") => {
                 save_doc(app, doc_id);
@@ -1506,6 +1567,7 @@ pub fn answer_prompt(app: &mut App, prompt: Prompt, answer: Option<String>) {
                 app.leave_confirmed = true;
                 then(app);
                 app.leave_confirmed = false;
+                app.discard_hidden(doc_id);
             }
             _ => {}
         },

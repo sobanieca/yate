@@ -38,19 +38,22 @@ Keys (Ctrl keys only, no modes; ctrl+h in yate lists the commands with their key
   "Insert emoji" in the command palette picks an emoji by name
 
 Menus: a key, then the key of a command.
-  ctrl+g  go to         l line, d the definition, or the file of the path or import under
-                        the cursor (path:line:col works; ctrl+p takes file:line),
-                        left jump back, right jump forward
+  ctrl+g  go to         l line, up the first line, down the last line, d the
+                        definition, or the file of the path or import under the cursor
+                        (path:line:col works; ctrl+p takes file:line), left jump back,
+                        right jump forward
   ctrl+k  bookmarks     t toggle, down next, up previous, l list, c clear in this file
   ctrl+w  panes, tabs   v split side by side, s split one above the other, h j k l or the
                         arrows focus the pane on that side, w next pane, r resize (type
                         columns,rows to add: 10, -10 or 10,-2), = equal sizes, c close
                         the pane, o close the others, y scroll all panes together,
-                        x close the tab, t close the tabs not on screen
+                        x close the tab, t close the tabs not on screen (not the
+                        unsaved ones); left of the leftmost pane is the file tree,
+                        and right from the tree is the editor
   ctrl+t  file tree     t toggle, r reveal file, f focus, l lock following the file
   ctrl+l  lines         up / down move, left / right outdent / indent, d duplicate,
                         k delete
-  ctrl+o  switch        1 file tree, 2-9 the tabs; ctrl+o again: next tab
+  ctrl+o  switch        1-9 the tabs; ctrl+o again: next tab
 
 The second key works with ctrl still held (ctrl+w ctrl+v), except ctrl+c, which closes the
 menu like esc. The key of a menu twice runs its usual command: ctrl+t ctrl+t toggles the
@@ -64,10 +67,12 @@ A message too long for the status line opens in a dialog: up / down scroll it, e
 enter closes it.
 
 Tabs: every file you open gets a tab above the editor, right of the current one. Click a
-tab to show it, click its x to close it. Only the files on screen are loaded: showing
-another tab with unsaved changes asks first (Save, Discard or Cancel: left / right and
-enter, or the first letter; esc stays). A file opens again where the cursor was, and
-ctrl+p lists the files you had last on top.
+tab to show it, click its x to close it. Showing another file never asks to save: a file
+with unsaved changes stays in memory, and a ● marks it in its tab, in the title of each
+pane that shows it, in the status line and in the ctrl+o list. Closing its tab asks
+first (Save, Discard or Cancel: left / right and enter, or the first letter; esc stays),
+and so does quitting (Save and quit, Quit or Cancel); "Save all" is in the palette. A file
+opens again where the cursor was, and ctrl+p lists the files you had last on top.
 
 File tree: enter open, left/right fold, f find file in the folder, g live grep in the
            folder, ctrl+n new, r rename, d delete, y copy path, shift+r refresh,

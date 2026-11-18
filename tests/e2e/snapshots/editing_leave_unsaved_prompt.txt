@@ -1,19 +1,20 @@
 # editing_leave_unsaved_prompt
-# start: yate a.js
-# type: "x"
+# start: yate (project folder)
+# keys: esc
+# type: "notes"
 # keys: ctrl+p
-# type: "b.js"
+# type: "a.js"
 # keys: enter
 # 70x10, cursor at column 13, row 3
 ┌──────────────────────────────────────────────────────────────────────┐
-│ a.js ●                                                               │
-│  1  xlet a = 1;                                                      │
-│  2       ╭─ a.js has unsaved changes ─────────────────────╮          │
-│          │  Save   Discard   Cancel                       │          │
+│ PROJECT                 1  notes                                     │
+│ [ ] changed                                                          │
+│ [ ] ignor╭─ untitled has unsaved changes ─────────────────╮          │
+│   a.js   │  Save   Discard   Cancel                       │          │
 │          ╰────────────────────────────────────────────────╯          │
 │                                                                      │
 │                                                                      │
 │                                                                      │
 │                                                                      │
-│ INPUT  a.js ●                         javascript  utf-8  LF  0%  1:2 │
+│ INPUT  untitled ●                         text  utf-8  LF  100%  1:6 │
 └──────────────────────────────────────────────────────────────────────┘
