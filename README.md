@@ -14,7 +14,7 @@ lines in the gutter, fix a line by hand, and go back to the agent in the next tm
 
 Website and manual: https://adam.sobaniec.com/yate/
 
-> **Status:** version 0.6.0, an early release. Keys, options and the plugin API may still
+> **Status:** version 0.7.0, an early release. Keys, options and the plugin API may still
 > change between versions.
 
 ## Features
