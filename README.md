@@ -14,7 +14,7 @@ lines in the gutter, fix a line by hand, and go back to the agent in the next tm
 
 Website and manual: https://adam.sobaniec.com/yate/
 
-> **Status:** version 0.7.0, an early release. Keys, options and the plugin API may still
+> **Status:** version 0.7.1, an early release. Keys, options and the plugin API may still
 > change between versions.
 
 ## Features
@@ -64,15 +64,18 @@ Website and manual: https://adam.sobaniec.com/yate/
 
 ## Install
 
-Linux and macOS (x64, arm64):
+Linux and macOS (x64, arm64), also Termux on Android:
 
 ```bash
 curl -fsSL adam.sobaniec.com/yate/install.sh | bash
 ```
 
-This installs yate to `/usr/local/bin`. If you can't write there, run the script with `sudo`
-(`... | sudo bash`), or install it to another folder on your `PATH` with
-`... | INSTALL_DIR=~/.local/bin bash`.
+This installs yate to `~/.yate/bin`, with no `sudo` needed, and asks to add that folder to
+your `PATH` in your shell's startup file (`~/.bashrc`, `~/.zshrc`, fish's `conf.d` or
+`~/.profile`). Set `YATE_NO_MODIFY_PATH=1` to leave the file unchanged, or install to another
+folder with `... | INSTALL_DIR=~/.local/bin bash`. Run as root, the script installs to
+`/usr/local/bin`. To uninstall, delete `~/.yate/bin` (the rest of `~/.yate` holds your
+settings and bookmarks).
 
 Prebuilt binaries are also attached to each
 [GitHub release](https://github.com/sobanieca/yate/releases).

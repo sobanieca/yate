@@ -328,7 +328,7 @@ img { max-width: 100%; }
 <main id="top">
   <div class="wrap hero">
     <div class="hero-grid">
-      <div class="eyebrow"><span>yate · yet another text editor</span><span class="pill">v0.7.0 · early</span></div>
+      <div class="eyebrow"><span>yate · yet another text editor</span><span class="pill">v0.7.1 · early</span></div>
       <h1>A terminal editor between <em>nano</em> and <em>neovim</em>.</h1>
       <p class="lede">Simple to use like nano: no modes, type and the text goes in, and the keys show on screen. Ready for a whole project like neovim: a file tree, Ctrl+P, live grep, split view, go to definition and JavaScript plugins, with nothing to set up. One binary with no runtime dependencies, for quick, comfortable edits in a terminal or a tmux pane.</p>
       <p class="lede">An editor for the age of coding agents. Agents write most of the code now, but now and then you still need to open it, read it and see the bigger picture: how the files fit together, where a name is defined, what the agent changed. Walk the project in the file tree, jump with Ctrl+P, live grep and go to definition, see the changed lines in the gutter, fix a line by hand, and go back to the agent in the next tmux pane.</p>
@@ -410,8 +410,8 @@ img { max-width: 100%; }
         <div class="chapters">
           <article class="chapter" id="install">
             <h2>Install and update</h2>
-            <p>The install script downloads the release binary for your system to <code>/usr/local/bin</code>. If you can't write there, pipe it to <code>sudo bash</code>, or pick another folder on your <code>PATH</code>:</p>
-            <pre class="code"><span class="c"># Linux and macOS, x64 and arm64</span>
+            <p>The install script downloads the release binary for your system to <code>~/.yate/bin</code>, with no <code>sudo</code> needed, and asks to add that folder to your <code>PATH</code> in your shell's startup file. Set <code>YATE_NO_MODIFY_PATH=1</code> to leave the file unchanged, or pick another folder with <code>INSTALL_DIR</code>. To uninstall, delete <code>~/.yate/bin</code>.</p>
+            <pre class="code"><span class="c"># Linux and macOS, x64 and arm64, also Termux on Android</span>
 curl -fsSL adam.sobaniec.com/yate/install.sh | bash
 curl -fsSL adam.sobaniec.com/yate/install.sh | INSTALL_DIR=~/.local/bin bash</pre>
             <p>Binaries for every version are on the <a href="https://github.com/sobanieca/yate/releases">releases page</a>. yate checks for a new release once a day and shows a message when one is out, also after you quit. Install it with:</p>

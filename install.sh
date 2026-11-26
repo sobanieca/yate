@@ -10,24 +10,25 @@ NC='\033[0m' # No Color
 
 # Configuration
 REPO="sobanieca/yate"
-DEFAULT_INSTALL_DIR="/usr/local/bin"
 BINARY_NAME="yate"
 SCRIPT_URL="adam.sobaniec.com/yate/install.sh"
 
 usage() {
   cat <<USAGE
-Install yate for Linux or macOS (x64, arm64).
+Install yate for Linux or macOS (x64, arm64), also in Termux on Android.
 
 Usage:
   curl -fsSL ${SCRIPT_URL} | bash
 
-By default yate is installed to ${DEFAULT_INSTALL_DIR}, for all users. If you
-can't write to it, run the script with sudo:
-  curl -fsSL ${SCRIPT_URL} | sudo bash
+yate is installed to ~/.yate/bin, with no sudo needed. If that folder is not on
+your PATH, the script asks to add it in your shell's startup file (~/.bashrc,
+~/.zshrc, fish's conf.d or ~/.profile). Run as root, it installs to
+/usr/local/bin instead.
 
-To install to a custom location, set INSTALL_DIR to a directory that is
-on your PATH:
+To install to another folder, set INSTALL_DIR:
   curl -fsSL ${SCRIPT_URL} | INSTALL_DIR=~/.local/bin bash
+
+To leave your shell's startup file unchanged, set YATE_NO_MODIFY_PATH=1.
 USAGE
 }
 
@@ -46,24 +47,33 @@ case "${1:-}" in
     ;;
 esac
 
+# A path with the home folder shown as ~
+shown() {
+  case "$1" in
+    "$HOME"/*) echo "~${1#"$HOME"}" ;;
+    *) echo "$1" ;;
+  esac
+}
+
 if [ -n "${INSTALL_DIR:-}" ]; then
-  CUSTOM_INSTALL_DIR=1
+  case "${INSTALL_DIR}" in
+    "~"/*) INSTALL_DIR="$HOME${INSTALL_DIR#"~"}" ;;
+  esac
+elif [ "$(id -u)" = 0 ]; then
+  INSTALL_DIR="/usr/local/bin"
+elif [ -z "${HOME:-}" ]; then
+  echo -e "${RED}Error: HOME is not set${NC}"
+  echo "Set INSTALL_DIR to a folder on your PATH, e.g.:"
+  echo "  curl -fsSL ${SCRIPT_URL} | INSTALL_DIR=/usr/local/bin bash"
+  exit 1
 else
-  CUSTOM_INSTALL_DIR=""
-  INSTALL_DIR="${DEFAULT_INSTALL_DIR}"
+  INSTALL_DIR="$HOME/.yate/bin"
 fi
 
 install_failed() {
   echo -e "${RED}Error: Could not install yate to ${INSTALL_DIR}${NC}"
-  if [ -n "${CUSTOM_INSTALL_DIR}" ]; then
-    echo "INSTALL_DIR must be a writable directory that is on your PATH, e.g.:"
-    echo "  curl -fsSL ${SCRIPT_URL} | INSTALL_DIR=~/.local/bin bash"
-  else
-    echo "Most likely you need to run the script with sudo:"
-    echo "  curl -fsSL ${SCRIPT_URL} | sudo bash"
-    echo "or set INSTALL_DIR to a directory that is on your PATH, e.g.:"
-    echo "  curl -fsSL ${SCRIPT_URL} | INSTALL_DIR=~/.local/bin bash"
-  fi
+  echo "Set INSTALL_DIR to a folder you can write to, e.g.:"
+  echo "  curl -fsSL ${SCRIPT_URL} | INSTALL_DIR=~/.local/bin bash"
   exit 1
 }
 
@@ -148,18 +158,91 @@ mv -f "${TMP_DIR}/${BINARY_NAME}" "${INSTALL_DIR}/${BINARY_NAME}" || install_fai
 
 echo ""
 echo -e "${GREEN}✓ yate has been installed successfully!${NC}"
-echo ""
-echo "Run 'yate --help' to get started"
+VERSION=$("${INSTALL_DIR}/${BINARY_NAME}" --version 2>&1 || echo "unknown")
+echo "Installed version: ${VERSION}"
 echo ""
 
-# Verify installation
-case ":${PATH}:" in
-  *":${INSTALL_DIR}:"*)
-    VERSION=$("${INSTALL_DIR}/${BINARY_NAME}" --version 2>&1 || echo "unknown")
-    echo "Installed version: ${VERSION}"
+# The folder as it goes into a startup file: $HOME stays a variable there.
+case "${INSTALL_DIR}" in
+  "$HOME"/*) PATH_DIR="\$HOME${INSTALL_DIR#"$HOME"}" ;;
+  *) PATH_DIR="${INSTALL_DIR}" ;;
+esac
+
+# The startup file of the user's shell and the line that puts the folder on PATH.
+case "$(basename "${SHELL:-sh}")" in
+  zsh)
+    PROFILE="${ZDOTDIR:-$HOME}/.zshrc"
+    PATH_LINE="export PATH=\"${PATH_DIR}:\$PATH\""
+    ;;
+  bash)
+    if [ "${OS_TYPE}" = macos ]; then
+      PROFILE="$HOME/.bash_profile"
+    else
+      PROFILE="$HOME/.bashrc"
+    fi
+    PATH_LINE="export PATH=\"${PATH_DIR}:\$PATH\""
+    ;;
+  fish)
+    PROFILE="${XDG_CONFIG_HOME:-$HOME/.config}/fish/conf.d/yate.fish"
+    PATH_LINE="contains \"${PATH_DIR}\" \$PATH; or set -gx PATH \"${PATH_DIR}\" \$PATH"
     ;;
   *)
-    echo -e "${YELLOW}Warning: ${INSTALL_DIR} is not on your PATH${NC}"
-    echo "Add it to your PATH, or set INSTALL_DIR to a directory that is on your PATH"
+    PROFILE="$HOME/.profile"
+    PATH_LINE="export PATH=\"${PATH_DIR}:\$PATH\""
+    ;;
+esac
+PROFILE_SHOWN="$(shown "${PROFILE}")"
+
+# Whether a question can be asked: with `curl | bash` the script itself is on stdin,
+# so the answer is read from the terminal.
+can_ask() {
+  (exec < /dev/tty) 2> /dev/null
+}
+
+add_to_path() {
+  mkdir -p "$(dirname "${PROFILE}")" &&
+    printf '\n# yate\n%s\n' "${PATH_LINE}" >> "${PROFILE}"
+}
+
+case ":${PATH}:" in
+  *":${INSTALL_DIR}:"*)
+    echo "Run 'yate --help' to get started"
+    ;;
+  *)
+    if [ -f "${PROFILE}" ] && grep -qF "${PATH_LINE}" "${PROFILE}"; then
+      # Added by an earlier install, the current shell started before that.
+      ADDED=1
+    elif [ "${YATE_NO_MODIFY_PATH:-}" = 1 ] || ! can_ask; then
+      ADDED=""
+    else
+      printf "Add %s to PATH in %s? [Y/n] " "$(shown "${INSTALL_DIR}")" "${PROFILE_SHOWN}"
+      read -r ANSWER < /dev/tty || ANSWER=n
+      case "${ANSWER}" in
+        ""|y|Y|yes|Yes|YES)
+          if add_to_path; then
+            echo -e "${GREEN}✓ Added to ${PROFILE_SHOWN}${NC}"
+            ADDED=1
+          else
+            echo -e "${YELLOW}Warning: Could not write to ${PROFILE_SHOWN}${NC}"
+            ADDED=""
+          fi
+          ;;
+        *)
+          ADDED=""
+          ;;
+      esac
+      echo ""
+    fi
+
+    if [ -n "${ADDED}" ]; then
+      echo "Open a new terminal, or run this to use yate in this one:"
+      echo "  export PATH=\"${INSTALL_DIR}:\$PATH\""
+    else
+      echo -e "${YELLOW}$(shown "${INSTALL_DIR}") is not on your PATH${NC}"
+      echo "To use yate, add this line to ${PROFILE_SHOWN}:"
+      echo "  ${PATH_LINE}"
+    fi
+    echo ""
+    echo "Then run 'yate --help' to get started"
     ;;
 esac
