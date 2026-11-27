@@ -4,7 +4,8 @@ Usage:
   yate                  open the current folder (file tree)
   yate <folder>         open a folder
   yate <file>[:line]    open a file; the project is its git repository
-  yate update           install the latest release (./update opens a file named update)
+  yate update           install the latest release and rewrite the skills that
+                        skill --init wrote (./update opens a file named update)
   yate init             create ./yate.jsonc listing every setting, commented out
   yate skill            print instructions for AI agents that edit yate.json
   yate skill --init     create a /yate skill for AI agents (.claude/skills, .agents/skills)

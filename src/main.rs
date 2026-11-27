@@ -27,6 +27,15 @@ fn main() -> ExitCode {
     if args == ["skill", "--init"] {
         return skill_init();
     }
+    // Not in the help: `yate update` runs the new binary with it.
+    if args == ["skill", "--refresh"] {
+        let cwd = std::env::current_dir().unwrap_or_else(|_| ".".into());
+        let home = std::env::var_os("HOME").map(std::path::PathBuf::from);
+        for line in yate::skill::refresh(&cwd, home.as_deref()) {
+            println!("{line}");
+        }
+        return ExitCode::SUCCESS;
+    }
     let mut path = None;
     for arg in args {
         match arg.as_str() {

@@ -14,7 +14,7 @@ lines in the gutter, fix a line by hand, and go back to the agent in the next tm
 
 Website and manual: https://adam.sobaniec.com/yate/
 
-> **Status:** version 0.7.1, an early release. Keys, options and the plugin API may still
+> **Status:** version 0.8.0, an early release. Keys, options and the plugin API may still
 > change between versions.
 
 ## Features
@@ -191,6 +191,7 @@ its default. `yate skill --init` makes it a skill: it writes `SKILL.md` to
 the git root, or in your home folder outside a git repository, so agents see it in every
 project. Then ask, for example, `/yate use the gruvbox-dark theme and bind ctrl+e to go to
 definition`.
+`yate update` keeps the skill up to date (see [docs/configuration.md](docs/configuration.md)).
 
 ```jsonc
 {

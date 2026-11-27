@@ -1,6 +1,6 @@
 [package]
 name = "yate"
-version = "0.7.1"
+version = "0.8.0"
 edition = "2024"
 description = "Yet another text editor: a modeless terminal editor with JavaScript plugins"
 license = "MIT"

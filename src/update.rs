@@ -91,6 +91,11 @@ pub fn execute() -> Result<(), String> {
     write_cache(&latest);
     if !is_newer(&latest, VERSION) {
         println!("yate is up to date ({VERSION})");
+        let cwd = std::env::current_dir().unwrap_or_else(|_| ".".into());
+        let home = std::env::var_os("HOME").map(PathBuf::from);
+        for line in crate::skill::refresh(&cwd, home.as_deref()) {
+            println!("{line}");
+        }
         return Ok(());
     }
 
@@ -127,7 +132,20 @@ pub fn execute() -> Result<(), String> {
     result?;
 
     println!("yate has been updated to {latest}");
+    refresh_skills(&exe);
     Ok(())
+}
+
+/// The skill text is part of the binary, so the new binary rewrites the
+/// skills written by `yate skill --init`.
+fn refresh_skills(exe: &Path) {
+    let status = std::process::Command::new(exe)
+        .args(["skill", "--refresh"])
+        .env(NO_UPDATE_CHECK_ENV, "1")
+        .status();
+    if !status.is_ok_and(|status| status.success()) {
+        eprintln!("Failed to update the skills. Run 'yate skill --init' again.");
+    }
 }
 
 fn gunzip(compressed: &[u8]) -> std::io::Result<Vec<u8>> {
